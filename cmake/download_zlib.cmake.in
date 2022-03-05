@@ -1,0 +1,14 @@
+cmake_minimum_required(VERSION 3.15)
+
+project(zlib NONE)
+
+include(ExternalProject)
+ExternalProject_Add(zlib
+    GIT_REPOSITORY    https://github.com/madler/zlib.git
+    GIT_TAG           master
+    SOURCE_DIR        "${CMAKE_CURRENT_BINARY_DIR}/zlib-src"
+    BINARY_DIR        "${CMAKE_CURRENT_BINARY_DIR}/zlib-build"
+    PREFIX            "${CMAKE_CURRENT_BINARY_DIR}/zlib"
+    INSTALL_DIR       "${ZLIB_INSTALLED_PATH}"
+    CMAKE_ARGS        -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+)
