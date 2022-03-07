@@ -1,6 +1,7 @@
 #ifndef BIN_COMMON_SCHEMA_DISPATCHER_HPP
 #define BIN_COMMON_SCHEMA_DISPATCHER_HPP
 
+#include <list>
 #include <map>
 #include <memory>
 #include <stdexcept>
@@ -14,9 +15,18 @@ namespace common
 {
 struct dispatcher_settings
 {
-    std::string host;
+    using cluster_t = std::list<std::string>;
+    cluster_t hosts;
     bool curl_verbose = false;
 };
+
+using name_t = std::string;
+
+template<class SpecificRequest>
+using request_ptr_t = std::shared_ptr<SpecificRequest>;
+
+template<class SpecificRequest>
+using schema_request_map = std::map<name_t, request_ptr_t<SpecificRequest>>;
 
 template<class ...Requests>
 class schema_dispatcher
@@ -28,13 +38,6 @@ public:
     }
     virtual ~schema_dispatcher() = default;
 
-    using name_t = std::string;
-
-    template<class SpecificRequest>
-    using request_ptr_t = std::shared_ptr<SpecificRequest>;
-
-    template<class SpecificRequest>
-    using schema_request_map = std::map<name_t, request_ptr_t<SpecificRequest>>;
 
     using container_t = std::tuple<schema_request_map<Requests>...>;
 

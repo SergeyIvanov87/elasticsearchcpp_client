@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
     auto port = es_setting.get(v7::es_http_port);
 
     common::dispatcher_settings s;
-    s.host = "http://localhost:" + port;
+    s.hosts.push_back("http://localhost:" + port);
     s.curl_verbose = is_curl_verbose(argc,argv);
     v7::dispatcher d(s, is_verbose(argc, argv));
 

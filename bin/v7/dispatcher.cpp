@@ -262,13 +262,15 @@ void request_rm_data(const dispatcher &d, std::ostream &out, const char *index, 
     std::shared_ptr<elasticsearch::v7::delete_data::response> ans_ptr;
     if (!strcmp(index, schema_indices[0]))
     {
-        ans_ptr = d.execute_request<elasticsearch::book::del::transaction>(index,
+        ans_ptr = d.execute_request<elasticsearch::book::del::transaction>(
+                                    index,
                                     std::string(index) + "/" + doc_path_id,
                                     d.get_settings().curl_verbose)->get_response();
     }
     else if (!strcmp(index, schema_indices[1]))
     {
-        ans_ptr = d.execute_request<elasticsearch::image::del::transaction>(index,
+        ans_ptr = d.execute_request<elasticsearch::image::del::transaction>(
+                                    index,
                                     std::string(index) + "/" + doc_path_id,
                                     d.get_settings().curl_verbose)->get_response();
     }
@@ -435,42 +437,63 @@ request_collect_model_data(dispatcher &d, const char *file_path, Tracer tracer)
 }
 
 dispatcher::dispatcher(dispatcher_settings s, bool with_logs) :
-    base_t(std::move(s)),
     use_logging(with_logs)
 {
+    init_cluster_dispatchers();
     if (use_logging)
     {
         txml::StdoutTracer std_tracer;
-        create_request<elasticsearch::book::index_mapping::transaction>(schema_indices[0], settings.host, std_tracer);
-        create_request<elasticsearch::aux::index_mapping::transaction>(schema_indices[0], settings.host, std_tracer);
-        create_request<elasticsearch::image::index_mapping::transaction>(schema_indices[1], settings.host, std_tracer);
-        create_request<elasticsearch::aux::index_mapping::transaction>(schema_indices[1], settings.host, std_tracer);
+        create_request<elasticsearch::book::index_mapping::transaction>(schema_indices[0], std_tracer);
+        create_request<elasticsearch::aux::index_mapping::transaction>(schema_indices[0], std_tracer);
+        create_request<elasticsearch::image::index_mapping::transaction>(schema_indices[1], std_tracer);
+        create_request<elasticsearch::aux::index_mapping::transaction>(schema_indices[1], std_tracer);
     }
     else
     {
-        create_request<elasticsearch::book::index_mapping::transaction>(schema_indices[0], settings.host);
-        create_request<elasticsearch::aux::index_mapping::transaction>(schema_indices[0], settings.host);
-        create_request<elasticsearch::image::index_mapping::transaction>(schema_indices[1], settings.host);
-        create_request<elasticsearch::aux::index_mapping::transaction>(schema_indices[1], settings.host);
+        create_request<elasticsearch::book::index_mapping::transaction>(schema_indices[0]);
+        create_request<elasticsearch::aux::index_mapping::transaction>(schema_indices[0]);
+        create_request<elasticsearch::image::index_mapping::transaction>(schema_indices[1]);
+        create_request<elasticsearch::aux::index_mapping::transaction>(schema_indices[1]);
     }
 
-    create_request<elasticsearch::book::create::transaction>(schema_indices[0], settings.host);
-    create_request<elasticsearch::image::create::transaction>(schema_indices[1], settings.host);
-    create_request<elasticsearch::book::del::transaction>(schema_indices[0], settings.host);
-    create_request<elasticsearch::image::del::transaction>(schema_indices[1], settings.host);
-    create_request<elasticsearch::book::get::transaction>(schema_indices[0], settings.host);
-    create_request<elasticsearch::image::get::transaction>(schema_indices[1], settings.host);
-    create_request<elasticsearch::book::del::transaction>(schema_indices[0], settings.host);
-    create_request<elasticsearch::image::del::transaction>(schema_indices[1], settings.host);
-    create_request<elasticsearch::book::search::transaction>(schema_indices[0], settings.host);
-    create_request<elasticsearch::image::search::transaction>(schema_indices[1], settings.host);
-    create_request<elasticsearch::v7::index_mapping_delete::transaction>(schema_indices[0], settings.host);
-    create_request<elasticsearch::v7::index_mapping_delete::transaction>(schema_indices[1], settings.host);
+    create_request<elasticsearch::book::create::transaction>(schema_indices[0]);
+    create_request<elasticsearch::image::create::transaction>(schema_indices[1]);
+    create_request<elasticsearch::book::del::transaction>(schema_indices[0]);
+    create_request<elasticsearch::image::del::transaction>(schema_indices[1]);
+    create_request<elasticsearch::book::get::transaction>(schema_indices[0]);
+    create_request<elasticsearch::image::get::transaction>(schema_indices[1]);
+    create_request<elasticsearch::book::del::transaction>(schema_indices[0]);
+    create_request<elasticsearch::image::del::transaction>(schema_indices[1]);
+    create_request<elasticsearch::book::search::transaction>(schema_indices[0]);
+    create_request<elasticsearch::image::search::transaction>(schema_indices[1]);
+    create_request<elasticsearch::v7::index_mapping_delete::transaction>(schema_indices[0]);
+    create_request<elasticsearch::v7::index_mapping_delete::transaction>(schema_indices[1]);
 
-    create_request<elasticsearch::aux::create_doc_id::transaction>(schema_indices[0], settings.host);
-    create_request<elasticsearch::aux::create_doc_id::transaction>(schema_indices[1], settings.host);
+    create_request<elasticsearch::aux::create_doc_id::transaction>(schema_indices[0]);
+    create_request<elasticsearch::aux::create_doc_id::transaction>(schema_indices[1]);
 }
 
+std::ostream &dispatcher::data_outputstream() const
+{
+    return std::cout;
+}
+std::ostream &dispatcher::aux_outputstream() const
+{
+    return std::cerr;
+}
+
+const dispatcher_settings& dispatcher::get_settings() const
+{
+    return settings;
+}
+
+void dispatcher::init_cluster_dispatchers()
+{
+    for (const auto &h : settings.hosts)
+    {
+        dispatchers[h] = std::make_shared<base_dispatcher_t>(dispatcher_settings{settings});
+    }
+}
 
 
 void dispatcher::all_index_mapping()
