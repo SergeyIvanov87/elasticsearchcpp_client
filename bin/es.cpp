@@ -50,10 +50,15 @@ int main(int argc, char* argv[])
     using namespace bin;
     utils::cfg_reader es_setting(v7::es_yml_default_path, ':');
     auto port = es_setting.get(v7::es_http_port);
+    auto cluster_hosts = es_setting.get(v7::discovery_cluster);
+
 
     common::dispatcher_settings s;
-    s.hosts.push_back("http://localhost:" + port);
+    s.hosts = utils::cfg_reader::parse_discovery_cluster(cluster_hosts, port);
     s.curl_verbose = is_curl_verbose(argc,argv);
+
+    std::cerr << s.to_string() << std::endl;
+
     v7::dispatcher d(s, is_verbose(argc, argv));
 
     std::string binary_name(argv[0]);

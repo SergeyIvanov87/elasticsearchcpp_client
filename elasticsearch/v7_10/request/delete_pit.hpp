@@ -26,6 +26,8 @@ public:
     using base_t = elasticsearch::base::transaction;
     using receiver = ModelBasedSStreamReceiver<response, ResponseFromJSON>;
 
+    static constexpr const char *name() { return "v7/delete_pit"; }
+
     transaction(const std::string& host);
     ~transaction();
 

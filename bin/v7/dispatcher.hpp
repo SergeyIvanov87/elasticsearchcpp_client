@@ -28,7 +28,7 @@ class dispatcher
     template<class SpecificRequest, class ...SpecificRequestCtorArgs>
     void create_request(const name_t &schema, SpecificRequestCtorArgs &&...args)
     {
-        aux_outputstream() << "try on cluster, size: " << settings.hosts.size() << std::endl;
+        aux_outputstream() << "create \"" << SpecificRequest::name() << "\" on cluster, size: " << settings.hosts.size() << std::endl;
         size_t success = 0;
         for (const auto &h : settings.hosts)
         {
@@ -45,6 +45,7 @@ class dispatcher
                                                             schema, h,
                                                             std::forward<SpecificRequestCtorArgs>(args)...);
                 success ++;
+                aux_outputstream() << "created for peer: " << h << std::endl;
             }
             catch (const std::exception &ex)
             {
@@ -91,7 +92,7 @@ public:
     request_ptr_t<SpecificRequest> execute_request(const name_t &schema, SpecificRequestArgs &&...args) const
     {
         request_ptr_t<SpecificRequest> ret;
-        aux_outputstream() << "try on cluster, size: " << settings.hosts.size() << std::endl;
+        aux_outputstream() << "execute \"" << SpecificRequest::name() << "\" on cluster, size: " << settings.hosts.size() << std::endl;
         for (const auto &h : settings.hosts)
         {
             auto it = dispatchers.find(h);
@@ -106,6 +107,7 @@ public:
                 ret = it->second->execute_request<SpecificRequest, SpecificRequestArgs...>(
                                                         schema,
                                                         std::forward<SpecificRequestArgs>(args)...);
+                aux_outputstream() << "executed for peer: " << h << std::endl;
             }
             catch (const std::exception &ex)
             {

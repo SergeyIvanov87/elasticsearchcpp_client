@@ -20,6 +20,8 @@ public:
     using receiver = impl_t::receiver;
     using response = elasticsearch::book::model::data;
 
+    static constexpr const char *name() { return "book/get"; }
+
     transaction(const std::string& host);
     ~transaction();
 

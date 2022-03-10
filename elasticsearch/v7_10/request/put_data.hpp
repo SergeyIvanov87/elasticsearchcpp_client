@@ -29,6 +29,8 @@ public:
     using base_t = elasticsearch::base::transaction;
     using receiver =  adapter::easy::StringStreamReceiver;
 
+    static constexpr const char *name() { return "v7/put_json_data"; }
+
     template<class MappingModel, template<class> class ...MappingModelSerializer>
     struct Tag {
         using model_type = MappingModel;

@@ -20,6 +20,8 @@ public:
     using base_t = elasticsearch::base::transaction;
     using receiver = ModelBasedSStreamReceiver<response, ResponseFromJSON>;
 
+    static constexpr const char *name() { return "v7/index_mapping_delete"; }
+
     transaction(const std::string& host);
     ~transaction() = default;
 

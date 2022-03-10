@@ -1,9 +1,12 @@
 #ifndef BIN_COMMON_SCHEMA_DISPATCHER_HPP
 #define BIN_COMMON_SCHEMA_DISPATCHER_HPP
 
+#include <algorithm>
+#include <iterator>
 #include <list>
 #include <map>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -18,6 +21,16 @@ struct dispatcher_settings
     using cluster_t = std::list<std::string>;
     cluster_t hosts;
     bool curl_verbose = false;
+
+    std::string to_string() const
+    {
+        std::stringstream ss;
+        ss << "cluster {";
+        std::copy(hosts.begin(), hosts.end(), std::ostream_iterator<std::string>(ss, ","));
+        ss << "}" << std::endl;
+        ss << "curl_verbose: " << curl_verbose << std::endl;
+        return ss.str();
+    }
 };
 
 using name_t = std::string;

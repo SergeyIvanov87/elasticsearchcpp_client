@@ -16,6 +16,8 @@ public:
     using impl_t::receiver;
     using impl_t::response;
 
+    static constexpr const char *name() { return "book/index_mapping"; }
+
     template<class Tracer = txml::EmptyTracer>
     transaction(const std::string& host, Tracer tracer = Tracer());
 };

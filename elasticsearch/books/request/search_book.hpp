@@ -19,6 +19,8 @@ public:
     using response = elasticsearch::v7::search::response<model_t>;
 
     using base_t::base_t;
+
+    static constexpr const char *name() { return "book/search"; }
 /*
     template<class ...SpecificQueryParams, class Tracer = txml::EmptyTracer>
     transaction(const std::string& host,

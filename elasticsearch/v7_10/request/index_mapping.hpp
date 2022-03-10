@@ -19,6 +19,8 @@ public:
     using receiver = impl_t::receiver;
     using response = elasticsearch::v7::index_mapping::response;
 
+    static constexpr const char *name() { return "v7/index_mapping"; }
+
     template<class MappingModel, template<class> class ...MappingModelSerializer>
     struct Tag {
         using model_type = MappingModel;
