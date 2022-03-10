@@ -2,6 +2,7 @@
 #define BIN_UTILS_CFG_READER_HPP
 
 #include <filesystem>
+#include <list>
 #include <map>
 #include <string>
 
@@ -19,6 +20,8 @@ public:
 
     const value_t &get(const name_t &name) const;
     value_t get_or_default(const name_t &name, value_t &&default_value) const;
+
+    static std::list<std::string> parse_discovery_cluster(const std::string &cluster_list, const std::string &default_port = "9200", const std::string &url_prefix = "http://");
 private:
     using storage_t = std::map<name_t, value_t>;
 

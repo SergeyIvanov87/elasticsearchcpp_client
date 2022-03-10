@@ -437,6 +437,7 @@ request_collect_model_data(dispatcher &d, const char *file_path, Tracer tracer)
 }
 
 dispatcher::dispatcher(dispatcher_settings s, bool with_logs) :
+    settings(std::move(s)),
     use_logging(with_logs)
 {
     init_cluster_dispatchers();

@@ -14,6 +14,8 @@ public:
     using impl_t = elasticsearch::v7::delete_data::transaction;
     using response = elasticsearch::v7::delete_data::response;
 
+    static constexpr const char *name() { return "book/del"; }
+
     transaction(const std::string& host);
     ~transaction();
 

@@ -70,5 +70,28 @@ const cfg_reader::value_t &cfg_reader::get_impl(const name_t &name,  const stora
     }
     return it->second;
 }
+
+std::list<std::string> cfg_reader::parse_discovery_cluster(const std::string &cluster_list, const std::string &default_port, const std::string &url_prefix)
+{
+    std::list<std::string> ret;
+    const char *peer_it = get_next_char_not_if(cluster_list.c_str(), [] (const char *s) {return *s =='[' || *s=='"';});
+    while(peer_it && *peer_it)
+    {
+        const char *peer_next_it = get_next_char_if(peer_it + 1, [] (const char *s) {return *s =='"';});
+        if (peer_next_it && *peer_next_it)
+        {
+            if (!default_port.empty())
+            {
+                ret.push_back(url_prefix + std::string(peer_it, peer_next_it) + ":" + default_port);
+            }
+            else
+            {
+                ret.push_back(url_prefix + std::string(peer_it, peer_next_it));
+            }
+        }
+        peer_it = get_next_char_if(peer_next_it + 1, [] (const char *s) {return *s =='"';});
+    }
+    return ret;
+}
 } // namespace utils
 } // namespace bin

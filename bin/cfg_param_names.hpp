@@ -8,6 +8,7 @@ namespace v7
 extern const char *es_yml_default_path;
 extern const char *es_http_port;
 extern const char *es_network_host;
+extern const char *discovery_cluster;
 
 extern const char *schema_indices[];
 

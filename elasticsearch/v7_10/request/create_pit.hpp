@@ -24,6 +24,8 @@ class transaction: public elasticsearch::base::transaction
 public:
     using base_t = elasticsearch::base::transaction;
 
+    static constexpr const char *name() { return "v7/create_pit"; }
+
     transaction(const std::string& host);
     ~transaction();
 

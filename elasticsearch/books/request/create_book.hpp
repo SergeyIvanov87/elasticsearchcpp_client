@@ -17,6 +17,8 @@ public:
     using receiver = impl_t::receiver;
     using response = elasticsearch::v7::put_json_data::response;
 
+    static constexpr const char *name() { return "book/create"; }
+
     transaction(const std::string& host);
     ~transaction();
 

@@ -23,6 +23,8 @@ public:
     using base_t = elasticsearch::base::transaction;
     using receiver =  adapter::easy::StringStreamReceiver;
 
+    static constexpr const char *name() { return "v7/get_json_data"; }
+
     transaction(const std::string& host);
     ~transaction();
 
