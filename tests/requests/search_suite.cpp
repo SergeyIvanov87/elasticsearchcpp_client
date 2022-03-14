@@ -34,6 +34,42 @@ TEST(MustTagTest, init)
     ASSERT_EQ(node_1.dump(), R"({"must":[{"term":{"test_stub_leaf_bool.test_stub_leaf_string":"my_string_1"}},{"term":{"test_stub_leaf_bool.test_stub_leaf_int":22}},{"term":{"test_stub_leaf_bool":false}}]})");
 }
 
+template<class Parent>
+TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(CustomModelSerializer, Parent, ToJSON,
+                                                  ::model::must::ElementToQuery<CustomModel, StubLeafNode_bool>,
+                                                  ::model::must::ElementToQuery<CustomModel, StubLeafNode_int>,
+                                                  ::model::must::ElementToQuery<CustomModel, StubLeafNode_string>,
+                                                  ::model::must::ElementToQuery<CustomModel, CustomNode>)
+{
+    TXML_SERIALIZER_DISPATCHABLE_OBJECT
+
+    template<class Tracer>
+    void serialize_impl(const ::model::must::ElementToQuery<CustomModel, CustomNode> &val, Tracer tracer)
+    {
+        this->json_object_stack_helper->push(nlohmann::json::object({{::model::must::ElementToQuery<CustomModel, CustomNode>::class_name(),"aha!!!"}}));
+    }
+};
+
+
+TEST(MustTagCustomTest, init)
+{
+    using namespace elasticsearch::v7::search::tag;
+    auto must_param_0 = create::must_tag<CustomModel, StubLeafNode_bool, StubLeafNode_int,StubLeafNode_string, CustomNode>(
+                                                    true, 11, std::string("my_string_0"), CustomStruct{});
+    auto must_param_1 = create::must_tag<CustomModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string, CustomNode>(
+                                                    false, 22, std::string("my_string_1"), CustomStruct{});
+
+    txml::StdoutTracer tracer;
+    nlohmann::json node_0 = nlohmann::json::object();
+    must_param_0.custom_serialize<CustomModelSerializer>(node_0, tracer);
+    ASSERT_EQ(node_0.dump(), R"({"must":[{"term":{"test_stub_leaf_bool.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_leaf_bool.test_stub_leaf_int":11}},{"term":{"test_stub_leaf_bool":true}}]})");
+
+    nlohmann::json node_1 = nlohmann::json::object();
+    must_param_1.custom_serialize<CustomModelSerializer>(node_1, tracer);
+    std::cout << node_1.dump();
+    ASSERT_EQ(node_1.dump(), R"({"must":[{"term":{"test_stub_leaf_bool.test_stub_leaf_string":"my_string_1"}},{"term":{"test_stub_leaf_bool.test_stub_leaf_int":22}},{"term":{"test_stub_leaf_bool":false}}]})");
+}
+
 TEST(BooleanFromMustTagTest, init)
 {
     using namespace elasticsearch::v7::search::tag;
@@ -72,6 +108,22 @@ TEST(QueryTagWithBooleanFromMustNFilterTagTest, init)
     std::cout << node.dump();
 }
 
+
+/*
+TEST(QueryTagWithBooleanFromMustNFilterTagCustomSerializerTest, init)
+{
+    using namespace elasticsearch::v7::search::tag;
+    auto must_param = create::must_tag<CustomModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string, CustomNode>(true, 11, std::string("my_string_0"), CustomStruct {});
+    auto filter_param = create::filter_tag<CustomModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string, CustomNode>(false, 22, std::string("my_string_filter"), CustomStruct {});
+    auto boolean_param = create::boolean_tag<CustomModel>(must_param, filter_param);
+    auto query_param = create::query_tag<CustomModel>(boolean_param);
+    nlohmann::json node = nlohmann::json::object();
+    txml::StdoutTracer tracer;
+
+    query_param.template custom_serialize<CustomModelSerializer>(node, tracer);
+    std::cout << node.dump();
+}
+*/
 
 class SearchTagFixtureMatchAll : public ::testing::Test,
                          public Settings

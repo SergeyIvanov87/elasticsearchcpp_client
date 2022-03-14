@@ -32,7 +32,6 @@ TXML_PREPARE_SCHEMA_SERIALIZER_DISPATCHABLE_CLASS(to_schema, Parent, SchemaToJSO
     template<class Tracer>
     void serialize_schema_impl(txml::details::SchemaTag<Tags>, Tracer tracer)
     {
-        //this->json_object_stack_helper->push(nlohmann::json::object({{Tags::class_name(),{{"type", "text"}}}}));
         this->json_object_stack_helper->push(nlohmann::json::object(
         {
             {Tags::class_name(),{

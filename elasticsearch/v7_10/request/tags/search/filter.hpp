@@ -22,6 +22,9 @@ struct filter {
     template<class Parent>
     using serializer_parted_type = QueryFilterContextToJSONParted<Parent, Model, SpecificModelParams...>;
 
+    template<class Parent, template<typename> class CustomSerializer>
+    using custom_serializer_parted_type = /*???*/ QueryFilterContextToJSONParted<Parent, Model, SpecificModelParams...>;
+
     filter(typename SpecificModelParams::value_t &&...args)
     {
         auto elem = std::make_shared<filter_array_type_value_type>();

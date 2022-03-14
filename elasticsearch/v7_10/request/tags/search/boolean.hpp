@@ -57,6 +57,11 @@ struct boolean {
     using serializer_dispatcher_type  = txml::SerializerDispatcher<UpperLevels<Parent>..., serializer_parted_type<Parent>,
                                                                    typename SpecificBooleanParams::serializer_parted_type<Parent>...>;
 
+    template<template<typename>class CustomSerializer, class Parent, template<typename> class ...UpperLevels>
+    using custom_serializer_dispatcher_type  = txml::SerializerDispatcher<UpperLevels<Parent>..., serializer_parted_type<Parent>,
+                                                                   typename SpecificBooleanParams::custom_serializer_parted_type<Parent, CustomSerializer>...>;
+
+
     //      b) just syntax sugar to reduce template<template<template>> params
     //         because it do not know how to write it down just now...
     template<template<typename> class ...UpperLevels>
@@ -70,6 +75,20 @@ struct boolean {
         {
         }
     };
+
+    ////////////
+    template<template<typename> class CustomSerializer, template<typename> class ...UpperLevels>
+    struct custom_parent : public custom_serializer_dispatcher_type<CustomSerializer, custom_parent<CustomSerializer, UpperLevels...>, UpperLevels...>
+    {
+        using base_t = custom_serializer_dispatcher_type<CustomSerializer, custom_parent<CustomSerializer, UpperLevels...>, UpperLevels...>;
+
+        custom_parent(std::shared_ptr<std::stack<json::SerializerCore::json_core_t>> external_iterators_stack =
+               std::shared_ptr<std::stack<json::SerializerCore::json_core_t>>(new std::stack<json::SerializerCore::json_core_t>)) :
+        base_t(external_iterators_stack)
+        {
+        }
+    };
+    ////////////
 
     template<class ...BooleanParamsTagsPack>
     boolean(BooleanParamsTagsPack &&...args)

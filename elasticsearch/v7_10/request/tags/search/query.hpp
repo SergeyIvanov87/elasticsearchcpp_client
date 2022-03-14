@@ -57,6 +57,19 @@ struct query
     //          thus we must use std::apply ultimately
     using serializer_type = QueryContextToJSON;
 
+    /**************/
+    template <template<typename> class CustomSerializer>
+    struct CustomQueryContextToJSON : public std::tuple<typename SpecificQueryParams::custom_parent<CustomSerializer, QueryContextItself>...>
+    {
+        using base_t = std::tuple<typename SpecificQueryParams::custom_parent<CustomSerializer, QueryContextItself>...>;
+        using base_t::base_t;
+
+        CustomQueryContextToJSON(std::shared_ptr<std::stack<json::SerializerCore::json_core_t>> external_iterators_stack =
+                           std::shared_ptr<std::stack<json::SerializerCore::json_core_t>>(new std::stack<json::SerializerCore::json_core_t>)) :
+            base_t(typename SpecificQueryParams::custom_parent<CustomSerializer, QueryContextItself>(external_iterators_stack)...)
+            {}
+    };
+    /**************/
     template<class ...QueryParamsTagsPack>
     query(QueryParamsTagsPack &&...args)
     {
@@ -82,6 +95,18 @@ struct query
             ser. template finalize(to, tracer);
         }, static_cast<typename serializer_type::base_t&>(s));
     }
+
+    template <template<typename> class CustomSerializer, class Tracer = txml::EmptyTracer>
+    void custom_serialize(nlohmann::json& to, Tracer tracer = Tracer()) const
+    {
+        CustomQueryContextToJSON<CustomSerializer> s;
+        // here we go! use apply for tuple of serializers
+        std::apply([this, &tracer, &to] (auto &ser) {
+            instance.format_serialize(ser, tracer);
+            ser. template finalize(to, tracer);
+        }, static_cast<typename CustomQueryContextToJSON<CustomSerializer>::base_t&>(s));
+    }
+
     value_type instance;
 };
 

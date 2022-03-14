@@ -2,7 +2,7 @@
 #define ELASTICSEARCH_IMAGES_REQUEST_SEARCH_HPP
 
 #include "elasticsearch/v7_10/request/search.hpp"
-#include "elasticsearch/images/request/search_image_tags.hpp"
+#include "elasticsearch/images/request/search_image_specializations.hpp"
 #include "elasticsearch/v7_10/answer_model/object/KeepAlive.h"
 
 namespace elasticsearch

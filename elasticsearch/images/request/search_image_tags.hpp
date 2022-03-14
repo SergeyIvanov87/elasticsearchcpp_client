@@ -70,4 +70,5 @@ namespace create
 } // namespace search
 } // namespace image
 } // namespace elasticsearch
+
 #endif // ELASTICSEARCH_IMAGES_REQUEST_SEARCH_TAG_HPP

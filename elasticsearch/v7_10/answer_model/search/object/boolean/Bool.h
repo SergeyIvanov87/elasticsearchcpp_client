@@ -37,7 +37,7 @@ public:
 
     static constexpr std::string_view class_name()
     {
-        return "term";
+        return "terms"; //term -S- ???
     }
 
     static constexpr txml::TextReaderWrapper::NodeType class_node_type()

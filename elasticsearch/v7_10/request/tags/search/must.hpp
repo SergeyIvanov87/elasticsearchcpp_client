@@ -32,6 +32,25 @@ struct must
     template<class Parent>
     using serializer_parted_type = QueryMustContextToJSONParted<Parent, Model, SpecificModelParams...>;
 
+    template<class Parent, template<typename> class CustomSerializer>
+    using custom_serializer_parted_type = /*???*/ QueryMustContextToJSONParted<Parent, Model, SpecificModelParams...>;
+
+    template<class Parent>
+    using magic_custom_serializer_parted_type = /*???*/ MagicQueryMustContextToJSONParted<Parent, Model, SpecificModelParams...>;
+
+    template<template<typename> class CustomSerializer>
+    TXML_DECLARE_SERIALIZER_AGGREGATOR_CLASS(MustAggregatorSerializer,
+                                             magic_custom_serializer_parted_type<MustAggregatorSerializer<CustomSerializer>>,
+                                             CustomSerializer<MustAggregatorSerializer<CustomSerializer>>)
+    {
+        TXML_SERIALIZER_AGGREGATOR_OBJECT
+        MustAggregatorSerializer(std::shared_ptr<std::stack<json::SerializerCore::json_core_t>> external_iterators_stack =
+                           std::shared_ptr<std::stack<json::SerializerCore::json_core_t>>(new std::stack<json::SerializerCore::json_core_t>)) :
+            base_t(external_iterators_stack)
+        {
+        }
+    };
+
     must(typename SpecificModelParams::value_t &&...args)
     {
         auto elem = std::make_shared<must_array_type_value_type>();
@@ -53,6 +72,14 @@ struct must
     void serialize(nlohmann::json& to, Tracer tracer = Tracer()) const
     {
         serializer_type s;
+        instance_ptr->format_serialize(s, tracer);
+        s.finalize(to, tracer);
+    }
+
+    template <template<typename> class CustomSerializer, class Tracer = txml::EmptyTracer>
+    void custom_serialize(nlohmann::json& to, Tracer tracer = Tracer()) const
+    {
+        MustAggregatorSerializer<CustomSerializer> s;
         instance_ptr->format_serialize(s, tracer);
         s.finalize(to, tracer);
     }

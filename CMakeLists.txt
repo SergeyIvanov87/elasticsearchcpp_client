@@ -56,6 +56,7 @@ if (WITH_EASYEXIF)
                     ${EASYEXIF_PATH})
 endif()
 
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -ftemplate-backtrace-limit=0")
 set (CURL_CPP_WRAPPER_TARGET curl_cpp_wrapper)
 list (APPEND CURL_CPP_WRAPPER_SRC
                         sources/http_client/http_connection.cpp

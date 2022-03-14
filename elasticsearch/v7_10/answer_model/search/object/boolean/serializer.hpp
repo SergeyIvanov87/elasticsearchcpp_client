@@ -57,6 +57,22 @@ TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(QueryMustContextToJSONParted, Parent,
     }
 };
 
+template<class Parent, class Model, class ...SpecificQueryParams>
+TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(MagicQueryMustContextToJSONParted, Parent, ToJSON,
+                                                ::model::Must<Model, SpecificQueryParams...>,
+                                                    ::model::must::SpecificQueryArrayElement<Model, SpecificQueryParams...>,
+                                                        ::model::must::Term<Model, SpecificQueryParams>.../*,
+                                                        ::model::must::ElementToQuery<Model, SpecificQueryParams>...*/)
+{
+    TXML_SERIALIZER_DISPATCHABLE_OBJECT
+
+    template<class Tracer>
+    void serialize_impl(const ::model::must::SpecificQueryArrayElement<Model, SpecificQueryParams...> &val, Tracer tracer)
+    {
+        tracer.trace(__FUNCTION__, " - skipe SpecificQueryArrayElement by itself");
+        val.template format_serialize_elements(*this, tracer);
+    }
+};
 
 template<class Model, class ...SpecificQueryParams>
 struct QueryFilterContextToJSON : public ToJSON<QueryFilterContextToJSON<Model, SpecificQueryParams...>,
