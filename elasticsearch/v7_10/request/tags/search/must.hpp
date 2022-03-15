@@ -19,6 +19,50 @@ using namespace elasticsearch::v7::search;
 // must object declare match conditions for different `SpecificModelParams` elements,
 // which parts of `Model`
 // So, must incapsulate builder functionality to match `SpecificModelParams` in `Model` set
+namespace details
+{
+    class TermArg {};
+    class TermsArg {};
+}
+template<class T, class Base>
+struct RArg : Base {
+    using value_t = T;
+    RArg(T &&v) : m_arg(std::move(v)) {}
+    T&& m_arg;
+};
+template<class T, class Base>
+struct LArg : Base {
+    using value_t = T;
+    LArg(const T &v) : m_arg(v) {}
+    const T& m_arg;
+};
+
+template <class T>
+auto make_term(T &&arg)
+{
+    if constexpr (std::is_rvalue_reference_v<decltype(arg)>)
+    {
+        return RArg<typename std::decay<T>::type, details::TermArg>(std::move(arg));
+    }
+    else
+    {
+        return LArg<typename std::decay<T>::type, details::TermArg>(std::forward<T>(arg));
+    }
+}
+
+template <class T>
+auto make_terms(T &&arg)
+{
+    if constexpr (std::is_rvalue_reference_v<decltype(arg)>)
+    {
+        return RArg<typename std::decay<T>::type, details::TermsArg>(std::move(arg));
+    }
+    else
+    {
+        return LArg<typename std::decay<T>::type, details::TermsArg>(std::forward<T>(arg));
+    }
+}
+
 template<class Model, class ...SpecificModelParams>
 struct must
 {
@@ -50,7 +94,6 @@ struct must
         {
         }
     };
-
     must(typename SpecificModelParams::value_t &&...args)
     {
         auto elem = std::make_shared<must_array_type_value_type>();
@@ -66,6 +109,27 @@ struct must
 
         instance_ptr = std::make_shared<value_type>(std::initializer_list<std::shared_ptr<must_array_type_value_type>>{elem});
     }
+
+
+    template<class ...TermWrapper>
+    must(TermWrapper&&...args)
+    {
+        auto elem = std::make_shared<must_array_type_value_type>();
+
+        auto append = [&elem](auto&& val, auto is_same) mutable {
+            if (is_same)//std::is_same_v<std::decay_t<decltype(is_same)>, std::true_type>)
+            {
+                elem->template emplace<::model::must::Term<Model, std::decay_t<decltype(val)>>>()->template emplace<::model::must::ElementToQuery<Model, std::decay_t<decltype(val)>>>(val.getValue());
+            }
+            else //if constexpr(std::is_same_v<std::decay_t<decltype(is_same)>, std::false_type>)
+            {
+                elem->template emplace<::model::must::Terms<Model, std::decay_t<decltype(val)>>>()->template emplace<::model::must::ElementToQuery<Model, std::decay_t<decltype(val)>>>(val.getValue());
+            }
+        };
+        (append(args.m_arg, std::is_base_of_v<details::TermArg, std::decay_t<TermWrapper>>), ...);
+        instance_ptr = std::make_shared<value_type>(std::initializer_list<std::shared_ptr<must_array_type_value_type>>{elem});
+    }
+
     std::shared_ptr<value_type> instance_ptr;
 
     template <class Tracer = txml::EmptyTracer>
@@ -105,6 +169,22 @@ namespace create
     {
         return must<SpecificModelParams...> (std::forward<std::optional<typename SpecificModelParams::value_t>>(args)...);
     }
+
+    template<class Model, class ...SpecificModelParams>
+    must<Model, typename SpecificModelParams::value_t...> must_tag_term(SpecificModelParams &&...args)
+    {
+        return must<Model, typename SpecificModelParams::value_t...> (std::forward<SpecificModelParams>(args)...);
+    }
+/*
+    struct FooI {using value_t = int; value_t val;};
+    struct FooF {using value_t = float; value_t val;};
+    struct FooS {using value_t = std::string; value_t val;};
+    inline void foo()
+    {
+       must<FooI, FooF, FooS> f(make_term<FooI>(FooI{0}), make_term<FooF>(FooF{0.0f}), make_term<FooS>(FooS{std::string("ss")}));
+       (void)f;
+
+    }*/
 } // namespace create
 } // namespace tag
 } // namespace search

@@ -37,7 +37,27 @@ public:
 
     static constexpr std::string_view class_name()
     {
-        return "terms"; //term -S- ???
+        return "term";
+    }
+
+    static constexpr txml::TextReaderWrapper::NodeType class_node_type()
+    {
+        return txml::TextReaderWrapper::NodeType::Element;
+    }
+};
+
+
+template<class Model, class QueryElement>
+class Terms : public txml::XMLNode<Terms<Model, QueryElement>,
+                                       ElementToQuery<Model, QueryElement>>
+{
+public:
+    using base_t = txml::XMLNode<Terms<Model, QueryElement>,
+                                 ElementToQuery<Model, QueryElement>>;
+
+    static constexpr std::string_view class_name()
+    {
+        return "terms";
     }
 
     static constexpr txml::TextReaderWrapper::NodeType class_node_type()
@@ -49,11 +69,13 @@ public:
 
 template<class Model, class ...SortedElements>
 class SpecificQueryArrayElement : public txml::XMLNode<SpecificQueryArrayElement<Model, SortedElements...>,
-                                                       Term<Model, SortedElements>...>
+                                                       Term<Model, SortedElements>...,
+                                                       Terms<Model, SortedElements>...>
 {
 public:
     using base_t = txml::XMLNode<SpecificQueryArrayElement<Model, SortedElements...>,
-                                 Term<Model, SortedElements>...>;
+                                 Term<Model, SortedElements>...,
+                                 Terms<Model, SortedElements>...>;
 
     static constexpr std::string_view class_name()
     {

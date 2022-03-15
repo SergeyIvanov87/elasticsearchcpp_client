@@ -18,6 +18,7 @@ struct QueryMustContextToJSON : public ToJSON<QueryMustContextToJSON<Model, Spec
                                                 ::model::Must<Model, SpecificQueryParams...>,
                                                     ::model::must::SpecificQueryArrayElement<Model, SpecificQueryParams...>,
                                                         ::model::must::Term<Model, SpecificQueryParams>...,
+                                                        ::model::must::Terms<Model, SpecificQueryParams>...,
                                                         ::model::must::ElementToQuery<Model, SpecificQueryParams>...,
                                                 SpecificQueryParams...>
 {
@@ -25,6 +26,7 @@ struct QueryMustContextToJSON : public ToJSON<QueryMustContextToJSON<Model, Spec
                                 ::model::Must<Model, SpecificQueryParams...>,
                                         ::model::must::SpecificQueryArrayElement<Model, SpecificQueryParams...>,
                                                 ::model::must::Term<Model, SpecificQueryParams>...,
+                                                ::model::must::Terms<Model, SpecificQueryParams>...,
                                                 ::model::must::ElementToQuery<Model, SpecificQueryParams>...,
                                             SpecificQueryParams...>;
     using base_t::base_t;
@@ -44,6 +46,7 @@ TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(QueryMustContextToJSONParted, Parent,
                                                 ::model::Must<Model, SpecificQueryParams...>,
                                                     ::model::must::SpecificQueryArrayElement<Model, SpecificQueryParams...>,
                                                         ::model::must::Term<Model, SpecificQueryParams>...,
+                                                        ::model::must::Terms<Model, SpecificQueryParams>...,
                                                         ::model::must::ElementToQuery<Model, SpecificQueryParams>...,
                                                 SpecificQueryParams...)
 {
@@ -61,7 +64,8 @@ template<class Parent, class Model, class ...SpecificQueryParams>
 TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(MagicQueryMustContextToJSONParted, Parent, ToJSON,
                                                 ::model::Must<Model, SpecificQueryParams...>,
                                                     ::model::must::SpecificQueryArrayElement<Model, SpecificQueryParams...>,
-                                                        ::model::must::Term<Model, SpecificQueryParams>.../*,
+                                                        ::model::must::Term<Model, SpecificQueryParams>...,
+                                                        ::model::must::Terms<Model, SpecificQueryParams>.../*,
                                                         ::model::must::ElementToQuery<Model, SpecificQueryParams>...*/)
 {
     TXML_SERIALIZER_DISPATCHABLE_OBJECT
@@ -79,6 +83,7 @@ struct QueryFilterContextToJSON : public ToJSON<QueryFilterContextToJSON<Model, 
                                                 ::model::Filter<Model, SpecificQueryParams...>,
                                                     ::model::filter::SpecificQueryArrayElement<Model, SpecificQueryParams...>,
                                                         ::model::filter::Term<Model, SpecificQueryParams>...,
+                                                        //::model::filter::Terms<Model, SpecificQueryParams>...,
                                                         ::model::filter::ElementToQuery<Model, SpecificQueryParams>...,
                                                 SpecificQueryParams...>
 {
@@ -86,6 +91,7 @@ struct QueryFilterContextToJSON : public ToJSON<QueryFilterContextToJSON<Model, 
                                 ::model::Filter<Model, SpecificQueryParams...>,
                                         ::model::filter::SpecificQueryArrayElement<Model, SpecificQueryParams...>,
                                                 ::model::filter::Term<Model, SpecificQueryParams>...,
+                                                //::model::filter::Terms<Model, SpecificQueryParams>...,
                                                 ::model::filter::ElementToQuery<Model, SpecificQueryParams>...,
                                             SpecificQueryParams...>;
     using base_t::base_t;
@@ -104,6 +110,7 @@ TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(QueryFilterContextToJSONParted, Paren
                                                 ::model::Filter<Model, SpecificQueryParams...>,
                                                     ::model::filter::SpecificQueryArrayElement<Model, SpecificQueryParams...>,
                                                         ::model::filter::Term<Model, SpecificQueryParams>...,
+                                                  //      ::model::filter::Terms<Model, SpecificQueryParams>...,
                                                         ::model::filter::ElementToQuery<Model, SpecificQueryParams>...,
                                                 SpecificQueryParams...)
 {
