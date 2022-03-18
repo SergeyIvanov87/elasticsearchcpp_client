@@ -19,47 +19,28 @@ using namespace elasticsearch::v7::search;
 // must object declare match conditions for different `SpecificModelParams` elements,
 // which parts of `Model`
 // So, must incapsulate builder functionality to match `SpecificModelParams` in `Model` set
+class Term {};
+class Terms {};
+
 namespace details
 {
-    class TermArg {};
-    class TermsArg {};
-}
 template<class T, class Base>
-struct RArg : Base {
-    using value_t = T;
-    RArg(T &&v) : m_arg(std::move(v)) {}
+struct CArg : Base {
+    using value_t = std::decay_t<T>;
+    CArg(T&& v) : m_arg(std::forward<T>(v)) {}
     T&& m_arg;
 };
-template<class T, class Base>
-struct LArg : Base {
-    using value_t = T;
-    LArg(const T &v) : m_arg(v) {}
-    const T& m_arg;
-};
-
-template <class T>
-auto make_term(T &&arg)
-{
-    if constexpr (std::is_rvalue_reference_v<decltype(arg)>)
-    {
-        return RArg<typename std::decay<T>::type, details::TermArg>(std::move(arg));
-    }
-    else
-    {
-        return LArg<typename std::decay<T>::type, details::TermArg>(std::forward<T>(arg));
-    }
 }
-
-template <class T>
-auto make_terms(T &&arg)
+template <class TTag, class T>
+auto make(T&& arg)
 {
-    if constexpr (std::is_rvalue_reference_v<decltype(arg)>)
+    if constexpr (std::is_same_v<TTag, elasticsearch::v7::search::tag::Term>)
     {
-        return RArg<typename std::decay<T>::type, details::TermsArg>(std::move(arg));
+        return details::CArg<T&&, elasticsearch::v7::search::tag::Term>(std::forward<T>(arg));
     }
     else
     {
-        return LArg<typename std::decay<T>::type, details::TermsArg>(std::forward<T>(arg));
+        return details::CArg<T&&, elasticsearch::v7::search::tag::Terms>(std::forward<T>(arg));
     }
 }
 
@@ -114,19 +95,52 @@ struct must
     template<class ...TermWrapper>
     must(TermWrapper&&...args)
     {
+        static_assert(std::disjunction_v<std::is_base_of<Term, TermWrapper>...> ||
+                      std::disjunction_v<std::is_base_of<Terms, TermWrapper>...>,
+                      "TermWrapper must wrap Term or TermArgs ");
+
         auto elem = std::make_shared<must_array_type_value_type>();
 
         auto append = [&elem](auto&& val, auto is_same) mutable {
-            if (is_same)//std::is_same_v<std::decay_t<decltype(is_same)>, std::true_type>)
+            using value_type = std::decay_t<decltype(val)>;
+            if (is_same)
             {
-                elem->template emplace<::model::must::Term<Model, std::decay_t<decltype(val)>>>()->template emplace<::model::must::ElementToQuery<Model, std::decay_t<decltype(val)>>>(val.getValue());
+                elem->template emplace<::model::must::Term<Model, value_type>>()->template emplace<::model::must::ElementToQuery<Model, value_type>>(val.getValue());
             }
-            else //if constexpr(std::is_same_v<std::decay_t<decltype(is_same)>, std::false_type>)
+            else
             {
-                elem->template emplace<::model::must::Terms<Model, std::decay_t<decltype(val)>>>()->template emplace<::model::must::ElementToQuery<Model, std::decay_t<decltype(val)>>>(val.getValue());
+                elem->template emplace<::model::must::Terms<Model, value_type>>()->template emplace<::model::must::ElementToQuery<Model, value_type>>(val.getValue());
             }
         };
-        (append(args.m_arg, std::is_base_of_v<details::TermArg, std::decay_t<TermWrapper>>), ...);
+        (append(args.m_arg, std::is_base_of_v<Term, std::decay_t<TermWrapper>>), ...);
+        instance_ptr = std::make_shared<value_type>(std::initializer_list<std::shared_ptr<must_array_type_value_type>>{elem});
+    }
+
+    template<class ...TermWrapper>
+    must(const std::optional<TermWrapper>&...args)
+    {
+        static_assert(std::disjunction_v<std::is_base_of<Term, TermWrapper>...> ||
+                      std::disjunction_v<std::is_base_of<Terms, TermWrapper>...>,
+                      "TermWrapper must wrap Term or TermArgs ");
+
+        auto elem = std::make_shared<must_array_type_value_type>();
+
+        auto append = [&elem](auto&& val, auto is_same) mutable {
+            if (val.has_value())
+            {
+                using optional_type = typename std::decay_t<decltype(val)>::value_type ;
+                using value_type = typename optional_type::value_t ;
+                if (is_same)
+                {
+                    elem->template emplace<::model::must::Term<Model, value_type>>()->template emplace<::model::must::ElementToQuery<Model, value_type>>(val.value().m_arg.getValue());
+                }
+                else
+                {
+                    elem->template emplace<::model::must::Terms<Model, value_type>>()->template emplace<::model::must::ElementToQuery<Model, value_type>>(val.value().m_arg.getValue());
+                }
+            }
+        };
+        (append(args, std::is_base_of_v<elasticsearch::v7::search::tag::Term, std::decay_t<TermWrapper>>), ...);
         instance_ptr = std::make_shared<value_type>(std::initializer_list<std::shared_ptr<must_array_type_value_type>>{elem});
     }
 
@@ -171,20 +185,16 @@ namespace create
     }
 
     template<class Model, class ...SpecificModelParams>
-    must<Model, typename SpecificModelParams::value_t...> must_tag_term(SpecificModelParams &&...args)
+    must<Model, typename SpecificModelParams::value_t...> must_tag_ext(SpecificModelParams &&...args)
     {
         return must<Model, typename SpecificModelParams::value_t...> (std::forward<SpecificModelParams>(args)...);
     }
-/*
-    struct FooI {using value_t = int; value_t val;};
-    struct FooF {using value_t = float; value_t val;};
-    struct FooS {using value_t = std::string; value_t val;};
-    inline void foo()
-    {
-       must<FooI, FooF, FooS> f(make_term<FooI>(FooI{0}), make_term<FooF>(FooF{0.0f}), make_term<FooS>(FooS{std::string("ss")}));
-       (void)f;
 
-    }*/
+    template<class Model, class ...SpecificModelParams>
+    must<Model, typename SpecificModelParams::value_t...> must_tag_ext(const std::optional<SpecificModelParams> &...args)
+    {
+        return must<Model, typename SpecificModelParams::value_t...> (args...);
+    }
 } // namespace create
 } // namespace tag
 } // namespace search

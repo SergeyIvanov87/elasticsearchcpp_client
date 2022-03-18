@@ -37,20 +37,20 @@ TEST(MustTagTest, init)
 TEST(MustTagTermTest, init)
 {
     using namespace elasticsearch::v7::search::tag;
-    auto must_param_0 = create::must_tag_term<StubModel>(
-                                                    make_term(StubLeafNode_bool{true}),
-                                                    make_term(StubLeafNode_int{11}),
-                                                    make_term(StubLeafNode_string{std::string("my_string_0")}));
+    auto must_param_0 = create::must_tag_ext<StubModel>(
+                                                    make<Term>(StubLeafNode_bool{true}),
+                                                    make<Term>(StubLeafNode_int{11}),
+                                                    make<Term>(StubLeafNode_string{std::string("my_string_0")}));
 
-    auto must_param_1 = create::must_tag_term<StubModel>(
-                                                    make_terms(StubLeafNode_bool{false}),
-                                                    make_terms(StubLeafNode_int{22}),
-                                                    make_terms(StubLeafNode_string{std::string("my_string_1")}));
+    auto must_param_1 = create::must_tag_ext<StubModel>(
+                                                    make<Terms>(StubLeafNode_bool{false}),
+                                                    make<Terms>(StubLeafNode_int{22}),
+                                                    make<Terms>(StubLeafNode_string{std::string("my_string_1")}));
 
-    auto must_param_2 = create::must_tag_term<StubModel>(
-                                                    make_term(StubLeafNode_bool{true}),
-                                                    make_terms(StubLeafNode_int{33}),
-                                                    make_term(StubLeafNode_string{std::string("my_string_2")}));
+    auto must_param_2 = create::must_tag_ext<StubModel>(
+                                                    make<Term>(StubLeafNode_bool{true}),
+                                                    make<Terms>(StubLeafNode_int{33}),
+                                                    make<Term>(StubLeafNode_string{std::string("my_string_2")}));
 
 
 

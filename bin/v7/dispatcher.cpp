@@ -34,6 +34,17 @@ get_match_tag_param(const std::map<std::string, std::string> &data_storage, cons
     return {};
 }
 
+template <class Element, class ElementValue, class ...Args>
+std::optional<Element> get_match_elem(const std::map<std::string, std::string> &data_storage, Args&& ...args)
+{
+    if (auto it = data_storage.find(std::string(Element::class_name())); it != data_storage.end())
+    {
+        return std::optional<Element>(ElementValue{it->second, std::forward<Args>(args)...});
+    }
+    return {};
+}
+
+
 template<class Model>
 using record_t = std::pair<std::string, std::shared_ptr<Model>>;
 
@@ -133,21 +144,22 @@ request_book_search_match(const dispatcher &d,
     }
     else
     {
-        auto mu = tag::create::must_tag<BOOK_DATA_MODEL_ELEMENTS,
-                                        COMMON_DATA_MODEL_ELEMENTS>(details::get_match_param<element::Contributor, std::string>(match_params),
-                                                                    details::get_match_param<element::Creator, std::string>(match_params),
-                                                                    details::get_match_param<element::Identifier, std::string>(match_params),
-                                                                    details::get_match_param<element::Language, std::string>(match_params),
-                                                                    details::get_match_param<element::Title, std::string>(match_params),
-                                                                    details::get_match_param<elasticsearch::common_model::BinaryBlob, std::string>(match_params),
-                                                                    details::get_match_param<elasticsearch::common_model::CreationDateTime, std::string>(match_params),
-                                                                    details::get_match_param<elasticsearch::common_model::Description, std::string>(match_params),
-                                                                    details::get_match_param<elasticsearch::common_model::Format, std::string>(match_params),
-                                                                    details::get_match_param<elasticsearch::common_model::OriginalPath, std::string>(match_params),
-                                                                    details::get_match_param<elasticsearch::common_model::Preview, std::string>(match_params),
-                                                                    details::get_match_param<elasticsearch::common_model::SourceName, std::string>(match_params),
-                                                                    /*std::optional<std::list<std::string>>{}*/
-                                                                    details::get_match_tag_param(match_params, ","));
+        auto mu = tag::create::must_tag_ext(
+                                            tag::create::details::make(details::get_match_elem<element::Contributor, std::string>(match_params)),
+                                            tag::create::details::make(details::get_match_elem<element::Creator, std::string>(match_params)),
+                                            tag::create::details::make(details::get_match_elem<element::Identifier, std::string>(match_params)),
+                                            tag::create::details::make(details::get_match_elem<element::Language, std::string>(match_params)),
+                                            tag::create::details::make(details::get_match_elem<element::Title, std::string>(match_params)),
+                                            tag::create::details::make(details::get_match_elem<elasticsearch::common_model::BinaryBlob, std::string>(match_params)),
+                                            tag::create::details::make(details::get_match_elem<elasticsearch::common_model::CreationDateTime, std::string>(match_params)),
+                                            tag::create::details::make(details::get_match_elem<elasticsearch::common_model::Description, std::string>(match_params)),
+                                            tag::create::details::make(details::get_match_elem<elasticsearch::common_model::Format, std::string>(match_params)),
+                                            tag::create::details::make(details::get_match_elem<elasticsearch::common_model::OriginalPath, std::string>(match_params)),
+                                            tag::create::details::make(details::get_match_elem<elasticsearch::common_model::Preview, std::string>(match_params)),
+                                            tag::create::details::make(details::get_match_elem<elasticsearch::common_model::SourceName, std::string>(match_params)),
+                                            /*std::optional<std::list<std::string>>{}*/
+                                            //tag::create::details::make(details::get_match_tag_param(match_params, ","))
+                                            tag::create::details::make(details::get_match_elem<elasticsearch::common_model::Tags, elasticsearch::common_model::Tags>(match_params, ",")));
         auto boo = tag::create::boolean_tag(mu);
         search_ptr = d.execute_request<transaction>(schema_indices[0], schema_indices[0],
                                                     max_count, pit_interval,
