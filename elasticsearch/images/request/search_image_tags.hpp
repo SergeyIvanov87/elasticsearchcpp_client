@@ -16,17 +16,36 @@ using namespace elasticsearch::image::search;
 
 template<class ...SpecificModelParams>
 using must = elasticsearch::v7::search::tag::must<elasticsearch::image::model::data, SpecificModelParams...>;
+
+template <class T>
+inline auto make(const std::optional<T> &arg)
+{
+    return elasticsearch::v7::search::tag::make<elasticsearch::v7::search::tag::Term>(arg);
+}
+
+inline auto make(const std::optional<elasticsearch::common_model::Tags> &arg)
+{
+    return elasticsearch::v7::search::tag::make<elasticsearch::v7::search::tag::Terms>(arg);
+}
+
+template <class T, class ...Args>
+inline auto make(Args&&...args)
+{
+    return make(std::optional<T>(std::forward<Args>(args)...));
+}
+
 namespace create
 {
     template<class ...SpecificModelParams>
-    must<SpecificModelParams...> must_tag(typename SpecificModelParams::value_t &&...args)
+    must<typename SpecificModelParams::value_t...> must_tag(SpecificModelParams &&...args)
     {
-        return must<SpecificModelParams...> (std::forward<typename SpecificModelParams::value_t>(args)...);
+        return must<typename SpecificModelParams::value_t...> (std::forward<SpecificModelParams>(args)...);
     }
+
     template<class ...SpecificModelParams>
-    must<SpecificModelParams...> must_tag(std::optional<typename SpecificModelParams::value_t> &&...args)
+    must<typename SpecificModelParams::value_t...> must_tag(const std::optional<SpecificModelParams> &...args)
     {
-        return must<SpecificModelParams...> (std::forward<std::optional<typename SpecificModelParams::value_t>>(args)...);
+        return must<typename SpecificModelParams::value_t...> (args...);
     }
 } // namespace create
 

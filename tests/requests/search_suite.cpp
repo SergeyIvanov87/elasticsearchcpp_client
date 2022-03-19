@@ -18,10 +18,12 @@ namespace tests
 TEST(MustTagTest, init)
 {
     using namespace elasticsearch::v7::search::tag;
-    auto must_param_0 = create::must_tag<StubModel, StubLeafNode_bool, StubLeafNode_int,StubLeafNode_string>(
-                                                    true, 11, std::string("my_string_0"));
-    auto must_param_1 = create::must_tag<StubModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string>(
-                                                    false, 22, std::string("my_string_1"));
+    auto must_param_0 = create::must_tag<StubModel>(make<Term, StubLeafNode_bool>(true),
+                                                    make<Term, StubLeafNode_int>(11),
+                                                    make<Term, StubLeafNode_string>(std::string("my_string_0")));
+    auto must_param_1 = create::must_tag<StubModel>(make<Term, StubLeafNode_bool>(false),
+                                                    make<Term, StubLeafNode_int>(22),
+                                                    make<Term, StubLeafNode_string>(std::string("my_string_1")));
 
     txml::StdoutTracer tracer;
     nlohmann::json node_0 = nlohmann::json::object();
@@ -37,18 +39,15 @@ TEST(MustTagTest, init)
 TEST(MustTagTermTest, init)
 {
     using namespace elasticsearch::v7::search::tag;
-    auto must_param_0 = create::must_tag_ext<StubModel>(
-                                                    make<Term>(StubLeafNode_bool{true}),
+    auto must_param_0 = create::must_tag<StubModel>(make<Term>(StubLeafNode_bool{true}),
                                                     make<Term>(StubLeafNode_int{11}),
                                                     make<Term>(StubLeafNode_string{std::string("my_string_0")}));
 
-    auto must_param_1 = create::must_tag_ext<StubModel>(
-                                                    make<Terms>(StubLeafNode_bool{false}),
+    auto must_param_1 = create::must_tag<StubModel>(make<Terms>(StubLeafNode_bool{false}),
                                                     make<Terms>(StubLeafNode_int{22}),
                                                     make<Terms>(StubLeafNode_string{std::string("my_string_1")}));
 
-    auto must_param_2 = create::must_tag_ext<StubModel>(
-                                                    make<Term>(StubLeafNode_bool{true}),
+    auto must_param_2 = create::must_tag<StubModel>(make<Term>(StubLeafNode_bool{true}),
                                                     make<Terms>(StubLeafNode_int{33}),
                                                     make<Term>(StubLeafNode_string{std::string("my_string_2")}));
 
@@ -91,10 +90,14 @@ TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(CustomModelSerializer, Parent, ToJSON
 TEST(MustTagCustomTest, init)
 {
     using namespace elasticsearch::v7::search::tag;
-    auto must_param_0 = create::must_tag<CustomModel, StubLeafNode_bool, StubLeafNode_int,StubLeafNode_string, CustomNode>(
-                                                    true, 11, std::string("my_string_0"), CustomStruct{});
-    auto must_param_1 = create::must_tag<CustomModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string, CustomNode>(
-                                                    false, 22, std::string("my_string_1"), CustomStruct{});
+    auto must_param_0 = create::must_tag<CustomModel>(make<Term, StubLeafNode_bool>(true),
+                                                      make<Term, StubLeafNode_int>(11),
+                                                      make<Term, StubLeafNode_string>(std::string("my_string_0")),
+                                                      make<Term, CustomNode>(CustomStruct{}));
+    auto must_param_1 = create::must_tag<CustomModel>(make<Term, StubLeafNode_bool>(false),
+                                                      make<Term, StubLeafNode_int>(22),
+                                                      make<Term, StubLeafNode_string>(std::string("my_string_1")),
+                                                      make<Term, CustomNode>(CustomStruct{}));
 
     txml::StdoutTracer tracer;
     nlohmann::json node_0 = nlohmann::json::object();
@@ -110,7 +113,9 @@ TEST(MustTagCustomTest, init)
 TEST(BooleanFromMustTagTest, init)
 {
     using namespace elasticsearch::v7::search::tag;
-    auto must_param = create::must_tag<StubModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string>(true, 11, std::string("my_string_0"));
+    auto must_param = create::must_tag<StubModel>(make<Term>(StubLeafNode_bool{true}),
+                                                  make<Term>(StubLeafNode_int{11}),
+                                                  make<Term>(StubLeafNode_string{std::string("my_string_0")}));
 
     auto boolean_param = create::boolean_tag<StubModel>(must_param);
     nlohmann::json node = nlohmann::json::object();
@@ -122,7 +127,9 @@ TEST(BooleanFromMustTagTest, init)
 TEST(BooleanFromMustNFilterTagTest, init)
 {
     using namespace elasticsearch::v7::search::tag;
-    auto must_param = create::must_tag<StubModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string>(true, 11, std::string("my_string_0"));
+    auto must_param = create::must_tag<StubModel>(make<Term>(StubLeafNode_bool{true}),
+                                                  make<Term>(StubLeafNode_int{11}),
+                                                  make<Term>(StubLeafNode_string{std::string("my_string_0")}));
     auto filter_param = create::filter_tag<StubModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string>(false, 22, std::string("my_string_filter"));
 
     auto boolean_param = create::boolean_tag<StubModel>(must_param, filter_param);
@@ -135,7 +142,9 @@ TEST(BooleanFromMustNFilterTagTest, init)
 TEST(QueryTagWithBooleanFromMustNFilterTagTest, init)
 {
     using namespace elasticsearch::v7::search::tag;
-    auto must_param = create::must_tag<StubModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string>(true, 11, std::string("my_string_0"));
+    auto must_param = create::must_tag<StubModel>(make<Term>(StubLeafNode_bool{true}),
+                                                  make<Term>(StubLeafNode_int{11}),
+                                                  make<Term>(StubLeafNode_string{std::string("my_string_0")}));
     auto filter_param = create::filter_tag<StubModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string>(false, 22, std::string("my_string_filter"));
     auto boolean_param = create::boolean_tag<StubModel>(must_param, filter_param);
     auto query_param = create::query_tag<StubModel>(boolean_param);
@@ -241,7 +250,9 @@ TEST_F(SearchTagFixtureComplex, request_create_match_all)
     ASSERT_TRUE(pit.getValue<model::Id>());
 
     txml::StdoutTracer tracer;
-    auto must_param = search::tag::create::must_tag<StubModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string>(true, 11, std::string("my_string_0"));
+    auto must_param = search::tag::create::must_tag<StubModel>(search::tag::make<search::tag::Term>(StubLeafNode_bool{true}),
+                                                               search::tag::make<search::tag::Term>(StubLeafNode_int{11}),
+                                                               search::tag::make<search::tag::Term>(StubLeafNode_string{std::string("my_string_0")}));
     auto filter_param = search::tag::create::filter_tag<StubModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string>(false, 22, std::string("my_string_filter"));
     auto boolean_param = search::tag::create::boolean_tag<StubModel>(must_param, filter_param);
 

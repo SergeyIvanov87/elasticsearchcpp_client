@@ -16,56 +16,35 @@ using namespace elasticsearch::book::search;
 
 template<class ...SpecificModelParams>
 using must = elasticsearch::v7::search::tag::must<elasticsearch::book::model::data, SpecificModelParams...>;
+
+
+template <class T>
+inline auto make(const std::optional<T> &arg)
+{
+    return elasticsearch::v7::search::tag::make<elasticsearch::v7::search::tag::Term>(arg);
+}
+
+inline auto make(const std::optional<elasticsearch::common_model::Tags> &arg)
+{
+    return elasticsearch::v7::search::tag::make<elasticsearch::v7::search::tag::Terms>(arg);
+}
+
+template <class T, class ...Args>
+inline auto make(Args &&...args)
+{
+    return make(std::optional<T>(std::forward<Args>(args)...));
+}
+
 namespace create
 {
-namespace details
-{
-template <class T, class V>
-std::optional<elasticsearch::v7::search::tag::details::CArg<T&&, elasticsearch::v7::search::tag::Term>> make_tag(const std::optional<V> &arg)
-{
-    using t_t = elasticsearch::v7::search::tag::Term;
-        return arg.has_value() ?  elasticsearch::v7::search::tag::make<t_t>(T{V{arg.value()}}) :
-                std::optional<elasticsearch::v7::search::tag::details::CArg<T&&, t_t>>{};
-}
-template <class T>
-inline std::optional<elasticsearch::v7::search::tag::details::CArg<const T&, elasticsearch::v7::search::tag::Term>> make(const std::optional<T> &arg)
-{
-    using t_t = elasticsearch::v7::search::tag::Term;
-        return arg.has_value() ?  elasticsearch::v7::search::tag::make<t_t>(arg.value()) :
-                std::optional<elasticsearch::v7::search::tag::details::CArg<const T&, t_t>>{};
-}
-
-
-inline std::optional<elasticsearch::v7::search::tag::details::CArg<const elasticsearch::common_model::Tags&, elasticsearch::v7::search::tag::Terms>> make(const std::optional<elasticsearch::common_model::Tags> &arg)
-{
-    using t_t = elasticsearch::v7::search::tag::Terms;
-        return arg.has_value() ?  elasticsearch::v7::search::tag::make<t_t>(arg.value()) :
-                std::optional<elasticsearch::v7::search::tag::details::CArg<const elasticsearch::common_model::Tags&, t_t>>{};
-}
-}
     template<class ...SpecificModelParams>
-    must<SpecificModelParams...> must_tag(typename SpecificModelParams::value_t &&...args)
-    {
-        return must<SpecificModelParams...> (std::forward<typename SpecificModelParams::value_t>(args)...);
-    }
-
-    template<class ...SpecificModelParams>
-    must<typename SpecificModelParams::value_t...> must_tag_ext(const std::optional<SpecificModelParams> &...args);
-
-    template<class ...SpecificModelParams>
-    must<SpecificModelParams...> must_tag(const std::optional<typename SpecificModelParams::value_t>&...args)
-    {
-        return must_tag_ext(details::make_tag<SpecificModelParams>(args)...);
-    }
-
-    template<class ...SpecificModelParams>
-    must<typename SpecificModelParams::value_t...> must_tag_ext(SpecificModelParams &&...args)
+    must<typename SpecificModelParams::value_t...> must_tag(SpecificModelParams &&...args)
     {
         return must<typename SpecificModelParams::value_t...> (std::forward<SpecificModelParams>(args)...);
     }
 
     template<class ...SpecificModelParams>
-    must<typename SpecificModelParams::value_t...> must_tag_ext(const std::optional<SpecificModelParams> &...args)
+    must<typename SpecificModelParams::value_t...> must_tag(const std::optional<SpecificModelParams> &...args)
     {
         return must<typename SpecificModelParams::value_t...> (args...);
     }
