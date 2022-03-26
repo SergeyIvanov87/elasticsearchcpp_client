@@ -29,7 +29,7 @@ template<class T, class Base>
 struct CArg : Base, TermKind {
     using value_t = std::decay_t<T>;
     CArg(T&& v) : m_arg(std::forward<T>(v)) {}
-    T&& m_arg;
+    T m_arg;
 };
 }
 template <class TTag, class T>
@@ -40,17 +40,23 @@ std::enable_if_t<true, details::CArg<T&&, TTag>> make(T&& arg)
 }
 
 template <class TTag, class T>
-std::optional<elasticsearch::v7::search::tag::details::CArg<const T&, TTag>> make(const std::optional<T> &arg)
+inline std::optional<elasticsearch::v7::search::tag::details::CArg<const T&, TTag>> make(const std::optional<T> &arg)
 {
         return arg.has_value() ?  elasticsearch::v7::search::tag::make<TTag>(arg.value()) :
                 std::optional<elasticsearch::v7::search::tag::details::CArg<const T&, TTag>>{};
 }
 
-template <class TTag, class T, class ...Args>
-inline std::optional<elasticsearch::v7::search::tag::details::CArg<const T&, TTag>> make(Args&&...args)
+template <class TTag, class T>
+inline std::optional<elasticsearch::v7::search::tag::details::CArg<T, TTag>> make(std::optional<T> &&arg)
 {
-    std::optional<T> opt(std::forward<Args>(args)...);
-    return make<TTag, T>(opt);
+        return arg.has_value() ? std::optional<elasticsearch::v7::search::tag::details::CArg<T, TTag>>(elasticsearch::v7::search::tag::details::CArg<T, TTag>(std::move(arg.value()))) : //elasticsearch::v7::search::tag::make<TTag, T>(std::move(arg.value())) :
+                std::optional<elasticsearch::v7::search::tag::details::CArg<T, TTag>>{};
+}
+
+template <class TTag, class T, class U, class ...Args>
+inline typename std::enable_if<not std::is_same_v<std::decay_t<U>, std::optional<T>>, std::optional<elasticsearch::v7::search::tag::details::CArg<T, TTag>>>::type make(U&& arg1, Args&&...args)
+{
+    return make<TTag, T>( std::optional<T> {std::forward<U>(arg1), std::forward<Args>(args)...});
 }
 
 template<class Model, class ...SpecificModelParams>
@@ -135,6 +141,34 @@ struct must
         instance_ptr = std::make_shared<value_type>(std::initializer_list<std::shared_ptr<must_array_type_value_type>>{elem});
     }
 
+     template<class ...TermWrapper>
+    must(std::optional<TermWrapper>&&...args)
+    {
+        static_assert(std::disjunction_v<std::is_base_of<TermKind, TermWrapper>...>,
+                      "TermWrapper must wrap Term or TermArgs ");
+
+        auto elem = std::make_shared<must_array_type_value_type>();
+
+        auto append = [&elem](auto&& val, auto is_same) mutable {
+            if (val.has_value())
+            {
+                using optional_type = typename std::decay_t<decltype(val)>::value_type ;
+                using value_type = typename optional_type::value_t ;
+
+                const value_type& arg = val.value().m_arg;
+                if (is_same)
+                {
+                    elem->template emplace<::model::must::Term<Model, value_type>>()->template emplace<::model::must::ElementToQuery<Model, value_type>>(arg.getValue());
+                }
+                else
+                {
+                    elem->template emplace<::model::must::Terms<Model, value_type>>()->template emplace<::model::must::ElementToQuery<Model, value_type>>(arg.getValue());
+                }
+            }
+        };
+        (append(std::move(args), std::is_base_of_v<elasticsearch::v7::search::tag::Term, std::decay_t<TermWrapper>>), ...);
+        instance_ptr = std::make_shared<value_type>(std::initializer_list<std::shared_ptr<must_array_type_value_type>>{elem});
+    }
     std::shared_ptr<value_type> instance_ptr;
 
     template <class Tracer = txml::EmptyTracer>
@@ -175,6 +209,13 @@ namespace create
     {
         static_assert(std::conjunction_v<std::is_base_of<TermKind, std::decay_t<SpecificModelParams>>...>, "Must be TermKind");
         return must<Model, typename SpecificModelParams::value_t...> (args...);
+    }
+
+    template<class Model, class ...SpecificModelParams>
+    must<Model, typename SpecificModelParams::value_t...> must_tag(std::optional<SpecificModelParams> &&...args)
+    {
+        static_assert(std::conjunction_v<std::is_base_of<TermKind, std::decay_t<SpecificModelParams>>...>, "Must be TermKind");
+        return must<Model, typename SpecificModelParams::value_t...> (std::move(args)...);
     }
 } // namespace create
 } // namespace tag

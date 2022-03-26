@@ -85,8 +85,8 @@ struct StubLeafNode_bool : public txml::XMLNodeLeaf<StubLeafNode_bool, bool>
     }
 };
 
-struct StubModel : public txml::XMLNode<StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string> {
-    using base_t = txml::XMLNode<StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string>;
+struct StubModel : public txml::XMLNode<StubModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string> {
+    using base_t = txml::XMLNode<StubModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string>;
 
     static constexpr std::string_view class_name()
     {
@@ -124,8 +124,8 @@ struct CustomNode : public txml::XMLNodeLeaf<CustomNode, CustomStruct>
     }
 };
 
-struct CustomModel : public txml::XMLNode<StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string, CustomNode> {
-    using base_t = txml::XMLNode<StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string, CustomNode>;
+struct CustomModel : public txml::XMLNode<CustomModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string, CustomNode> {
+    using base_t = txml::XMLNode<CustomModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string, CustomNode>;
 
     static constexpr std::string_view class_name()
     {

@@ -15,6 +15,74 @@
 namespace tests
 {
 
+struct CtorTracer {
+    static size_t created;
+    static size_t copy_created;
+    static size_t move_created;
+    static size_t moved;
+    static size_t copied;
+    static size_t destroyed;
+    CtorTracer(std::string s) {
+        created ++;
+        impl = s;
+    }
+    CtorTracer(const CtorTracer&src) {
+        copy_created ++;
+        impl = src.impl;
+    }
+    CtorTracer(CtorTracer&&src) {
+        move_created ++;
+        impl = src.impl;
+    }
+    CtorTracer& operator=(const CtorTracer&src) {
+        copied ++;
+        impl = src.impl;
+        return *this;
+    }
+    CtorTracer& operator=(CtorTracer&&src) {
+        moved ++;
+        impl = src.impl;
+        return *this;
+    }
+    ~CtorTracer() {
+        destroyed++;
+    }
+
+    std::string impl;
+};
+size_t CtorTracer::created = 0;
+size_t CtorTracer::copy_created = 0;
+size_t CtorTracer::move_created = 0;
+size_t CtorTracer::moved = 0;
+size_t CtorTracer::copied = 0;
+size_t CtorTracer::destroyed = 0;
+TEST(TagHelperTest, value_based_helper)
+{
+    using namespace elasticsearch::v7::search::tag;
+    {
+        auto a = elasticsearch::v7::search::tag::details::CArg<CtorTracer, Term>(CtorTracer{"string"});
+        (void)a;
+    }
+    ASSERT_EQ(CtorTracer::created, 1);
+    EXPECT_EQ(CtorTracer::move_created, 1);
+    ASSERT_EQ(CtorTracer::copied, 0);
+    EXPECT_EQ(CtorTracer::destroyed, 2);
+
+    {
+        CtorTracer::created = 0;;
+        CtorTracer::move_created = 0;
+        CtorTracer::copied = 0;
+        CtorTracer::destroyed = 0;
+        auto a = make<Term, CtorTracer>(CtorTracer{"string"});
+        EXPECT_EQ(a.m_arg.impl, std::string("string"));
+    }
+    ASSERT_EQ(CtorTracer::created, 1);
+    EXPECT_EQ(CtorTracer::move_created, 0);
+    ASSERT_EQ(CtorTracer::copied, 0);
+    EXPECT_EQ(CtorTracer::destroyed, 1);
+
+}
+
 TEST(MustTagTest, init)
 {
     using namespace elasticsearch::v7::search::tag;
@@ -28,12 +96,12 @@ TEST(MustTagTest, init)
     txml::StdoutTracer tracer;
     nlohmann::json node_0 = nlohmann::json::object();
     must_param_0.serialize(node_0, tracer);
-    ASSERT_EQ(node_0.dump(), R"({"must":[{"term":{"test_stub_leaf_bool.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_leaf_bool.test_stub_leaf_int":11}},{"term":{"test_stub_leaf_bool":true}}]})");
+    ASSERT_EQ(node_0.dump(), R"({"must":[{"term":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_int":11}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]})");
 
     nlohmann::json node_1 = nlohmann::json::object();
     must_param_1.serialize(node_1, tracer);
     std::cout << node_1.dump();
-    ASSERT_EQ(node_1.dump(), R"({"must":[{"term":{"test_stub_leaf_bool.test_stub_leaf_string":"my_string_1"}},{"term":{"test_stub_leaf_bool.test_stub_leaf_int":22}},{"term":{"test_stub_leaf_bool":false}}]})");
+    ASSERT_EQ(node_1.dump(), R"({"must":[{"term":{"test_stub_model.test_stub_leaf_string":"my_string_1"}},{"term":{"test_stub_model.test_stub_leaf_int":22}},{"term":{"test_stub_model.test_stub_leaf_bool":false}}]})");
 }
 
 TEST(MustTagTermTest, init)
@@ -57,17 +125,17 @@ TEST(MustTagTermTest, init)
 
     nlohmann::json node_0 = nlohmann::json::object();
     must_param_0.serialize(node_0, tracer);
-    ASSERT_EQ(node_0.dump(), R"({"must":[{"term":{"test_stub_leaf_bool.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_leaf_bool.test_stub_leaf_int":11}},{"term":{"test_stub_leaf_bool":true}}]})");
+    ASSERT_EQ(node_0.dump(), R"({"must":[{"term":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_int":11}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]})");
 
     nlohmann::json node_1 = nlohmann::json::object();
     must_param_1.serialize(node_1, tracer);
     std::cout << node_1.dump();
-    ASSERT_EQ(node_1.dump(), R"({"must":[{"terms":{"test_stub_leaf_bool.test_stub_leaf_string":"my_string_1"}},{"terms":{"test_stub_leaf_bool.test_stub_leaf_int":22}},{"terms":{"test_stub_leaf_bool":false}}]})");
+    ASSERT_EQ(node_1.dump(), R"({"must":[{"terms":{"test_stub_model.test_stub_leaf_string":"my_string_1"}},{"terms":{"test_stub_model.test_stub_leaf_int":22}},{"terms":{"test_stub_model.test_stub_leaf_bool":false}}]})");
 
     nlohmann::json node_2 = nlohmann::json::object();
     must_param_2.serialize(node_2, tracer);
     std::cout << node_2.dump();
-    ASSERT_EQ(node_2.dump(), R"({"must":[{"terms":{"test_stub_leaf_bool.test_stub_leaf_int":33}},{"term":{"test_stub_leaf_bool.test_stub_leaf_string":"my_string_2"}},{"term":{"test_stub_leaf_bool":true}}]})");
+    ASSERT_EQ(node_2.dump(), R"({"must":[{"terms":{"test_stub_model.test_stub_leaf_int":33}},{"term":{"test_stub_model.test_stub_leaf_string":"my_string_2"}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]})");
 }
 
 template<class Parent>
@@ -102,12 +170,12 @@ TEST(MustTagCustomTest, init)
     txml::StdoutTracer tracer;
     nlohmann::json node_0 = nlohmann::json::object();
     must_param_0.custom_serialize<CustomModelSerializer>(node_0, tracer);
-    ASSERT_EQ(node_0.dump(), R"({"must":[{"term":{"test_stub_leaf_bool.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_leaf_bool.test_stub_leaf_int":11}},{"term":{"test_stub_leaf_bool":true}}]})");
+    ASSERT_EQ(node_0.dump(), R"({"must":[{"term":{"test_custom_model.test_custom_leaf":"aha!!!"}},{"term":{"test_custom_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_custom_model.test_stub_leaf_int":11}},{"term":{"test_custom_model.test_stub_leaf_bool":true}}]})");
 
     nlohmann::json node_1 = nlohmann::json::object();
     must_param_1.custom_serialize<CustomModelSerializer>(node_1, tracer);
     std::cout << node_1.dump();
-    ASSERT_EQ(node_1.dump(), R"({"must":[{"term":{"test_stub_leaf_bool.test_stub_leaf_string":"my_string_1"}},{"term":{"test_stub_leaf_bool.test_stub_leaf_int":22}},{"term":{"test_stub_leaf_bool":false}}]})");
+    ASSERT_EQ(node_1.dump(), R"({"must":[{"term":{"test_custom_model.test_custom_leaf":"aha!!!"}},{"term":{"test_custom_model.test_stub_leaf_string":"my_string_1"}},{"term":{"test_custom_model.test_stub_leaf_int":22}},{"term":{"test_custom_model.test_stub_leaf_bool":false}}]})");
 }
 
 TEST(BooleanFromMustTagTest, init)
@@ -121,7 +189,7 @@ TEST(BooleanFromMustTagTest, init)
     nlohmann::json node = nlohmann::json::object();
     txml::StdoutTracer tracer;
     boolean_param.serialize(node, tracer);
-    ASSERT_EQ(node.dump(), R"({"bool":{"must":[{"term":{"test_stub_leaf_bool.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_leaf_bool.test_stub_leaf_int":11}},{"term":{"test_stub_leaf_bool":true}}]}})");
+    ASSERT_EQ(node.dump(), R"({"bool":{"must":[{"term":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_int":11}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]}})");
 }
 
 TEST(BooleanFromMustNFilterTagTest, init)
@@ -136,7 +204,7 @@ TEST(BooleanFromMustNFilterTagTest, init)
     nlohmann::json node = nlohmann::json::object();
     txml::StdoutTracer tracer;
     boolean_param.serialize(node, tracer);
-    ASSERT_EQ(node.dump(), R"({"bool":{"filter":[{"term":{"test_stub_leaf_bool.test_stub_leaf_string":"my_string_filter"}},{"term":{"test_stub_leaf_bool.test_stub_leaf_int":22}},{"term":{"test_stub_leaf_bool":false}}],"must":[{"term":{"test_stub_leaf_bool.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_leaf_bool.test_stub_leaf_int":11}},{"term":{"test_stub_leaf_bool":true}}]}})");
+    ASSERT_EQ(node.dump(), R"({"bool":{"filter":[{"term":{"test_stub_model.test_stub_leaf_string":"my_string_filter"}},{"term":{"test_stub_model.test_stub_leaf_int":22}},{"term":{"test_stub_model.test_stub_leaf_bool":false}}],"must":[{"term":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_int":11}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]}})");
 }
 
 TEST(QueryTagWithBooleanFromMustNFilterTagTest, init)
@@ -155,6 +223,16 @@ TEST(QueryTagWithBooleanFromMustNFilterTagTest, init)
 }
 
 
+TEST(SimpleQueryTagTest, init)
+{
+    using namespace elasticsearch::v7::search::tag;
+    auto sqt_param = create::simple_query_string_tag<StubModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string>();
+
+    txml::StdoutTracer tracer;
+    nlohmann::json node_0 = nlohmann::json::object();
+    sqt_param.serialize(node_0, tracer);
+    ASSERT_EQ(node_0.dump(), R"({"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string","test_stub_model.test_stub_leaf_int","test_stub_model.test_stub_leaf_bool"]}})");
+}
 /*
 TEST(QueryTagWithBooleanFromMustNFilterTagCustomSerializerTest, init)
 {
