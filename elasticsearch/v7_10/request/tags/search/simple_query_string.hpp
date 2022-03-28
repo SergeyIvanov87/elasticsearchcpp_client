@@ -25,6 +25,38 @@ struct simple_query_string {
     template<class Parent, template<typename> class CustomSerializer>
     using custom_serializer_parted_type = /*???*/ QuerySimpleQueryStringToJSONParted<Parent, Model, SpecificModelParams...>;
 
+    template<class Parent, template<typename> class ...UpperLevels>
+    using serializer_dispatcher_type  = txml::SerializerDispatcher<UpperLevels<Parent>..., serializer_parted_type<Parent>>;
+
+    template<template<typename>class CustomSerializer, class Parent, template<typename> class ...UpperLevels>
+    using custom_serializer_dispatcher_type  = txml::SerializerDispatcher<UpperLevels<Parent>..., serializer_parted_type<Parent>,
+                                                                   custom_serializer_parted_type<Parent, CustomSerializer>>;
+
+    template<template<typename> class ...UpperLevels>
+    struct parent : public serializer_dispatcher_type<parent<UpperLevels...>, UpperLevels...>
+    {
+        using base_t = serializer_dispatcher_type<parent<UpperLevels...>, UpperLevels...>;
+
+        parent(std::shared_ptr<std::stack<json::SerializerCore::json_core_t>> external_iterators_stack =
+               std::shared_ptr<std::stack<json::SerializerCore::json_core_t>>(new std::stack<json::SerializerCore::json_core_t>)) :
+        base_t(external_iterators_stack)
+        {
+        }
+    };
+
+    ////////////
+    template<template<typename> class CustomSerializer, template<typename> class ...UpperLevels>
+    struct custom_parent : public custom_serializer_dispatcher_type<CustomSerializer, custom_parent<CustomSerializer, UpperLevels...>, UpperLevels...>
+    {
+        using base_t = custom_serializer_dispatcher_type<CustomSerializer, custom_parent<CustomSerializer, UpperLevels...>, UpperLevels...>;
+
+        custom_parent(std::shared_ptr<std::stack<json::SerializerCore::json_core_t>> external_iterators_stack =
+               std::shared_ptr<std::stack<json::SerializerCore::json_core_t>>(new std::stack<json::SerializerCore::json_core_t>)) :
+        base_t(external_iterators_stack)
+        {
+        }
+    };
+
     simple_query_string()
     {
         auto elem = std::make_shared<array_type_value_type>();

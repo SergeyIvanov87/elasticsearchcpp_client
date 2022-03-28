@@ -233,6 +233,65 @@ TEST(SimpleQueryTagTest, init)
     sqt_param.serialize(node_0, tracer);
     ASSERT_EQ(node_0.dump(), R"({"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string","test_stub_model.test_stub_leaf_int","test_stub_model.test_stub_leaf_bool"]}})");
 }
+
+TEST(SimpleQueryTagWithQueryTagTest, init)
+{
+    using namespace elasticsearch::v7::search::tag;
+    auto sqt_param = create::simple_query_string_tag<StubModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string>();
+    auto query_param = create::query_tag<StubModel>(sqt_param);
+
+    txml::StdoutTracer tracer;
+    nlohmann::json node = nlohmann::json::object();
+    query_param.serialize(node, tracer);
+    ASSERT_EQ(node.dump(), R"({"query":{"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string","test_stub_model.test_stub_leaf_int","test_stub_model.test_stub_leaf_bool"]}}})");
+}
+TEST(SimpleQueryTagWith2QueryTagTest, init)
+{
+    using namespace elasticsearch::v7::search::tag;
+    auto sqt_param = create::simple_query_string_tag<StubModel, StubLeafNode_bool, StubLeafNode_int>();
+    auto sqt_param_2 = create::simple_query_string_tag<StubModel, StubLeafNode_string>();
+    auto query_param = create::query_tag<StubModel>(sqt_param, sqt_param_2);
+
+    txml::StdoutTracer tracer;
+    nlohmann::json node = nlohmann::json::object();
+    query_param.serialize(node, tracer);
+    ASSERT_EQ(node.dump(), R"({"query":{"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"]}}})");
+}
+
+TEST(SimpleQueryTagWithMustTest, init)
+{
+    using namespace elasticsearch::v7::search::tag;
+    auto sqt_param = create::simple_query_string_tag<StubModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string>();
+
+    auto must_param = create::must_tag<StubModel>(make<Term>(StubLeafNode_bool{true}),
+                                                  make<Term>(StubLeafNode_int{11}),
+                                                  make<Term>(StubLeafNode_string{std::string("my_string_0")}));
+    auto boolean_param = create::boolean_tag<StubModel>(must_param);
+    auto query_param = create::query_tag<StubModel>(boolean_param, sqt_param);
+
+    txml::StdoutTracer tracer;
+    nlohmann::json node = nlohmann::json::object();
+    query_param.serialize(node, tracer);
+    ASSERT_EQ(node.dump(), R"({"query":{"bool":{"must":[{"term":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_int":11}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]},"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string","test_stub_model.test_stub_leaf_int","test_stub_model.test_stub_leaf_bool"]}}})");
+}
+
+TEST(SimpleQueryTagWithMustFilterTest, init)
+{
+    using namespace elasticsearch::v7::search::tag;
+    auto sqt_param = create::simple_query_string_tag<StubModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string>();
+
+    auto must_param = create::must_tag<StubModel>(make<Term>(StubLeafNode_bool{true}),
+                                                  make<Term>(StubLeafNode_int{11}),
+                                                  make<Term>(StubLeafNode_string{std::string("my_string_0")}));
+    auto filter_param = create::filter_tag<StubModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string>(false, 22, std::string("my_string_filter"));
+    auto boolean_param = create::boolean_tag<StubModel>(must_param, filter_param);
+    auto query_param = create::query_tag<StubModel>(boolean_param, sqt_param);
+
+    txml::StdoutTracer tracer;
+    nlohmann::json node = nlohmann::json::object();
+    query_param.serialize(node, tracer);
+    ASSERT_EQ(node.dump(), R"({"query":{"bool":{"filter":[{"term":{"test_stub_model.test_stub_leaf_string":"my_string_filter"}},{"term":{"test_stub_model.test_stub_leaf_int":22}},{"term":{"test_stub_model.test_stub_leaf_bool":false}}],"must":[{"term":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_int":11}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]},"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string","test_stub_model.test_stub_leaf_int","test_stub_model.test_stub_leaf_bool"]}}})");
+}
 /*
 TEST(QueryTagWithBooleanFromMustNFilterTagCustomSerializerTest, init)
 {

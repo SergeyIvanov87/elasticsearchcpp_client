@@ -2,6 +2,7 @@
 #define ELASTICSEARCH_7_10_REQUEST_SEARCH_TAGS_QUERY_HPP
 
 #include "elasticsearch/v7_10/answer_model/search/object/boolean/serializer.hpp"
+#include "elasticsearch/v7_10/answer_model/search/object/full_text/serializer.hpp"
 #include "elasticsearch/v7_10/answer_model/search/serializer.hpp"
 
 
@@ -15,7 +16,7 @@ namespace tag
 {
 using namespace elasticsearch::v7::search;
 
-template<class Model, class ...SpecificQueryParams>/* Boolean, Must */
+template<class Model, class ...SpecificQueryParams>/* Boolean (Must,filter), QuerySimpleString */
 struct query
 {
     using value_type = query_subrequest<Model, typename std::decay_t<SpecificQueryParams>::value_type...>;
@@ -52,6 +53,13 @@ struct query
                            std::shared_ptr<std::stack<json::SerializerCore::json_core_t>>(new std::stack<json::SerializerCore::json_core_t>)) :
             base_t(typename SpecificQueryParams::parent<QueryContextItself>(external_iterators_stack)...)
             {}
+        template<class Tracer>
+        void finalize(json::SerializerCore::json_core_t& to, Tracer tracer) const {
+            std::apply([&tracer, &to] (auto &...ser) -> void {
+                json::SerializerCore::json_core_t tmp;
+                ((instance.format_serialize(ser, tracer), ser. template finalize(tmp, tracer), to.merge_patch(tmp), tmp = json::SerializerCore::json_core_t::object() ),...);
+            }, static_cast<base_t&>(*this));
+        }
     };
     //      c) here it is - whole query serializer (!) but as tuple of subsequent serializers!!!
     //          thus we must use std::apply ultimately
@@ -90,9 +98,9 @@ struct query
     {
         serializer_type s;
         // here we go! use apply for tuple of serializers
-        std::apply([this, &tracer, &to] (auto &ser) {
-            instance.format_serialize(ser, tracer);
-            ser. template finalize(to, tracer);
+        std::apply([this, &tracer, &to] (auto &...ser) -> void {
+            json::SerializerCore::json_core_t tmp;
+                ((instance.format_serialize(ser, tracer), ser. template finalize(tmp, tracer), to.merge_patch(tmp), tmp = json::SerializerCore::json_core_t::object() ),...);/*Consider final finalize in dispathcer!!!!*/
         }, static_cast<typename serializer_type::base_t&>(s));
     }
 
