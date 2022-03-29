@@ -23,10 +23,20 @@ inline auto make(const std::optional<T> &arg)
 {
     return elasticsearch::v7::search::tag::make<elasticsearch::v7::search::tag::Term>(arg);
 }
+template <class T>
+inline auto make(std::optional<T> &&arg)
+{
+    return elasticsearch::v7::search::tag::make<elasticsearch::v7::search::tag::Term>(std::move(arg));
+}
 
 inline auto make(const std::optional<elasticsearch::common_model::Tags> &arg)
 {
     return elasticsearch::v7::search::tag::make<elasticsearch::v7::search::tag::Terms>(arg);
+}
+
+inline auto make(std::optional<elasticsearch::common_model::Tags> &&arg)
+{
+    return elasticsearch::v7::search::tag::make<elasticsearch::v7::search::tag::Terms>(std::move(arg));
 }
 
 template <class T, class ...Args>
@@ -72,6 +82,17 @@ namespace create
     boolean<std::decay_t<SpecificBooleanParams>...> boolean_tag(SpecificBooleanParams &&...args)
     {
         return boolean<std::decay_t<SpecificBooleanParams>...> (std::forward<SpecificBooleanParams>(args)...);
+    }
+} // namespace create
+
+template<class ...SpecificModelElements>
+using simple_query_string = elasticsearch::v7::search::tag::simple_query_string<elasticsearch::book::model::data, SpecificModelElements...>;
+namespace create
+{
+    template<class ...SpecificModelElements>
+    simple_query_string<SpecificModelElements...> simple_query_string_tag(const std::string &query_string)
+    {
+        return simple_query_string<SpecificModelElements...> (query_string);
     }
 } // namespace create
 

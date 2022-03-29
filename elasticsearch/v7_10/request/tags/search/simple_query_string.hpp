@@ -57,11 +57,12 @@ struct simple_query_string {
         }
     };
 
-    simple_query_string()
+    simple_query_string(const std::string &query_string)
     {
         auto elem = std::make_shared<array_type_value_type>();
         instance_ptr = std::make_shared<value_type>();
         instance_ptr->template set(elem);
+        instance_ptr->template emplace<::model::full_text::Query>(query_string);
     }
 
     template <class Tracer = txml::EmptyTracer>
@@ -86,9 +87,9 @@ struct simple_query_string {
 namespace create
 {
     template<class Model, class ...SpecificModelParams>
-    simple_query_string<Model, SpecificModelParams...> simple_query_string_tag()
+    simple_query_string<Model, SpecificModelParams...> simple_query_string_tag(const std::string &query_string)
     {
-        return simple_query_string<Model, SpecificModelParams...> {};
+        return simple_query_string<Model, SpecificModelParams...> {query_string};
     }
 } // namespace create
 } // namespace tag

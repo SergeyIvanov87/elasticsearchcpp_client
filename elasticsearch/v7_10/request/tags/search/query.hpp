@@ -100,7 +100,7 @@ struct query
         // here we go! use apply for tuple of serializers
         std::apply([this, &tracer, &to] (auto &...ser) -> void {
             json::SerializerCore::json_core_t tmp;
-                ((instance.format_serialize(ser, tracer), ser. template finalize(tmp, tracer), to.merge_patch(tmp), tmp = json::SerializerCore::json_core_t::object() ),...);/*Consider final finalize in dispathcer!!!!*/
+                ((instance.format_serialize(ser, tracer), ser. template finalize(tmp, tracer), std::cout << tmp.dump() << std::endl, to.merge_patch(tmp), tmp = json::SerializerCore::json_core_t::object() ),...);/*Consider final finalize in dispathcer!!!!*/
         }, static_cast<typename serializer_type::base_t&>(s));
     }
 
