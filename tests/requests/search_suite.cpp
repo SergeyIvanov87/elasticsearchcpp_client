@@ -290,6 +290,7 @@ TEST(SimpleQueryTagWithMustFilterTest, init)
 
     txml::StdoutTracer tracer;
     nlohmann::json node = nlohmann::json::object();
+    std::cout <<node.dump() << std::endl;
     query_param.serialize(node, tracer);
     ASSERT_EQ(node.dump(), R"({"query":{"bool":{"filter":[{"term":{"test_stub_model.test_stub_leaf_string":"my_string_filter"}},{"term":{"test_stub_model.test_stub_leaf_int":22}},{"term":{"test_stub_model.test_stub_leaf_bool":false}}],"must":[{"term":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_int":11}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]},"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string","test_stub_model.test_stub_leaf_int","test_stub_model.test_stub_leaf_bool"],"query":"wintersun"}}})");
 }
