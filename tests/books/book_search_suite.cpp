@@ -344,7 +344,7 @@ TEST_F(BookMultipleCreateSearchFixture_11, create_n_search_boolean_2_terms)
 }
 
 
-TEST_F(BookMultipleCreateSearchFixture_11, create_n_search_boolean_2_terms_with_query_simple_string)
+TEST_F(BookMultipleCreateSearchFixture_11, create_n_search_query_simple_string)
 {
     using namespace elasticsearch::book;
     using namespace elasticsearch::book::model;
@@ -352,16 +352,11 @@ TEST_F(BookMultipleCreateSearchFixture_11, create_n_search_boolean_2_terms_with_
     std::set<std::string> inserted_items = this->get_generated_ids();
 
     txml::StdoutTracer tracer;
-
-    auto mu = search::tag::create::must_tag(search::tag::make<element::Creator>(std::string("creator_search10")),
-                                            search::tag::make<element::Language>(std::string("language_search10")));
     auto qst = search::tag::create::simple_query_string_tag<element::Title>("word1|word10");
-
-    auto boo = search::tag::create::boolean_tag(mu, qst);
     search::transaction s(get_host());
 
     ASSERT_NO_THROW(s.execute(get_index(), 10, 10s,
-                              search::tag::create::query_tag(boo),
+                              search::tag::create::query_tag(qst),
                               search::tag::sort<element::Contributor> ({::model::Order("desc")}),
                               curl_verbose(),
                               tracer));
