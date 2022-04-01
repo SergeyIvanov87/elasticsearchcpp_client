@@ -21,6 +21,7 @@ using namespace elasticsearch::v7::search;
 // So, must incapsulate builder functionality to match `SpecificModelParams` in `Model` set
 class Term {};
 class Terms {};
+class SimpleString {};
 class TermKind {};
 
 namespace details

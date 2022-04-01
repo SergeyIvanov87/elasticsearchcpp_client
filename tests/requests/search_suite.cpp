@@ -11,9 +11,42 @@
 #include "tests/common/Nodes.hpp"
 #include <gtest/gtest.h>
 
+//
+#include "elasticsearch/v7_10/answer_model/search/object/boolean/new_Bool.h"
+#include "elasticsearch/v7_10/answer_model/search/object/full_text/new_QuerySimpleString.hpp"
 
 namespace tests
 {
+    using Model = StubModel;
+
+    template<class Element>
+    using NTerm = model::must_new::Term<Model, Element>;
+
+    template<class Element>
+    using NTerms = model::must_new::Terms<Model, Element>;
+
+    template<class ...Elements>
+    using QSS = model::full_text_new::SimpleQueryString<Model, Elements...>;
+TEST(NEW_BOOL, serializer)
+{
+
+//накуя шаблонный шаблон???
+    model::MustNew<StubModel, NTerm<StubLeafNode_bool>,
+                              NTerm<StubLeafNode_int>,
+                              NTerms<StubLeafNode_string>,
+                              QSS<StubLeafNode_string>> must_instance(NTerm<StubLeafNode_bool>(true), NTerms<StubLeafNode_string>("my_string_0"),
+                                                                      QSS<StubLeafNode_string>("aaaa"));
+
+typename model::MustNew<StubModel, NTerm<StubLeafNode_bool>,
+                              NTerm<StubLeafNode_int>,
+                              NTerms<StubLeafNode_string>,
+                              QSS<StubLeafNode_string>>::aggregator_serializer_type ser;
+    txml::StdoutTracer tracer;
+    nlohmann::json node_0 = nlohmann::json::object();
+    must_instance.template format_serialize(ser, tracer);
+    ser. template finalize(node_0, tracer);
+    ASSERT_EQ(node_0.dump(), R"({"must":[{"term":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_int":11}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]})");
+}
 
 struct CtorTracer {
     static size_t created;
