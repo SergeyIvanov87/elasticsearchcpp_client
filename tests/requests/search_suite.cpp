@@ -14,6 +14,7 @@
 //
 #include "elasticsearch/v7_10/answer_model/search/object/boolean/new_Bool.h"
 #include "elasticsearch/v7_10/answer_model/search/object/full_text/new_QuerySimpleString.hpp"
+#include "elasticsearch/v7_10/answer_model/search/object/new_Query.h"
 
 namespace tests
 {
@@ -66,6 +67,34 @@ TEST(NEW_BOOL, serializer)
     ser. template finalize(node, tracer);
     ASSERT_EQ(node.dump(), R"({"bool":{"must":[{"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"aaaa"}},{"terms":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]}})");
 }
+
+TEST(NEW_Query, serializer)
+{
+    using MustTag = model::MustNew<StubModel,
+                                   NTerm<StubLeafNode_bool>,
+                                   NTerm<StubLeafNode_int>,
+                                   NTerms<StubLeafNode_string>,
+                                   QSS<StubLeafNode_string>>;
+    MustTag must_instance(NTerm<StubLeafNode_bool>(true),
+                          NTerms<StubLeafNode_string>("my_string_0"),
+                          QSS<StubLeafNode_string>("aaaa"));
+
+    using BooleanTag = model::BooleanNew<StubModel, MustTag>;
+    BooleanTag bool_instance(must_instance);
+
+    using QSSTag = QSS<StubLeafNode_string>;
+    QSSTag sqt_param("acdc");
+
+    using QueryTag = model::QueryNew<StubModel, BooleanTag, QSSTag>;
+    QueryTag q_instance(bool_instance, sqt_param);
+    typename QueryTag::aggregator_serializer_type ser;
+    nlohmann::json node = nlohmann::json::object();
+    txml::StdoutTracer tracer;
+    q_instance.template format_serialize(ser, tracer);
+    ser. template finalize(node, tracer);
+    ASSERT_EQ(node.dump(), R"({"query":{"bool":{"must":[{"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"aaaa"}},{"terms":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]},"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"acdc"}}})");
+}
+
 struct CtorTracer {
     static size_t created;
     static size_t copy_created;

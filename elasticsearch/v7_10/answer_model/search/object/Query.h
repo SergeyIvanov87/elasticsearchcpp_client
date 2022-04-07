@@ -7,9 +7,6 @@
 
 namespace model
 {
-class EmptyModel {};
-struct EmptyParam {using value_type = EmptyParam; };
-
 template<class Model, class ...Params>
 class Query: public txml::XMLNode<Query<Model, Params...>,
                                   Params...>

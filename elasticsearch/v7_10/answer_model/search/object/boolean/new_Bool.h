@@ -228,7 +228,21 @@ public:
         return txml::TextReaderWrapper::NodeType::Element;
     }
 
-    template<class ...BooleanParamsTagsPack>
+
+    BooleanNew(const BooleanNew &src) {
+        this->getValue() = src.getValue();
+    }
+
+    BooleanNew(BooleanNew &&src) {
+        this->getValue().swap(src.getValue());
+    }
+
+    template<class ...BooleanParamsTagsPack,
+                        class = std::enable_if_t<
+                                                not std::disjunction_v<
+                                                            std::is_same<std::decay_t<BooleanParamsTagsPack>, BooleanNew>...
+                                                                      >
+                                                        , int>>
     BooleanNew(BooleanParamsTagsPack &&...args)
     {
         (this->template set<std::decay_t<BooleanParamsTagsPack>>(std::make_shared<std::decay_t<BooleanParamsTagsPack>>(std::forward<BooleanParamsTagsPack>(args))),...);
@@ -247,6 +261,9 @@ public:
     {
         TXML_SERIALIZER_AGGREGATOR_OBJECT
     };
+
+    template<class Parent>
+    using subcontext_serializer_type = serializer_parted_type<Parent>;
 
     template<class Formatter, class Tracer>
     void format_serialize_impl(Formatter& out, Tracer tracer) const

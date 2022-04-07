@@ -26,10 +26,10 @@ struct simple_query_string {
     using custom_serializer_parted_type = /*???*/ QuerySimpleQueryStringToJSONParted<Parent, Model, SpecificModelParams...>;
 
     template<class Parent, template<typename> class ...UpperLevels>
-    using serializer_dispatcher_type  = txml::SerializerDispatcher<UpperLevels<Parent>..., serializer_parted_type<Parent>>;
+    using serializer_dispatcher_type  = txml::SerializerVirtualDispatcher<json::SerializerCore, UpperLevels<Parent>..., serializer_parted_type<Parent>>;
 
     template<template<typename>class CustomSerializer, class Parent, template<typename> class ...UpperLevels>
-    using custom_serializer_dispatcher_type  = txml::SerializerDispatcher<UpperLevels<Parent>..., serializer_parted_type<Parent>,
+    using custom_serializer_dispatcher_type  = txml::SerializerVirtualDispatcher<json::SerializerCore, UpperLevels<Parent>..., serializer_parted_type<Parent>,
                                                                    custom_serializer_parted_type<Parent, CustomSerializer>>;
 
     template<template<typename> class ...UpperLevels>

@@ -49,11 +49,11 @@ struct boolean {
     //         and combine all of it with future unknown final upper levels  serializers
     //         where `Parent` is final upper level serializer aggregator
     template<class ThisParent, template<typename> class ...QueryUpperLevels>
-    using serializer_dispatcher_type  = txml::SerializerDispatcher<QueryUpperLevels<ThisParent>..., serializer_parted_type<ThisParent>,
+    using serializer_dispatcher_type  = txml::SerializerVirtualDispatcher<json::SerializerCore, QueryUpperLevels<ThisParent>..., serializer_parted_type<ThisParent>,
                                                                    typename SpecificBooleanParams::serializer_parted_type<ThisParent>...>;
 
     template<template<typename>class CustomSerializer, class ThisParent, template<typename> class ...QueryUpperLevels>
-    using custom_serializer_dispatcher_type  = txml::SerializerDispatcher<QueryUpperLevels<ThisParent>..., serializer_parted_type<ThisParent>,
+    using custom_serializer_dispatcher_type  = txml::SerializerVirtualDispatcher<json::SerializerCore, QueryUpperLevels<ThisParent>..., serializer_parted_type<ThisParent>,
                                                                    typename SpecificBooleanParams::custom_serializer_parted_type<ThisParent, CustomSerializer>...>;
 
 
