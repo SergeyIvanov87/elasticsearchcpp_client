@@ -44,6 +44,52 @@ public:
     {
         return txml::TextReaderWrapper::NodeType::Element;
     }
+
+    SortArray(std::initializer_list<::model::Order> orders)
+    {
+        using sorted_array_value_type = ::model::SortArrayElement<Model, SortedElements...>;
+        auto elem = std::make_shared<sorted_array_value_type>();
+
+        // helper
+        auto append = [order_it = orders.begin()](auto sorted_param) mutable{
+            sorted_param->template emplace<::model::Order>(*order_it);
+        };
+
+        (append(elem->template emplace<::model::SortRecord<Model, SortedElements>>()), ...);
+        this->getValue().push_back(std::move(elem));
+    }
+
+    template<class ParentAggregator>
+    TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(serializer_parted_type, ParentAggregator, ToJSON,
+                                                ::model::SortArray<Model, SortedElements...>,
+                                                    ::model::SortArrayElement<Model, SortedElements...>,
+                                                        ::model::SortRecord<Model, SortedElements>...,
+                                                            ::model::UnmappedType,
+                                                            ::model::Order,
+                                                            ::model::Format)
+    {
+        TXML_SERIALIZER_DISPATCHABLE_OBJECT
+
+        template<class Tracer>
+        void serialize_impl(const ::model::SortArrayElement<Model, SortedElements...> &val, Tracer tracer)
+        {
+            tracer.trace(__FUNCTION__, " - skip SortArrayElement by itself");
+            val.template format_serialize_elements(*this, tracer);
+        }
+    };
+
+    TXML_DECLARE_SERIALIZER_AGGREGATOR_CLASS(aggregator_serializer_type,
+                                             serializer_parted_type<aggregator_serializer_type>)
+    {
+        TXML_SERIALIZER_AGGREGATOR_OBJECT
+    };
+
+    template<class Formatter, class Tracer>
+    void format_serialize_impl(Formatter& out, Tracer tracer) const
+    {
+        aggregator_serializer_type ser(out.get_shared_mediator_object());
+        base_t:: template format_serialize_impl(ser, tracer);
+    }
 };
 }
 #endif // ANSWER_MODEL_SEARCH_OBJECT_SORT_H

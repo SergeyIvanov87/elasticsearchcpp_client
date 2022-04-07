@@ -134,6 +134,20 @@ TEST(NEW_BooleanFromMustNFilterTagTest, init)
     ASSERT_EQ(node.dump(), R"({"query":{"bool":{"filter":[{"term":{"test_stub_model.test_stub_leaf_string":"my_string_filter"}},{"term":{"test_stub_model.test_stub_leaf_int":22}},{"term":{"test_stub_model.test_stub_leaf_bool":false}}],"must":[{"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"aaaa"}},{"terms":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]},"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"acdc"}}})");
 }
 
+TEST(NEW_Sort, init)
+{
+    using SortTag = model::SortArray<StubModel, StubLeafNode_bool, StubLeafNode_string>;
+    SortTag sort_instance({::model::Order("desc"), ::model::Order("asc")});
+
+    typename SortTag::aggregator_serializer_type ser;
+    nlohmann::json node = nlohmann::json::object();
+    txml::StdoutTracer tracer;
+    sort_instance.template format_serialize(ser, tracer);
+    ser. template finalize(node, tracer);
+
+    ASSERT_EQ(node.dump(), R"({"sort":[{"test_stub_model.test_stub_leaf_string.keyword":{"order":"desc"}},{"test_stub_model.test_stub_leaf_bool.keyword":{"order":"desc"}}]})");
+}
+
 struct CtorTracer {
     static size_t created;
     static size_t copy_created;
