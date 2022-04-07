@@ -18,21 +18,21 @@
 
 namespace tests
 {
-    using Model = StubModel;
+using Model = StubModel;
 
-    template<class Element>
-    using MTerm = model::must_new::Term<Model, Element>;
+template<class Element>
+using MTerm = model::must_new::Term<Model, Element>;
 
-    template<class Element>
-    using MTerms = model::must_new::Terms<Model, Element>;
+template<class Element>
+using MTerms = model::must_new::Terms<Model, Element>;
 
-    template<class Element>
-    using FTerm = model::filter_new::Term<Model, Element>;
+template<class Element>
+using FTerm = model::filter_new::Term<Model, Element>;
 
-    template<class ...Elements>
-    using QSS = model::full_text_new::SimpleQueryString<Model, Elements...>;
+template<class ...Elements>
+using QSS = model::full_text_new::SimpleQueryString<Model, Elements...>;
 
-TEST(NEW_MUST, serializer)
+TEST(NEW_MustQSS, serializer)
 {
     model::MustNew<StubModel, MTerm<StubLeafNode_bool>,
                               MTerm<StubLeafNode_int>,
@@ -51,7 +51,7 @@ TEST(NEW_MUST, serializer)
     ASSERT_EQ(node_0.dump(), R"({"must":[{"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"aaaa"}},{"terms":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]})");
 }
 
-TEST(NEW_BOOL, serializer)
+TEST(NEW_BooleanMustQSS, serializer)
 {
     using MustTag = model::MustNew<StubModel,
                                    MTerm<StubLeafNode_bool>,
@@ -72,7 +72,7 @@ TEST(NEW_BOOL, serializer)
     ASSERT_EQ(node.dump(), R"({"bool":{"must":[{"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"aaaa"}},{"terms":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]}})");
 }
 
-TEST(NEW_Query, serializer)
+TEST(NEW_QueryBooleanQSSMustQSS, serializer)
 {
     using MustTag = model::MustNew<StubModel,
                                    MTerm<StubLeafNode_bool>,
@@ -99,7 +99,7 @@ TEST(NEW_Query, serializer)
     ASSERT_EQ(node.dump(), R"({"query":{"bool":{"must":[{"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"aaaa"}},{"terms":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]},"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"acdc"}}})");
 }
 
-TEST(NEW_BooleanFromMustNFilterTagTest, init)
+TEST(NEW_BooleanMustQSSFilter, init)
 {
     using MustTag = model::MustNew<StubModel,
                                    MTerm<StubLeafNode_bool>,
@@ -148,75 +148,23 @@ TEST(NEW_Sort, init)
     ASSERT_EQ(node.dump(), R"({"sort":[{"test_stub_model.test_stub_leaf_string.keyword":{"order":"desc"}},{"test_stub_model.test_stub_leaf_bool.keyword":{"order":"desc"}}]})");
 }
 
-struct CtorTracer {
-    static size_t created;
-    static size_t copy_created;
-    static size_t move_created;
-    static size_t moved;
-    static size_t copied;
-    static size_t destroyed;
-    CtorTracer(std::string s) {
-        created ++;
-        impl = s;
-    }
-    CtorTracer(const CtorTracer&src) {
-        copy_created ++;
-        impl = src.impl;
-    }
-    CtorTracer(CtorTracer&&src) {
-        move_created ++;
-        impl = src.impl;
-    }
-    CtorTracer& operator=(const CtorTracer&src) {
-        copied ++;
-        impl = src.impl;
-        return *this;
-    }
-    CtorTracer& operator=(CtorTracer&&src) {
-        moved ++;
-        impl = src.impl;
-        return *this;
-    }
-    ~CtorTracer() {
-        destroyed++;
-    }
-
-    std::string impl;
-};
-size_t CtorTracer::created = 0;
-size_t CtorTracer::copy_created = 0;
-size_t CtorTracer::move_created = 0;
-size_t CtorTracer::moved = 0;
-size_t CtorTracer::copied = 0;
-size_t CtorTracer::destroyed = 0;
-TEST(TagHelperTest, value_based_helper)
+TEST(NEW_QSS, init)
 {
-    using namespace elasticsearch::v7::search::tag;
-    {
-        auto a = elasticsearch::v7::search::tag::details::CArg<CtorTracer, Term>(CtorTracer{"string"});
-        (void)a;
-    }
-    ASSERT_EQ(CtorTracer::created, 1);
-    EXPECT_EQ(CtorTracer::move_created, 1);
-    ASSERT_EQ(CtorTracer::copied, 0);
-    EXPECT_EQ(CtorTracer::destroyed, 2);
+    using QSSTag = QSS<StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string>;
+    QSSTag qss_instance("abba");
 
-    {
-        CtorTracer::created = 0;;
-        CtorTracer::move_created = 0;
-        CtorTracer::copied = 0;
-        CtorTracer::destroyed = 0;
-        auto a = make<Term, CtorTracer>(CtorTracer{"string"});
-        EXPECT_EQ(a.m_arg.impl, std::string("string"));
-    }
-    ASSERT_EQ(CtorTracer::created, 1);
-    EXPECT_EQ(CtorTracer::move_created, 0);
-    ASSERT_EQ(CtorTracer::copied, 0);
-    EXPECT_EQ(CtorTracer::destroyed, 1);
+    typename QSSTag::aggregator_serializer_type ser;
 
+    txml::StdoutTracer tracer;
+    nlohmann::json node;
+    qss_instance.template format_serialize(ser, tracer);
+    ser. template finalize(node, tracer);
+    ASSERT_EQ(node.dump(), R"({"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string","test_stub_model.test_stub_leaf_int","test_stub_model.test_stub_leaf_bool"],"query":"abba"}})");
 }
 
-TEST(MustTagTest, init)
+
+
+TEST(DISABLED_MustTagTest, init)
 {
     using namespace elasticsearch::v7::search::tag;
     auto must_param_0 = create::must_tag<StubModel>(make<Term, StubLeafNode_bool>(true),
@@ -237,7 +185,7 @@ TEST(MustTagTest, init)
     ASSERT_EQ(node_1.dump(), R"({"must":[{"term":{"test_stub_model.test_stub_leaf_string":"my_string_1"}},{"term":{"test_stub_model.test_stub_leaf_int":22}},{"term":{"test_stub_model.test_stub_leaf_bool":false}}]})");
 }
 
-TEST(MustTagTermTest, init)
+TEST(DISABLED_MustTagTermTest, init)
 {
     using namespace elasticsearch::v7::search::tag;
     auto must_param_0 = create::must_tag<StubModel>(make<Term>(StubLeafNode_bool{true}),
@@ -288,7 +236,7 @@ TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(CustomModelSerializer, Parent, ToJSON
 };
 
 
-TEST(MustTagCustomTest, init)
+TEST(DISABLED_MustTagCustomTest, init)
 {
     using namespace elasticsearch::v7::search::tag;
     auto must_param_0 = create::must_tag<CustomModel>(make<Term, StubLeafNode_bool>(true),
@@ -311,7 +259,7 @@ TEST(MustTagCustomTest, init)
     ASSERT_EQ(node_1.dump(), R"({"must":[{"term":{"test_custom_model.test_custom_leaf":"aha!!!"}},{"term":{"test_custom_model.test_stub_leaf_string":"my_string_1"}},{"term":{"test_custom_model.test_stub_leaf_int":22}},{"term":{"test_custom_model.test_stub_leaf_bool":false}}]})");
 }
 
-TEST(BooleanFromMustTagTest, init)
+TEST(DISABLED_BooleanFromMustTagTest, init)
 {
     using namespace elasticsearch::v7::search::tag;
     auto must_param = create::must_tag<StubModel>(make<Term>(StubLeafNode_bool{true}),
@@ -325,7 +273,7 @@ TEST(BooleanFromMustTagTest, init)
     ASSERT_EQ(node.dump(), R"({"bool":{"must":[{"term":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_int":11}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]}})");
 }
 
-TEST(BooleanFromMustNFilterTagTest, init)
+TEST(DISABLED_BooleanFromMustNFilterTagTest, init)
 {
     using namespace elasticsearch::v7::search::tag;
     auto must_param = create::must_tag<StubModel>(make<Term>(StubLeafNode_bool{true}),
@@ -340,7 +288,7 @@ TEST(BooleanFromMustNFilterTagTest, init)
     ASSERT_EQ(node.dump(), R"({"bool":{"filter":[{"term":{"test_stub_model.test_stub_leaf_string":"my_string_filter"}},{"term":{"test_stub_model.test_stub_leaf_int":22}},{"term":{"test_stub_model.test_stub_leaf_bool":false}}],"must":[{"term":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_int":11}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]}})");
 }
 
-TEST(QueryTagWithBooleanFromMustNFilterTagTest, init)
+TEST(DISABLED_QueryTagWithBooleanFromMustNFilterTagTest, init)
 {
     using namespace elasticsearch::v7::search::tag;
     auto must_param = create::must_tag<StubModel>(make<Term>(StubLeafNode_bool{true}),
@@ -356,7 +304,7 @@ TEST(QueryTagWithBooleanFromMustNFilterTagTest, init)
 }
 
 
-TEST(SimpleQueryTagTest, init)
+TEST(DISABLED_SimpleQueryTagTest, init)
 {
     using namespace elasticsearch::v7::search::tag;
     auto sqt_param = create::simple_query_string_tag<StubModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string>("abba");
@@ -367,7 +315,7 @@ TEST(SimpleQueryTagTest, init)
     ASSERT_EQ(node_0.dump(), R"({"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string","test_stub_model.test_stub_leaf_int","test_stub_model.test_stub_leaf_bool"],"query":"abba"}})");
 }
 
-TEST(SimpleQueryTagWithQueryTagTest, init)
+TEST(DISABLED_SimpleQueryTagWithQueryTagTest, init)
 {
     using namespace elasticsearch::v7::search::tag;
     auto sqt_param = create::simple_query_string_tag<StubModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string>("acdc");
@@ -378,6 +326,7 @@ TEST(SimpleQueryTagWithQueryTagTest, init)
     query_param.serialize(node, tracer);
     ASSERT_EQ(node.dump(), R"({"query":{"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string","test_stub_model.test_stub_leaf_int","test_stub_model.test_stub_leaf_bool"],"query":"acdc"}}})");
 }
+
 TEST(SimpleQueryTagWith2QueryTagTest, init)
 {
     using namespace elasticsearch::v7::search::tag;
@@ -391,7 +340,7 @@ TEST(SimpleQueryTagWith2QueryTagTest, init)
     ASSERT_EQ(node.dump(), R"({"query":{"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"crimson"}}})");
 }
 
-TEST(SimpleQueryTagWithMustTest, init)
+TEST(DISABLED_SimpleQueryTagWithMustTest, init)
 {
     using namespace elasticsearch::v7::search::tag;
     auto sqt_param = create::simple_query_string_tag<StubModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string>("rainbow");
@@ -409,7 +358,7 @@ TEST(SimpleQueryTagWithMustTest, init)
     ASSERT_EQ(node.dump(), R"({"query":{"bool":{"must":[{"term":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_int":11}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]},"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string","test_stub_model.test_stub_leaf_int","test_stub_model.test_stub_leaf_bool"],"query":"rainbow"}}})");
 }
 
-TEST(SimpleQueryTagWithMustFilterTest, init)
+TEST(DISABLED_SimpleQueryTagWithMustFilterTest, init)
 {
     using namespace elasticsearch::v7::search::tag;
     auto sqt_param = create::simple_query_string_tag<StubModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string>("wintersun");
