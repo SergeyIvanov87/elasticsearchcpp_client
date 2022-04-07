@@ -47,7 +47,7 @@ typename model::MustNew<StubModel, NTerm<StubLeafNode_bool>,
     nlohmann::json node_0 = nlohmann::json::object();
     must_instance.template format_serialize(ser, tracer);
     ser. template finalize(node_0, tracer);
-    ASSERT_EQ(node_0.dump(), R"({"must":[{"term":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_int":11}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]})");
+    ASSERT_EQ(node_0.dump(), R"({"must":[{"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"aaaa"}},{"terms":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]})");
 }
 
 TEST(NEW_BOOL, serializer)
@@ -68,7 +68,7 @@ TEST(NEW_BOOL, serializer)
     txml::StdoutTracer tracer;
     bool_instance.template format_serialize(ser, tracer);
     ser. template finalize(node, tracer);
-    ASSERT_EQ(node.dump(), R"({"bool":{"must":[{"term":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_int":11}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]}})");
+    ASSERT_EQ(node.dump(), R"({"bool":{"must":[{"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"aaaa"}},{"terms":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]}})");
 }
 struct CtorTracer {
     static size_t created;
