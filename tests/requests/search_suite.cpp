@@ -21,24 +21,28 @@ namespace tests
     using Model = StubModel;
 
     template<class Element>
-    using NTerm = model::must_new::Term<Model, Element>;
+    using MTerm = model::must_new::Term<Model, Element>;
 
     template<class Element>
-    using NTerms = model::must_new::Terms<Model, Element>;
+    using MTerms = model::must_new::Terms<Model, Element>;
+
+    template<class Element>
+    using FTerm = model::filter_new::Term<Model, Element>;
 
     template<class ...Elements>
     using QSS = model::full_text_new::SimpleQueryString<Model, Elements...>;
+
 TEST(NEW_MUST, serializer)
 {
-    model::MustNew<StubModel, NTerm<StubLeafNode_bool>,
-                              NTerm<StubLeafNode_int>,
-                              NTerms<StubLeafNode_string>,
-                              QSS<StubLeafNode_string>> must_instance(NTerm<StubLeafNode_bool>(true), NTerms<StubLeafNode_string>("my_string_0"),
+    model::MustNew<StubModel, MTerm<StubLeafNode_bool>,
+                              MTerm<StubLeafNode_int>,
+                              MTerms<StubLeafNode_string>,
+                              QSS<StubLeafNode_string>> must_instance(MTerm<StubLeafNode_bool>(true), MTerms<StubLeafNode_string>("my_string_0"),
                                                                       QSS<StubLeafNode_string>("aaaa"));
 
-    typename model::MustNew<StubModel, NTerm<StubLeafNode_bool>,
-                              NTerm<StubLeafNode_int>,
-                              NTerms<StubLeafNode_string>,
+    typename model::MustNew<StubModel, MTerm<StubLeafNode_bool>,
+                              MTerm<StubLeafNode_int>,
+                              MTerms<StubLeafNode_string>,
                               QSS<StubLeafNode_string>>::aggregator_serializer_type ser;
     txml::StdoutTracer tracer;
     nlohmann::json node_0 = nlohmann::json::object();
@@ -50,12 +54,12 @@ TEST(NEW_MUST, serializer)
 TEST(NEW_BOOL, serializer)
 {
     using MustTag = model::MustNew<StubModel,
-                                   NTerm<StubLeafNode_bool>,
-                                   NTerm<StubLeafNode_int>,
-                                   NTerms<StubLeafNode_string>,
+                                   MTerm<StubLeafNode_bool>,
+                                   MTerm<StubLeafNode_int>,
+                                   MTerms<StubLeafNode_string>,
                                    QSS<StubLeafNode_string>>;
-    MustTag must_instance(NTerm<StubLeafNode_bool>(true),
-                          NTerms<StubLeafNode_string>("my_string_0"),
+    MustTag must_instance(MTerm<StubLeafNode_bool>(true),
+                          MTerms<StubLeafNode_string>("my_string_0"),
                           QSS<StubLeafNode_string>("aaaa"));
 
     model::BooleanNew<StubModel, MustTag> bool_instance(must_instance);
@@ -71,12 +75,12 @@ TEST(NEW_BOOL, serializer)
 TEST(NEW_Query, serializer)
 {
     using MustTag = model::MustNew<StubModel,
-                                   NTerm<StubLeafNode_bool>,
-                                   NTerm<StubLeafNode_int>,
-                                   NTerms<StubLeafNode_string>,
+                                   MTerm<StubLeafNode_bool>,
+                                   MTerm<StubLeafNode_int>,
+                                   MTerms<StubLeafNode_string>,
                                    QSS<StubLeafNode_string>>;
-    MustTag must_instance(NTerm<StubLeafNode_bool>(true),
-                          NTerms<StubLeafNode_string>("my_string_0"),
+    MustTag must_instance(MTerm<StubLeafNode_bool>(true),
+                          MTerms<StubLeafNode_string>("my_string_0"),
                           QSS<StubLeafNode_string>("aaaa"));
 
     using BooleanTag = model::BooleanNew<StubModel, MustTag>;
@@ -93,6 +97,41 @@ TEST(NEW_Query, serializer)
     q_instance.template format_serialize(ser, tracer);
     ser. template finalize(node, tracer);
     ASSERT_EQ(node.dump(), R"({"query":{"bool":{"must":[{"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"aaaa"}},{"terms":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]},"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"acdc"}}})");
+}
+
+TEST(NEW_BooleanFromMustNFilterTagTest, init)
+{
+    using MustTag = model::MustNew<StubModel,
+                                   MTerm<StubLeafNode_bool>,
+                                   MTerm<StubLeafNode_int>,
+                                   MTerms<StubLeafNode_string>,
+                                   QSS<StubLeafNode_string>>;
+    MustTag must_instance(MTerm<StubLeafNode_bool>(true),
+                          MTerms<StubLeafNode_string>("my_string_0"),
+                          QSS<StubLeafNode_string>("aaaa"));
+
+    using FilterTag = model::FilterNew<StubModel,
+                                       FTerm<StubLeafNode_bool>,
+                                       FTerm<StubLeafNode_int>,
+                                       FTerm<StubLeafNode_string>>;
+    FilterTag filter_instance(FTerm<StubLeafNode_bool>(false),
+                              FTerm<StubLeafNode_int>(22),
+                              FTerm<StubLeafNode_string>("my_string_filter"));
+
+    using BooleanTag = model::BooleanNew<StubModel, MustTag, FilterTag>;
+    BooleanTag bool_instance(must_instance, filter_instance);
+
+    using QSSTag = QSS<StubLeafNode_string>;
+    QSSTag sqt_param("acdc");
+
+    using QueryTag = model::QueryNew<StubModel, BooleanTag, QSSTag>;
+    QueryTag q_instance(bool_instance, sqt_param);
+    typename QueryTag::aggregator_serializer_type ser;
+    nlohmann::json node = nlohmann::json::object();
+    txml::StdoutTracer tracer;
+    q_instance.template format_serialize(ser, tracer);
+    ser. template finalize(node, tracer);
+    ASSERT_EQ(node.dump(), R"({"query":{"bool":{"filter":[{"term":{"test_stub_model.test_stub_leaf_string":"my_string_filter"}},{"term":{"test_stub_model.test_stub_leaf_int":22}},{"term":{"test_stub_model.test_stub_leaf_bool":false}}],"must":[{"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"aaaa"}},{"terms":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]},"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"acdc"}}})");
 }
 
 struct CtorTracer {
