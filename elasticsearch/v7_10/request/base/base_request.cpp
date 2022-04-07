@@ -49,7 +49,8 @@ void transaction::execute_base(const std::string& url_part, bool curl_verbose)
     if(res != CURLE_OK)
     {
         throw std::runtime_error(std::string(__FUNCTION__) + " - failed: " +
-                                 curl_easy_strerror(res) + ", code: " + std::to_string(res));
+                                 curl_easy_strerror(res) + ", code: " + std::to_string(res) +
+                                 ". URL: " + url->get_url_part());
     }
 }
 } // namespace base

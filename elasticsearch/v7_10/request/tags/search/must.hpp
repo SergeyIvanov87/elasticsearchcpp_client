@@ -85,11 +85,6 @@ struct must
                                              CustomSerializer<MustAggregatorSerializer<CustomSerializer>>)
     {
         TXML_SERIALIZER_AGGREGATOR_OBJECT
-        MustAggregatorSerializer(std::shared_ptr<std::stack<json::SerializerCore::json_core_t>> external_iterators_stack =
-                           std::shared_ptr<std::stack<json::SerializerCore::json_core_t>>(new std::stack<json::SerializerCore::json_core_t>)) :
-            base_t(external_iterators_stack)
-        {
-        }
     };
 
     template<class ...TermWrapper>

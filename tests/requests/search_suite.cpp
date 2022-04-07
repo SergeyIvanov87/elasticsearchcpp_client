@@ -27,7 +27,7 @@ namespace tests
 
     template<class ...Elements>
     using QSS = model::full_text_new::SimpleQueryString<Model, Elements...>;
-TEST(NEW_BOOL, serializer)
+TEST(NEW_MUST, serializer)
 {
 
 //накуя шаблонный шаблон???
@@ -37,10 +37,12 @@ TEST(NEW_BOOL, serializer)
                               QSS<StubLeafNode_string>> must_instance(NTerm<StubLeafNode_bool>(true), NTerms<StubLeafNode_string>("my_string_0"),
                                                                       QSS<StubLeafNode_string>("aaaa"));
 
+
+ auto aaac=                                  std::shared_ptr<std::stack<json::SerializerCore::json_core_t>>(new std::stack<json::SerializerCore::json_core_t>);
 typename model::MustNew<StubModel, NTerm<StubLeafNode_bool>,
                               NTerm<StubLeafNode_int>,
                               NTerms<StubLeafNode_string>,
-                              QSS<StubLeafNode_string>>::aggregator_serializer_type ser;
+                              QSS<StubLeafNode_string>>::aggregator_serializer_type ser(aaac);
     txml::StdoutTracer tracer;
     nlohmann::json node_0 = nlohmann::json::object();
     must_instance.template format_serialize(ser, tracer);
@@ -48,6 +50,26 @@ typename model::MustNew<StubModel, NTerm<StubLeafNode_bool>,
     ASSERT_EQ(node_0.dump(), R"({"must":[{"term":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_int":11}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]})");
 }
 
+TEST(NEW_BOOL, serializer)
+{
+    using MustTag = model::MustNew<StubModel,
+                                   NTerm<StubLeafNode_bool>,
+                                   NTerm<StubLeafNode_int>,
+                                   NTerms<StubLeafNode_string>,
+                                   QSS<StubLeafNode_string>>;
+    MustTag must_instance(NTerm<StubLeafNode_bool>(true),
+                          NTerms<StubLeafNode_string>("my_string_0"),
+                          QSS<StubLeafNode_string>("aaaa"));
+
+    model::BooleanNew<StubModel, MustTag> bool_instance(must_instance);
+
+    typename model::BooleanNew<StubModel, MustTag>::aggregator_serializer_type ser;
+    nlohmann::json node = nlohmann::json::object();
+    txml::StdoutTracer tracer;
+    bool_instance.template format_serialize(ser, tracer);
+    ser. template finalize(node, tracer);
+    ASSERT_EQ(node.dump(), R"({"bool":{"must":[{"term":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_int":11}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]}})");
+}
 struct CtorTracer {
     static size_t created;
     static size_t copy_created;

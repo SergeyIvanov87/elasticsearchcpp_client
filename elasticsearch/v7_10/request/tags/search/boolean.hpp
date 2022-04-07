@@ -37,11 +37,6 @@ struct boolean {
                                              typename SpecificBooleanParams::serializer_parted_type<QueryBooleanContextToJSON>...)
     {
         TXML_SERIALIZER_AGGREGATOR_OBJECT
-        QueryBooleanContextToJSON(std::shared_ptr<std::stack<json::SerializerCore::json_core_t>> external_iterators_stack =
-                                  std::shared_ptr<std::stack<json::SerializerCore::json_core_t>>(new std::stack<json::SerializerCore::json_core_t>)) :
-            base_t(external_iterators_stack)
-        {
-        }
     };
     // Standalone itself serializer ends here:
     using serializer_type = QueryBooleanContextToJSON;
@@ -53,21 +48,21 @@ struct boolean {
     //         combine all of them with own parted serializer hint for itself
     //         and combine all of it with future unknown final upper levels  serializers
     //         where `Parent` is final upper level serializer aggregator
-    template<class Parent, template<typename> class ...UpperLevels>
-    using serializer_dispatcher_type  = txml::SerializerDispatcher<UpperLevels<Parent>..., serializer_parted_type<Parent>,
-                                                                   typename SpecificBooleanParams::serializer_parted_type<Parent>...>;
+    template<class ThisParent, template<typename> class ...QueryUpperLevels>
+    using serializer_dispatcher_type  = txml::SerializerDispatcher<QueryUpperLevels<ThisParent>..., serializer_parted_type<ThisParent>,
+                                                                   typename SpecificBooleanParams::serializer_parted_type<ThisParent>...>;
 
-    template<template<typename>class CustomSerializer, class Parent, template<typename> class ...UpperLevels>
-    using custom_serializer_dispatcher_type  = txml::SerializerDispatcher<UpperLevels<Parent>..., serializer_parted_type<Parent>,
-                                                                   typename SpecificBooleanParams::custom_serializer_parted_type<Parent, CustomSerializer>...>;
+    template<template<typename>class CustomSerializer, class ThisParent, template<typename> class ...QueryUpperLevels>
+    using custom_serializer_dispatcher_type  = txml::SerializerDispatcher<QueryUpperLevels<ThisParent>..., serializer_parted_type<ThisParent>,
+                                                                   typename SpecificBooleanParams::custom_serializer_parted_type<ThisParent, CustomSerializer>...>;
 
 
     //      b) just syntax sugar to reduce template<template<template>> params
     //         because it do not know how to write it down just now...
-    template<template<typename> class ...UpperLevels>
-    struct parent : public serializer_dispatcher_type<parent<UpperLevels...>, UpperLevels...>
+    template<template<typename> class ...QueryUpperLevels>
+    struct parent : public serializer_dispatcher_type<parent<QueryUpperLevels...>, QueryUpperLevels...>
     {
-        using base_t = serializer_dispatcher_type<parent<UpperLevels...>, UpperLevels...>;
+        using base_t = serializer_dispatcher_type<parent<QueryUpperLevels...>, QueryUpperLevels...>;
 
         parent(std::shared_ptr<std::stack<json::SerializerCore::json_core_t>> external_iterators_stack =
                std::shared_ptr<std::stack<json::SerializerCore::json_core_t>>(new std::stack<json::SerializerCore::json_core_t>)) :

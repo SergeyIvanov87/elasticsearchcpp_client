@@ -146,11 +146,6 @@ struct query<::model::EmptyModel, ::model::EmptyParam>
                                              MatchAllToJSON<QueryContextToJSON>)
     {
         TXML_SERIALIZER_AGGREGATOR_OBJECT
-        QueryContextToJSON(std::shared_ptr<std::stack<json::SerializerCore::json_core_t>> external_iterators_stack =
-                           std::shared_ptr<std::stack<json::SerializerCore::json_core_t>>(new std::stack<json::SerializerCore::json_core_t>)) :
-            base_t(external_iterators_stack)
-        {
-        }
     };
 
     using serializer_type = QueryContextToJSON;

@@ -7,9 +7,10 @@ namespace tests
 {
 struct Settings
 {
+    static const char *get_cfg_env_name() { return "UT_HOST_ADDR"; }
     Settings()
     {
-        char* host_addr = getenv("UT_HOST_ADDR");
+        char* host_addr = getenv(Settings::get_cfg_env_name());
         if (host_addr)
         {
             host = host_addr;
