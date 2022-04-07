@@ -204,40 +204,8 @@ public:
         base_t:: template format_serialize_impl(ser, tracer);
     }
 
-    // helper for upper level boolean standalone
     template<class Parent>
-    TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(subserializer_parted_type, Parent, ToJSON,
-                                                    must_new::SubContextArrayElement<Model, SubContexts...>,
-                                                        SubContexts...)
-    {
-        TXML_SERIALIZER_DISPATCHABLE_OBJECT
-
-        template<class Tracer>
-        void serialize_impl(const ::model::must_new::SubContextArrayElement<Model, SubContexts...> &val, Tracer tracer)
-        {
-            tracer.trace(__FUNCTION__, " - skip SubContextArrayElement by itself");
-            val.template format_serialize_elements(*this, tracer);
-        }
-    };
-    template<class Parent>
-    using subcontext_serializer_type = subserializer_parted_type<Parent>;
-
-    // transparetn serializer
-    template<class Parent, template<typename> class ...UpperLevels>
-    using serializer_dispatcher_type  = txml::SerializerDispatcher<UpperLevels<Parent>...,
-                                                                   serializer_parted_type<Parent>,
-                                                                   typename SubContexts::subcontext_serializer_type<Parent>...>;
-    template<template<typename> class ...UpperLevels>
-    struct parent : public serializer_dispatcher_type<parent<UpperLevels...>, UpperLevels...>
-    {
-        using base_t = serializer_dispatcher_type<parent<UpperLevels...>, UpperLevels...>;
-
-        parent(std::shared_ptr<std::stack<json::SerializerCore::json_core_t>> external_iterators_stack =
-               std::shared_ptr<std::stack<json::SerializerCore::json_core_t>>(new std::stack<json::SerializerCore::json_core_t>)) :
-        base_t(external_iterators_stack)
-        {
-        }
-    };
+    using subcontext_serializer_type = serializer_parted_type<Parent>;
 };
 
 
@@ -279,25 +247,6 @@ public:
     {
         TXML_SERIALIZER_AGGREGATOR_OBJECT
     };
-
-    template<class Parent, template<typename> class ...UpperLevels>
-    using serializer_dispatcher_type  = txml::SerializerDispatcher<UpperLevels<Parent>..., serializer_parted_type<Parent>,
-                                                                   typename SubContexts::serializer_dispatcher_type<Parent, UpperLevels...>...>;
-
-    //      b) just syntax sugar to reduce template<template<template>> params
-    //         because it do not know how to write it down just now...
-    template<template<typename> class ...UpperLevels>
-    struct parent : public serializer_dispatcher_type<parent<UpperLevels...>, UpperLevels...>
-    {
-        using base_t = serializer_dispatcher_type<parent<UpperLevels...>, UpperLevels...>;
-
-        parent(std::shared_ptr<std::stack<json::SerializerCore::json_core_t>> external_iterators_stack =
-               std::shared_ptr<std::stack<json::SerializerCore::json_core_t>>(new std::stack<json::SerializerCore::json_core_t>)) :
-        base_t(external_iterators_stack)
-        {
-        }
-    };
-
 
     template<class Formatter, class Tracer>
     void format_serialize_impl(Formatter& out, Tracer tracer) const

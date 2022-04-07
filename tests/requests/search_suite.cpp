@@ -29,20 +29,16 @@ namespace tests
     using QSS = model::full_text_new::SimpleQueryString<Model, Elements...>;
 TEST(NEW_MUST, serializer)
 {
-
-//накуя шаблонный шаблон???
     model::MustNew<StubModel, NTerm<StubLeafNode_bool>,
                               NTerm<StubLeafNode_int>,
                               NTerms<StubLeafNode_string>,
                               QSS<StubLeafNode_string>> must_instance(NTerm<StubLeafNode_bool>(true), NTerms<StubLeafNode_string>("my_string_0"),
                                                                       QSS<StubLeafNode_string>("aaaa"));
 
-
- auto aaac=                                  std::shared_ptr<std::stack<json::SerializerCore::json_core_t>>(new std::stack<json::SerializerCore::json_core_t>);
-typename model::MustNew<StubModel, NTerm<StubLeafNode_bool>,
+    typename model::MustNew<StubModel, NTerm<StubLeafNode_bool>,
                               NTerm<StubLeafNode_int>,
                               NTerms<StubLeafNode_string>,
-                              QSS<StubLeafNode_string>>::aggregator_serializer_type ser(aaac);
+                              QSS<StubLeafNode_string>>::aggregator_serializer_type ser;
     txml::StdoutTracer tracer;
     nlohmann::json node_0 = nlohmann::json::object();
     must_instance.template format_serialize(ser, tracer);

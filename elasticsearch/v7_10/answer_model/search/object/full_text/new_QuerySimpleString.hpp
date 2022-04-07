@@ -134,35 +134,24 @@ public:
         template<class Tracer>
         void serialize_impl(const ::model::full_text_new::FieldsArrayElement<Model, FieldsElements...> &val, Tracer tracer)
         {
-            tracer.trace(__FUNCTION__, " - skipe FieldsArrayElement by itself");
+            tracer.trace(__FUNCTION__, " - skip FieldsArrayElement by itself");
             val.template format_serialize_elements(*this, tracer);
         }
     };
     TXML_DECLARE_SERIALIZER_AGGREGATOR_CLASS(aggregator_serializer_type,
-                                                     serializer_parted_type<aggregator_serializer_type>)
+                                             serializer_parted_type<aggregator_serializer_type>)
     {
         TXML_SERIALIZER_AGGREGATOR_OBJECT
-/*
-        aggregator_serializer_type(std::shared_ptr<std::stack<json::SerializerCore::json_core_t>> external_iterators_stack =
-                                   std::shared_ptr<std::stack<json::SerializerCore::json_core_t>>(new std::stack<json::SerializerCore::json_core_t>)) :
-            json::SerializerCore(external_iterators_stack),
-            base_t(external_iterators_stack)
-        {
-        }*/
     };
 
     template<class Parent>
     using subcontext_serializer_type = serializer_parted_type<Parent>;
-
-    template<class Parent>
-    using subcontext_virtual_serializer_type = serializer_parted_type<Parent>;
 
     template<class Formatter, class Tracer>
     void format_serialize_impl(Formatter& out, Tracer tracer) const
     {
         aggregator_serializer_type ser(out.get_shared_mediator_object());
         base_t:: template format_serialize_impl(ser, tracer);
-        //*(out.get_shared_mediator_object()) = ser. template finalize(tracer);
     }
 };
 }
