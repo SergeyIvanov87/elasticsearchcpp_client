@@ -1,3 +1,5 @@
+#if 0
+
 #ifndef ANSWER_MODEL_SEARCH_BOOLEAN_BOOL_H
 #define ANSWER_MODEL_SEARCH_BOOLEAN_BOOL_H
 
@@ -214,4 +216,5 @@ public:
     }
 };
 }
+#endif
 #endif

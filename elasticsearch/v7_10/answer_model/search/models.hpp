@@ -24,6 +24,7 @@ namespace search
  * It is impossible to write down `request` in fully templated manner.
  * So let's take consideration to write down multiple subrequests which can be highly template customizable by itself
  * */
+#if 0
 template<class Model, class ...SpecificQueryParams>
 class query_subrequest : public txml::XMLNode<query_subrequest<Model, SpecificQueryParams...>,
                                               ::model::Query<Model, SpecificQueryParams...>>
@@ -42,6 +43,7 @@ public:
         return txml::TextReaderWrapper::NodeType::Element;
     }
 };
+#endif
 template<class Model, class ...SpecificSortParams>
 class sort_subrequest : public txml::XMLNode<sort_subrequest<Model, SpecificSortParams...>,
                                             ::model::SortArray<Model, SpecificSortParams...>>
@@ -113,11 +115,11 @@ public:
 using namespace json;
 template<class Model, class ...SpecificQueryParams>
 class query_subrequest_new : public txml::XMLNode<query_subrequest_new<Model, SpecificQueryParams...>,
-                                              ::model::QueryNew<Model, SpecificQueryParams...>>
+                                              ::model::search::QueryNew<Model, SpecificQueryParams...>>
 {
 public:
     using base_t = txml::XMLNode<query_subrequest_new<Model, SpecificQueryParams...>,
-                               ::model::QueryNew<Model, SpecificQueryParams...>>;
+                               ::model::search::QueryNew<Model, SpecificQueryParams...>>;
 
     static constexpr std::string_view class_name()
     {
@@ -129,14 +131,14 @@ public:
         return txml::TextReaderWrapper::NodeType::Element;
     }
 
-    using query_element_value_type = ::model::QueryNew<Model, SpecificQueryParams...>;
+    using query_element_value_type = ::model::search::QueryNew<Model, SpecificQueryParams...>;
 
     // Only itself serializer must be here... just relief
     //         a) we must declate serialzier for element by itself
     template <class Parent>
     TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(serializer_parted_type, Parent, ToJSON,
                                                     query_subrequest_new<Model, SpecificQueryParams...>,
-                                                    ::model::QueryNew<Model, SpecificQueryParams...>)
+                                                    ::model::search::QueryNew<Model, SpecificQueryParams...>)
     {
         TXML_SERIALIZER_DISPATCHABLE_OBJECT
 

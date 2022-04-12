@@ -5,6 +5,7 @@
 
 namespace model
 {
+using namespace json;
 template<class Model, class ...SortedElements>
 class SortArrayElement : public txml::XMLNode<SortArrayElement<Model, SortedElements...>,
                                               SortRecord<Model, SortedElements>...>
@@ -61,12 +62,12 @@ public:
 
     template<class ParentAggregator>
     TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(serializer_parted_type, ParentAggregator, ToJSON,
-                                                ::model::SortArray<Model, SortedElements...>,
-                                                    ::model::SortArrayElement<Model, SortedElements...>,
-                                                        ::model::SortRecord<Model, SortedElements>...,
-                                                            ::model::UnmappedType,
-                                                            ::model::Order,
-                                                            ::model::Format)
+                                                model::SortArray<Model, SortedElements...>,
+                                                    model::SortArrayElement<Model, SortedElements...>,
+                                                        model::SortRecord<Model, SortedElements>...,
+                                                            model::UnmappedType,
+                                                            model::Order,
+                                                            model::Format)
     {
         TXML_SERIALIZER_DISPATCHABLE_OBJECT
 

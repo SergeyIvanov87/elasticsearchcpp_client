@@ -7,6 +7,8 @@
 
 namespace model
 {
+namespace search
+{
 using namespace json;
 template<class Model, class ...Params>
 class QueryNew: public txml::XMLNode<QueryNew<Model, Params...>,
@@ -55,12 +57,12 @@ public:
     }
 };
 using namespace json;
-template<class Model>
-class QueryNew<Model, EmptyParam>: public txml::XMLNode<QueryNew<Model, EmptyParam>,
+template<>
+class QueryNew<EmptyModel, EmptyParam>: public txml::XMLNode<QueryNew<EmptyModel, EmptyParam>,
                                                           MatchAll>
 {
 public:
-    using base_t = txml::XMLNode<QueryNew<Model, EmptyParam>,
+    using base_t = txml::XMLNode<QueryNew<EmptyModel, EmptyParam>,
                                        MatchAll>;
 
     static constexpr std::string_view class_name()
@@ -78,10 +80,18 @@ public:
 
     template<class ParentAggregator>
     TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(serializer_parted_type, ParentAggregator, ToJSON,
-                                                    QueryNew<Model, EmptyParam>,
-                                                    EmptyParam)
+                                                    QueryNew<EmptyModel, EmptyParam>,
+                                                    MatchAll)
     {
         TXML_SERIALIZER_DISPATCHABLE_OBJECT
+
+        template<class Tracer>
+        void serialize_impl(const MatchAll&)
+        {
+            auto mediator = this->get_shared_mediator_object();
+            typename base_t::json_core_t element({{MatchAll::class_name(), ""}});
+            mediator->push(std::move(element));
+        }
     };
 
     TXML_DECLARE_SERIALIZER_AGGREGATOR_CLASS(aggregator_serializer_type,
@@ -97,5 +107,6 @@ public:
         base_t:: template format_serialize_impl(ser, tracer);
     }
 };
+}
 }
 #endif // ANSWER_MODEL_SEARCH_OBJECT_NEW_QUERY_H

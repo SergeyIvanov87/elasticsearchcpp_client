@@ -251,7 +251,10 @@ private:
     {
         {
             auto acc = json_data_provider->access();
-            q.serialize(acc.object(), tracer);
+            typename tag::query<Model, SpecificQueryParams...>::aggregator_serializer_type serializer;
+
+            q.template format_serialize(serializer, tracer);
+            serializer. template finalize(acc.object(), tracer);
         }
     }
 

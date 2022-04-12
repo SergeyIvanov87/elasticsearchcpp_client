@@ -1,3 +1,4 @@
+#if 0
 #ifndef ANSWER_MODEL_SEARCH_OBJECT_QUERY_H
 #define ANSWER_MODEL_SEARCH_OBJECT_QUERY_H
 
@@ -49,3 +50,4 @@ public:
 };
 }
 #endif // ANSWER_MODEL_SEARCH_OBJECT_QUERY_H
+#endif

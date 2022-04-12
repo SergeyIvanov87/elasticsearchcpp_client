@@ -14,29 +14,40 @@ namespace tag
 {
 using namespace elasticsearch::book::search;
 
-template<class ...SpecificModelParams>
-using must = elasticsearch::v7::search::tag::must<elasticsearch::book::model::data, SpecificModelParams...>;
+template <class ...SubContexts>
+using must = ::model::search::MustNew<elasticsearch::book::model::data, SubContexts...>;
+
+template<class ModelElement>
+using mterm = ::model::search::must_new::Term<elasticsearch::book::model::data, ModelElement>;
+template<class ModelElement>
+using mterms = ::model::search::must_new::Terms<elasticsearch::book::model::data, ModelElement>;
+
+template<class ModelElement>
+using fterm = ::model::search::filter_new::Term<elasticsearch::book::model::data, ModelElement>;
 
 
 template <class T>
 inline auto make(const std::optional<T> &arg)
 {
-    return elasticsearch::v7::search::tag::make<elasticsearch::v7::search::tag::Term>(arg);
+    return arg.has_value() ? std::optional<mterm<T>>(arg.value())  : std::optional<mterm<T>>{};
 }
 template <class T>
 inline auto make(std::optional<T> &&arg)
 {
-    return elasticsearch::v7::search::tag::make<elasticsearch::v7::search::tag::Term>(std::move(arg));
+    //return elasticsearch::v7::search::tag::make<elasticsearch::v7::search::tag::Term>(std::move(arg));
+    return arg.has_value() ? std::optional<mterm<T>>(std::move(arg.value())) : std::optional<mterm<T>>{};
 }
 
 inline auto make(const std::optional<elasticsearch::common_model::Tags> &arg)
 {
-    return elasticsearch::v7::search::tag::make<elasticsearch::v7::search::tag::Terms>(arg);
+    //return elasticsearch::v7::search::tag::make<elasticsearch::v7::search::tag::Terms>(arg);
+    return arg.has_value() ? std::optional<mterms<elasticsearch::common_model::Tags>>(arg.value()) : std::optional<mterms<elasticsearch::common_model::Tags>>{};
 }
 
 inline auto make(std::optional<elasticsearch::common_model::Tags> &&arg)
 {
-    return elasticsearch::v7::search::tag::make<elasticsearch::v7::search::tag::Terms>(std::move(arg));
+    //return elasticsearch::v7::search::tag::make<elasticsearch::v7::search::tag::Terms>(std::move(arg));
+    return arg.has_value() ? std::optional<mterms<elasticsearch::common_model::Tags>>(arg.value()) : std::optional<mterms<elasticsearch::common_model::Tags>>{};
 }
 
 template <class T, class ...Args>
@@ -47,16 +58,16 @@ inline auto make(Args &&...args)
 
 namespace create
 {
-    template<class ...SpecificModelParams>
-    must<typename SpecificModelParams::value_t...> must_tag(SpecificModelParams &&...args)
+    template<class ...SpecificModelParams, class = std::enable_if_t<::model::search::details::enable_for_node_args<::model::search::MustNew, SpecificModelParams...>()
+                              && ::model::search::details::enable_for_must_element<SpecificModelParams...>(), int>>
+    must<SpecificModelParams...> must_tag(SpecificModelParams &&...args)
     {
-        return must<typename SpecificModelParams::value_t...> (std::forward<SpecificModelParams>(args)...);
+        return must<SpecificModelParams...> (std::forward<SpecificModelParams>(args)...);
     }
-
     template<class ...SpecificModelParams>
-    must<typename SpecificModelParams::value_t...> must_tag(const std::optional<SpecificModelParams> &...args)
+    must<SpecificModelParams...> must_tag(const std::optional<SpecificModelParams> &...args)
     {
-        return must<typename SpecificModelParams::value_t...> (args...);
+        return must<SpecificModelParams...> (args...);
     }
 } // namespace create
 

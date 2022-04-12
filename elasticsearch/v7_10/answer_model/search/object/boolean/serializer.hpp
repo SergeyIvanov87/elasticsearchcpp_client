@@ -13,6 +13,7 @@ namespace search
 {
 using namespace json;
 
+#if 0
 template<class Model, class ...SpecificQueryParams>
 struct QueryMustContextToJSON : public ToJSON<QueryMustContextToJSON<Model, SpecificQueryParams...>,
                                                 ::model::Must<Model, SpecificQueryParams...>,
@@ -131,6 +132,7 @@ TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(QueryBooleanContextToJSONParted, Pare
 {
     TXML_SERIALIZER_DISPATCHABLE_OBJECT
 };
+#endif
 }
 }
 }

@@ -10,13 +10,14 @@
 
 namespace model
 {
-namespace must {
-
+namespace search
+{
+namespace must_new
+{
 template<class SpecificModel>
-class ElementToQuery<SpecificModel,
-                     elasticsearch::common_model::Tags> :
-     public txml::XMLNodeLeaf<ElementToQuery<SpecificModel,
-                     elasticsearch::common_model::Tags>, elasticsearch::common_model::Tags::value_t>
+class ElementToQuery<SpecificModel, elasticsearch::common_model::Tags> :
+     public txml::XMLNodeLeaf<ElementToQuery<SpecificModel, elasticsearch::common_model::Tags>,
+                              elasticsearch::common_model::Tags::value_t>
 {
 public:
     using Model = SpecificModel;
@@ -52,6 +53,7 @@ public:
     }
 
 };
+}
 }
 }
 #endif // COMMON_MODEL_SEARCH_TAG_SPECIALIZATIONS_HPP

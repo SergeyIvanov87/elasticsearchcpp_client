@@ -7,7 +7,8 @@
 
 namespace model
 {
-namespace must {
+namespace search {
+namespace must_new {
 template<>
 class ElementToQuery<elasticsearch::image::model::data,
                      elasticsearch::image::model::element::Location> :
@@ -41,5 +42,5 @@ public:
 };
 }
 }
-
+}
 #endif // ELASTICSEARCH_IMAGES_SEARCH_IMAGE_SPECIALIZATIONS_HPP

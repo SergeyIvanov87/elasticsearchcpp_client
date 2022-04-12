@@ -2,8 +2,11 @@
 #define ANSWER_MODEL_SEARCH_FULL_TEXT_SIMPLE_QUERY_STRING_NEW_HPP
 
 #include <txml/txml_fwd.h>
+#include "elasticsearch/v7_10/answer_model/search/object/boolean/tags.hpp"
 
 namespace model
+{
+namespace search
 {
 namespace full_text_new
 {
@@ -98,7 +101,8 @@ public:
 template<class Model, class ...FieldsElements>
 class SimpleQueryString : public txml::XMLNode<SimpleQueryString<Model, FieldsElements...>,
                                                Query,
-                                               FieldsArray<Model, FieldsElements...>>
+                                               FieldsArray<Model, FieldsElements...>>,
+                          public TagHolder<BooleanElementTag, MustElementTag>
 {
 public:
     using self_t = BooleanNew<Model, FieldsElements...>;
@@ -132,7 +136,7 @@ public:
         TXML_SERIALIZER_DISPATCHABLE_OBJECT
 
         template<class Tracer>
-        void serialize_impl(const ::model::full_text_new::FieldsArrayElement<Model, FieldsElements...> &val, Tracer tracer)
+        void serialize_impl(const full_text_new::FieldsArrayElement<Model, FieldsElements...> &val, Tracer tracer)
         {
             tracer.trace(__FUNCTION__, " - skip FieldsArrayElement by itself");
             val.template format_serialize_elements(*this, tracer);
@@ -154,6 +158,7 @@ public:
         base_t:: template format_serialize_impl(ser, tracer);
     }
 };
+}
 }
 }
 #endif // ANSWER_MODEL_SEARCH_FULL_TEXT_SIMPLE_QUERY_STRING_NEW_HPP

@@ -2,10 +2,39 @@
 #define ANSWER_MODEL_SEARCH_BOOLEAN_NEW_BOOL_H
 
 #include <txml/txml_fwd.h>
+#include "elasticsearch/utils/traits.hpp"
 #include "elasticsearch/v7_10/answer_model/search/object/full_text/SimpleQueryString.hpp"
+#include "elasticsearch/v7_10/answer_model/search/object/boolean/tags.hpp"
 
 namespace model
 {
+namespace search
+{
+namespace details
+{
+template<class T, class ...All>
+static constexpr bool
+enable_for_node_args() { return elasticsearch::utils::is_all_not<T, All...>(); }
+/*
+template<class Target>
+static constexpr bool
+is_must_element() {return model::search::isContainTag<MustElementTag>(std::declval<Target>()); }
+*/
+template <class Target>
+struct is_must_element : std::integral_constant<bool, model::search::has_tag<MustElementTag, Target>()> {};
+template<class ...All>
+static constexpr bool
+enable_for_must_element() {return  std::conjunction_v<is_must_element<All>...>; }
+
+template <class Target>
+struct is_filter_element : std::integral_constant<bool, model::search::isContainTag<FilterElementTag, Target>()> {};
+
+template<class ...All>
+static constexpr bool
+enable_for_filter_element() {return  std::conjunction_v<is_filter_element<All>...>; }
+}
+
+
 using namespace json;
 namespace must_new {
 
@@ -35,7 +64,8 @@ public:
 
 template<class Model, class QueryElement>
 class Term : public txml::XMLNode<Term<Model, QueryElement>,
-                                       ElementToQuery<Model, QueryElement>>
+                                       ElementToQuery<Model, QueryElement>>,
+             public TagHolder<MustElementTag>
 {
 public:
     using value_t = QueryElement;
@@ -60,6 +90,14 @@ public:
         this->template set (std::make_shared<ElementToQuery<Model, value_t>>(v));
     }
 
+    Term(value_t &&v) {
+        this->template set (std::make_shared<ElementToQuery<Model, value_t>>(std::move(v.getValue())));
+    }
+
+    Term(const value_t &v) {
+        this->template set (std::make_shared<ElementToQuery<Model, value_t>>(v.getValue()));
+    }
+
     template<class Parent>
     TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(subcontext_serializer_type, Parent, ToJSON,
                                                //Term<Model, value_t>,
@@ -71,7 +109,8 @@ public:
 
 template<class Model, class QueryElement>
 class Terms : public txml::XMLNode<Terms<Model, QueryElement>,
-                                       ElementToQuery<Model, QueryElement>>
+                                       ElementToQuery<Model, QueryElement>>,
+              public TagHolder<MustElementTag>
 {
 public:
     using value_t = QueryElement;
@@ -94,6 +133,14 @@ public:
 
     Terms(const typename value_t::value_t &v) {
         this->template set (std::make_shared<ElementToQuery<Model, value_t>>(v));
+    }
+
+    Terms(value_t &&v) {
+        this->template set (std::make_shared<ElementToQuery<Model, value_t>>(std::move(v.getValue())));
+    }
+
+    Terms(const value_t &v) {
+        this->template set (std::make_shared<ElementToQuery<Model, value_t>>(v.getValue()));
     }
 
     template<class Parent>
@@ -124,9 +171,12 @@ public:
 };
 }
 
+
+using namespace json;
 template<class Model, class ...SubContexts>
 class MustNew: public txml::XMLArray<MustNew<Model, SubContexts...>,
-                                              must_new::SubContextArrayElement<Model, SubContexts...>>
+                                              must_new::SubContextArrayElement<Model, SubContexts...>>,
+               public TagHolder<BooleanElementTag>
 {
 public:
     using element_t = must_new::SubContextArrayElement<Model, SubContexts...>;
@@ -154,19 +204,31 @@ public:
         this->getValue().swap(src.getValue());
     }
 
-    template<class ...SpecificSubContexts,
-                        class = std::enable_if_t<
-                                                not std::disjunction_v<
-                                                            std::is_same<std::decay_t<SpecificSubContexts>, MustNew>...
-                                                                      >
-                                                       , int>>
+    /*template<class ...SpecificSubContexts,
+                        class = std::enable_if_t<elasticsearch::utils::is_all_not<MustNew, SpecificSubContexts>
+                                                 and
+                                                 elasticsearch::utils::is_all_base_not<details::TermKind, SpecificSubContexts>,
+                                                 int>>*/
+    template<class ...SpecificSubContexts, class =
+             std::enable_if_t<details::enable_for_node_args<MustNew, SpecificSubContexts...>()
+                              && details::enable_for_must_element<SpecificSubContexts...>(), int>>
     MustNew(SpecificSubContexts && ...args) {
         auto elem = std::make_shared<element_t>();
         (elem->template emplace <SpecificSubContexts>(std::forward<SpecificSubContexts>(args)), ...);
         this->getValue().push_back(elem);
     }
 
-
+    template<class ...SpecificSubContexts, class =
+             std::enable_if_t<details::enable_for_node_args<MustNew, SpecificSubContexts...>()/*
+                              && not details::enable_for_must_element<SpecificSubContexts...>()*/, int>>
+    MustNew(const std::optional<SpecificSubContexts>&...args)
+    {
+        static_assert(details::enable_for_must_element<SpecificSubContexts...>(), "ssss");
+        auto elem = std::make_shared<element_t>();
+        ( (args.has_value() ? elem->template emplace <SpecificSubContexts>(args.value()),true : false), ...);
+        this->getValue().push_back(elem);
+    }
+/////////////////////////
 
     // Subcontext Array element constitute a lot of variadic subitem templates : Term, Terms, QuerySimpleString and something other
     // Many of them require its own variadic templates. So it's it not possible to enumerate several variadic packs here in standalone serializer
@@ -180,7 +242,7 @@ public:
         TXML_SERIALIZER_DISPATCHABLE_OBJECT
 
         template<class Tracer>
-        void serialize_impl(const ::model::must_new::SubContextArrayElement<Model, SubContexts...> &val, Tracer tracer)
+        void serialize_impl(const must_new::SubContextArrayElement<Model, SubContexts...> &val, Tracer tracer)
         {
             tracer.trace(__FUNCTION__, " - skip SubContextArrayElement by itself");
             val.template format_serialize_elements(*this, tracer);
@@ -236,7 +298,8 @@ public:
 
 template<class Model, class QueryElement>
 class Term : public txml::XMLNode<Term<Model, QueryElement>,
-                                       ElementToQuery<Model, QueryElement>>
+                                       ElementToQuery<Model, QueryElement>>,
+             public TagHolder<FilterElementTag>
 {
 public:
     using value_t = QueryElement;
@@ -288,9 +351,11 @@ public:
     }
 };
 }
+
 template<class Model, class ...SubContexts>
 class FilterNew: public txml::XMLArray<FilterNew<Model, SubContexts...>,
-                                              filter_new::SubContextArrayElement<Model, SubContexts...>>
+                                              filter_new::SubContextArrayElement<Model, SubContexts...>>,
+                public TagHolder<BooleanElementTag>
 {
 public:
     using element_t = filter_new::SubContextArrayElement<Model, SubContexts...>;
@@ -344,7 +409,7 @@ public:
         TXML_SERIALIZER_DISPATCHABLE_OBJECT
 
         template<class Tracer>
-        void serialize_impl(const ::model::filter_new::SubContextArrayElement<Model, SubContexts...> &val, Tracer tracer)
+        void serialize_impl(const filter_new::SubContextArrayElement<Model, SubContexts...> &val, Tracer tracer)
         {
             tracer.trace(__FUNCTION__, " - skip SubContextArrayElement by itself");
             val.template format_serialize_elements(*this, tracer);
@@ -375,7 +440,8 @@ public:
 //////////////////////
 template<class Model, class ...SubContexts>
 class BooleanNew : public txml::XMLNode<BooleanNew<Model, SubContexts...>,
-                                        SubContexts...> //Must, Filter
+                                        SubContexts...>, //Must, Filter,
+                   public TagHolder<QueryElementTag>
 {
 public:
     using self_t = BooleanNew<Model, SubContexts...>;
@@ -437,5 +503,6 @@ public:
         //*(out.get_shared_mediator_object()) = ser. template finalize(tracer);
     }
 };
+}
 }
 #endif
