@@ -1,7 +1,8 @@
 #ifndef ELASTICSEARCH_7_10_REQUEST_SEARCH_TAGS_FILTER_HPP
 #define ELASTICSEARCH_7_10_REQUEST_SEARCH_TAGS_FILTER_HPP
 
-#include "elasticsearch/v7_10/answer_model/search/object/boolean/serializer.hpp"
+#include <txml/applications/json/json.hpp>
+#include "elasticsearch/v7_10/answer_model/search/object/boolean/new_Bool.h"
 
 namespace elasticsearch
 {

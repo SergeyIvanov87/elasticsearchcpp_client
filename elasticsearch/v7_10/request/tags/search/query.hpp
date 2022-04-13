@@ -1,12 +1,9 @@
 #ifndef ELASTICSEARCH_7_10_REQUEST_SEARCH_TAGS_QUERY_HPP
 #define ELASTICSEARCH_7_10_REQUEST_SEARCH_TAGS_QUERY_HPP
 
-#include "elasticsearch/v7_10/answer_model/search/object/boolean/serializer.hpp"
-#include "elasticsearch/v7_10/answer_model/search/object/full_text/serializer.hpp"
+#include <txml/applications/json/json.hpp>
 #include "elasticsearch/v7_10/answer_model/search/serializer.hpp"
-
 #include "elasticsearch/v7_10/answer_model/search/object/boolean/new_Bool.h"
-#include "elasticsearch/v7_10/answer_model/search/object/full_text/new_QuerySimpleString.hpp"
 
 namespace elasticsearch
 {

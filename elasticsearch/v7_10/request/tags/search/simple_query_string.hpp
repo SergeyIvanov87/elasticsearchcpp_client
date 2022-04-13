@@ -1,7 +1,6 @@
 #ifndef ELASTICSEARCH_7_10_REQUEST_SEARCH_TAGS_SIMPLE_QUERY_STRING_HPP
 #define ELASTICSEARCH_7_10_REQUEST_SEARCH_TAGS_SIMPLE_QUERY_STRING_HPP
 
-#include "elasticsearch/v7_10/answer_model/search/object/full_text/serializer.hpp"
 #include "elasticsearch/v7_10/answer_model/search/object/full_text/new_QuerySimpleString.hpp"
 
 namespace elasticsearch

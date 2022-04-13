@@ -3,7 +3,6 @@
 
 #include <txml/txml_fwd.h>
 #include "elasticsearch/utils/traits.hpp"
-#include "elasticsearch/v7_10/answer_model/search/object/full_text/SimpleQueryString.hpp"
 #include "elasticsearch/v7_10/answer_model/search/object/boolean/tags.hpp"
 
 namespace model
