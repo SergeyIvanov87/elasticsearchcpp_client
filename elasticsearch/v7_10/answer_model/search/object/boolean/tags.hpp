@@ -7,6 +7,13 @@ namespace model
 {
 namespace search
 {
+namespace details
+{
+template<class T, class ...All>
+static constexpr bool
+enable_for_node_args() { return elasticsearch::utils::is_all_not<T, All...>(); }
+}
+
 struct BooleanElementTag {};
 
 struct MustElementTag {};

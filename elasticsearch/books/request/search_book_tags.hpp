@@ -58,16 +58,10 @@ inline auto make(Args &&...args)
 
 namespace create
 {
-    template<class ...SpecificModelParams, class = std::enable_if_t<::model::search::details::enable_for_node_args<::model::search::Must, SpecificModelParams...>()
-                              && ::model::search::details::enable_for_must_element<SpecificModelParams...>(), int>>
-    must<SpecificModelParams...> must_tag(SpecificModelParams &&...args)
-    {
-        return must<SpecificModelParams...> (std::forward<SpecificModelParams>(args)...);
-    }
     template<class ...SpecificModelParams>
-    must<SpecificModelParams...> must_tag(const std::optional<SpecificModelParams> &...args)
+    auto must_tag(SpecificModelParams &&...args)
     {
-        return must<SpecificModelParams...> (args...);
+        return elasticsearch::v7::search::tag::create::must_tag<elasticsearch::book::model::data>(std::forward<SpecificModelParams>(args)...);
     }
 } // namespace create
 
