@@ -14,11 +14,7 @@ namespace details
 template<class T, class ...All>
 static constexpr bool
 enable_for_node_args() { return elasticsearch::utils::is_all_not<T, All...>(); }
-/*
-template<class Target>
-static constexpr bool
-is_must_element() {return model::search::isContainTag<MustElementTag>(std::declval<Target>()); }
-*/
+
 template <class Target>
 struct is_must_element : std::integral_constant<bool, model::search::has_tag<MustElementTag, Target>()> {};
 template<class ...All>
@@ -26,7 +22,7 @@ static constexpr bool
 enable_for_must_element() {return  std::conjunction_v<is_must_element<All>...>; }
 
 template <class Target>
-struct is_filter_element : std::integral_constant<bool, model::search::isContainTag<FilterElementTag, Target>()> {};
+struct is_filter_element : std::integral_constant<bool, model::search::has_tag<FilterElementTag, Target>()> {};
 
 template<class ...All>
 static constexpr bool
@@ -438,13 +434,13 @@ public:
 
 //////////////////////
 template<class Model, class ...SubContexts>
-class BooleanNew : public txml::XMLNode<BooleanNew<Model, SubContexts...>,
+class Boolean : public txml::XMLNode<Boolean<Model, SubContexts...>,
                                         SubContexts...>, //Must, Filter,
                    public TagHolder<QueryElementTag>
 {
 public:
-    using self_t = BooleanNew<Model, SubContexts...>;
-    using base_t = txml::XMLNode<BooleanNew<Model, SubContexts...>,
+    using self_t = Boolean<Model, SubContexts...>;
+    using base_t = txml::XMLNode<Boolean<Model, SubContexts...>,
                                  SubContexts...>;
 
     static constexpr std::string_view class_name()
@@ -458,28 +454,28 @@ public:
     }
 
 
-    BooleanNew(const BooleanNew &src) {
+    Boolean(const Boolean &src) {
         this->getValue() = src.getValue();
     }
 
-    BooleanNew(BooleanNew &&src) {
+    Boolean(Boolean &&src) {
         this->getValue().swap(src.getValue());
     }
 
     template<class ...BooleanParamsTagsPack,
                         class = std::enable_if_t<
                                                 not std::disjunction_v<
-                                                            std::is_same<std::decay_t<BooleanParamsTagsPack>, BooleanNew>...
+                                                            std::is_same<std::decay_t<BooleanParamsTagsPack>, Boolean>...
                                                                       >
                                                         , int>>
-    BooleanNew(BooleanParamsTagsPack &&...args)
+    Boolean(BooleanParamsTagsPack &&...args)
     {
         (this->template set<std::decay_t<BooleanParamsTagsPack>>(std::make_shared<std::decay_t<BooleanParamsTagsPack>>(std::forward<BooleanParamsTagsPack>(args))),...);
     }
 
     template<class Parent>
     TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(serializer_parted_type, Parent, ToJSON,
-                                               BooleanNew<Model, SubContexts...>,
+                                               Boolean<Model, SubContexts...>,
                                                         SubContexts...) {
         TXML_SERIALIZER_DISPATCHABLE_OBJECT
     };

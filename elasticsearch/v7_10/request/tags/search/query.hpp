@@ -15,7 +15,7 @@ namespace tag
 {
 using namespace elasticsearch::v7::search;
 template<class Model, class ...SpecificQueryParams>
-using query = model::search::QueryNew<Model, SpecificQueryParams...>;
+using query = model::search::Query<Model, SpecificQueryParams...>;
 using query_all = query<::model::EmptyModel, ::model::EmptyParam>;
 namespace create
 {

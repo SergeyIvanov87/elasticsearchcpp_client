@@ -105,7 +105,7 @@ class SimpleQueryString : public txml::XMLNode<SimpleQueryString<Model, FieldsEl
                           public TagHolder<BooleanElementTag, MustElementTag>
 {
 public:
-    using self_t = BooleanNew<Model, FieldsElements...>;
+    using self_t = SimpleQueryString<Model, FieldsElements...>;
     using base_t = txml::XMLNode<SimpleQueryString<Model, FieldsElements...>,
                                                    Query,
                                                    FieldsArray<Model, FieldsElements...>>;

@@ -14,7 +14,7 @@ namespace tag
 using namespace elasticsearch::v7::search;
 
 template<class Model, class ...SpecificBooleanParams/*Must, Filter*/>
-using boolean = ::model::search::BooleanNew<Model, SpecificBooleanParams...>;
+using boolean = ::model::search::Boolean<Model, SpecificBooleanParams...>;
 
 namespace create
 {

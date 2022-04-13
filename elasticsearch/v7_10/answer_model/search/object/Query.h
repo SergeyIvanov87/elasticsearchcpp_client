@@ -11,11 +11,11 @@ namespace search
 {
 using namespace json;
 template<class Model, class ...Params>
-class QueryNew: public txml::XMLNode<QueryNew<Model, Params...>,
+class Query: public txml::XMLNode<Query<Model, Params...>,
                                   Params...>
 {
 public:
-    using base_t = txml::XMLNode<QueryNew<Model, Params...>,
+    using base_t = txml::XMLNode<Query<Model, Params...>,
                                  Params...>;
 
     static constexpr std::string_view class_name()
@@ -29,14 +29,14 @@ public:
     }
 
     template<class ...SpecificParams>
-    QueryNew(SpecificParams &&...args)
+    Query(SpecificParams &&...args)
     {
         (this->template set<std::decay_t<SpecificParams>>(std::make_shared<std::decay_t<SpecificParams>>(std::forward<SpecificParams>(args))),...);
     }
 
     template<class ParentAggregator>
     TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(serializer_parted_type, ParentAggregator, ToJSON,
-                                                    QueryNew<Model, Params...>,
+                                                    Query<Model, Params...>,
                                                     Params...)
     {
         TXML_SERIALIZER_DISPATCHABLE_OBJECT
@@ -58,11 +58,11 @@ public:
 };
 using namespace json;
 template<>
-class QueryNew<EmptyModel, EmptyParam>: public txml::XMLNode<QueryNew<EmptyModel, EmptyParam>,
+class Query<EmptyModel, EmptyParam>: public txml::XMLNode<Query<EmptyModel, EmptyParam>,
                                                           MatchAll>
 {
 public:
-    using base_t = txml::XMLNode<QueryNew<EmptyModel, EmptyParam>,
+    using base_t = txml::XMLNode<Query<EmptyModel, EmptyParam>,
                                        MatchAll>;
 
     static constexpr std::string_view class_name()
@@ -74,13 +74,13 @@ public:
     {
         return txml::TextReaderWrapper::NodeType::Element;
     }
-    QueryNew() {
+    Query() {
         this->template emplace<MatchAll>();
     }
 
     template<class ParentAggregator>
     TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(serializer_parted_type, ParentAggregator, ToJSON,
-                                                    QueryNew<EmptyModel, EmptyParam>,
+                                                    Query<EmptyModel, EmptyParam>,
                                                     MatchAll)
     {
         TXML_SERIALIZER_DISPATCHABLE_OBJECT

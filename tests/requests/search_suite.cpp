@@ -62,9 +62,9 @@ TEST(NEW_BooleanMustQSS, serializer)
                           MTerms<StubLeafNode_string>("my_string_0"),
                           QSS<StubLeafNode_string>("aaaa"));
 
-    model::search::BooleanNew<StubModel, MustTag> bool_instance(must_instance);
+    model::search::Boolean<StubModel, MustTag> bool_instance(must_instance);
 
-    typename model::search::BooleanNew<StubModel, MustTag>::aggregator_serializer_type ser;
+    typename model::search::Boolean<StubModel, MustTag>::aggregator_serializer_type ser;
     nlohmann::json node = nlohmann::json::object();
     txml::StdoutTracer tracer;
     bool_instance.template format_serialize(ser, tracer);
@@ -83,13 +83,13 @@ TEST(NEW_QueryBooleanQSSMustQSS, serializer)
                           MTerms<StubLeafNode_string>("my_string_0"),
                           QSS<StubLeafNode_string>("aaaa"));
 
-    using BooleanTag = model::search::BooleanNew<StubModel, MustTag>;
+    using BooleanTag = model::search::Boolean<StubModel, MustTag>;
     BooleanTag bool_instance(must_instance);
 
     using QSSTag = QSS<StubLeafNode_string>;
     QSSTag sqt_param("acdc");
 
-    using QueryTag = model::search::QueryNew<StubModel, BooleanTag, QSSTag>;
+    using QueryTag = model::search::Query<StubModel, BooleanTag, QSSTag>;
     QueryTag q_instance(bool_instance, sqt_param);
     typename QueryTag::aggregator_serializer_type ser;
     nlohmann::json node = nlohmann::json::object();
@@ -118,13 +118,13 @@ TEST(NEW_BooleanMustQSSFilter, init)
                               FTerm<StubLeafNode_int>(22),
                               FTerm<StubLeafNode_string>("my_string_filter"));
 
-    using BooleanTag = model::search::BooleanNew<StubModel, MustTag, FilterTag>;
+    using BooleanTag = model::search::Boolean<StubModel, MustTag, FilterTag>;
     BooleanTag bool_instance(must_instance, filter_instance);
 
     using QSSTag = QSS<StubLeafNode_string>;
     QSSTag sqt_param("acdc");
 
-    using QueryTag = model::search::QueryNew<StubModel, BooleanTag, QSSTag>;
+    using QueryTag = model::search::Query<StubModel, BooleanTag, QSSTag>;
     QueryTag q_instance(bool_instance, sqt_param);
     typename QueryTag::aggregator_serializer_type ser;
     nlohmann::json node = nlohmann::json::object();
@@ -259,10 +259,10 @@ TEST_F(SearchTagFixtureComplex, request_create_match_all)
                           FTerm<StubLeafNode_int>(22),
                           FTerm<StubLeafNode_string>("my_string_filter"));
 
-    using BooleanTag = model::search::BooleanNew<StubModel, MustTag, FilterTag>;
+    using BooleanTag = model::search::Boolean<StubModel, MustTag, FilterTag>;
     BooleanTag boolean_param(must_param, filter_param);
 
-    using QueryTag = model::search::QueryNew<StubModel, BooleanTag>;
+    using QueryTag = model::search::Query<StubModel, BooleanTag>;
     QueryTag q_instance(boolean_param);
 
     search::transaction s(get_host());
