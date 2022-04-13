@@ -35,7 +35,7 @@ enable_for_filter_element() {return  std::conjunction_v<is_filter_element<All>..
 
 
 using namespace json;
-namespace must_new {
+namespace must {
 
 using namespace json;
 template<class Model, class Element>
@@ -173,15 +173,15 @@ public:
 
 using namespace json;
 template<class Model, class ...SubContexts>
-class MustNew: public txml::XMLArray<MustNew<Model, SubContexts...>,
-                                              must_new::SubContextArrayElement<Model, SubContexts...>>,
+class Must: public txml::XMLArray<Must<Model, SubContexts...>,
+                                              must::SubContextArrayElement<Model, SubContexts...>>,
                public TagHolder<BooleanElementTag>
 {
 public:
-    using element_t = must_new::SubContextArrayElement<Model, SubContexts...>;
-    using self_t = MustNew<Model, SubContexts...>;
-    using base_t = txml::XMLArray<MustNew<Model, SubContexts...>,
-                                  must_new::SubContextArrayElement<Model, SubContexts...>>;
+    using element_t = must::SubContextArrayElement<Model, SubContexts...>;
+    using self_t = Must<Model, SubContexts...>;
+    using base_t = txml::XMLArray<Must<Model, SubContexts...>,
+                                  must::SubContextArrayElement<Model, SubContexts...>>;
     using base_t::base_t;
 
     static constexpr std::string_view class_name()
@@ -195,32 +195,32 @@ public:
     }
 
 
-    MustNew(const MustNew &src) {
+    Must(const Must &src) {
         this->getValue() = src.getValue();
     }
 
-    MustNew(MustNew &&src) {
+    Must(Must &&src) {
         this->getValue().swap(src.getValue());
     }
 
     /*template<class ...SpecificSubContexts,
-                        class = std::enable_if_t<elasticsearch::utils::is_all_not<MustNew, SpecificSubContexts>
+                        class = std::enable_if_t<elasticsearch::utils::is_all_not<Must, SpecificSubContexts>
                                                  and
                                                  elasticsearch::utils::is_all_base_not<details::TermKind, SpecificSubContexts>,
                                                  int>>*/
     template<class ...SpecificSubContexts, class =
-             std::enable_if_t<details::enable_for_node_args<MustNew, SpecificSubContexts...>()
+             std::enable_if_t<details::enable_for_node_args<Must, SpecificSubContexts...>()
                               && details::enable_for_must_element<SpecificSubContexts...>(), int>>
-    MustNew(SpecificSubContexts && ...args) {
+    Must(SpecificSubContexts && ...args) {
         auto elem = std::make_shared<element_t>();
         (elem->template emplace <SpecificSubContexts>(std::forward<SpecificSubContexts>(args)), ...);
         this->getValue().push_back(elem);
     }
 
     template<class ...SpecificSubContexts, class =
-             std::enable_if_t<details::enable_for_node_args<MustNew, SpecificSubContexts...>()/*
+             std::enable_if_t<details::enable_for_node_args<Must, SpecificSubContexts...>()/*
                               && not details::enable_for_must_element<SpecificSubContexts...>()*/, int>>
-    MustNew(const std::optional<SpecificSubContexts>&...args)
+    Must(const std::optional<SpecificSubContexts>&...args)
     {
         static_assert(details::enable_for_must_element<SpecificSubContexts...>(), "ssss");
         auto elem = std::make_shared<element_t>();
@@ -234,14 +234,14 @@ public:
     // To reduce variadic packs on one we should declare serializer as part of class
     template<class Parent>
     TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(serializer_parted_type, Parent, ToJSON,
-                                               MustNew<Model, SubContexts...>,
-                                                    must_new::SubContextArrayElement<Model, SubContexts...>,
+                                               Must<Model, SubContexts...>,
+                                                    must::SubContextArrayElement<Model, SubContexts...>,
                                                         SubContexts...)
     {
         TXML_SERIALIZER_DISPATCHABLE_OBJECT
 
         template<class Tracer>
-        void serialize_impl(const must_new::SubContextArrayElement<Model, SubContexts...> &val, Tracer tracer)
+        void serialize_impl(const must::SubContextArrayElement<Model, SubContexts...> &val, Tracer tracer)
         {
             tracer.trace(__FUNCTION__, " - skip SubContextArrayElement by itself");
             val.template format_serialize_elements(*this, tracer);
@@ -269,7 +269,7 @@ public:
     using subcontext_serializer_type = serializer_parted_type<Parent>;
 };
 //////////////////////
-namespace filter_new
+namespace filter
 {
 using namespace json;
 template<class Model, class Element>
@@ -352,15 +352,15 @@ public:
 }
 
 template<class Model, class ...SubContexts>
-class FilterNew: public txml::XMLArray<FilterNew<Model, SubContexts...>,
-                                              filter_new::SubContextArrayElement<Model, SubContexts...>>,
+class Filter: public txml::XMLArray<Filter<Model, SubContexts...>,
+                                              filter::SubContextArrayElement<Model, SubContexts...>>,
                 public TagHolder<BooleanElementTag>
 {
 public:
-    using element_t = filter_new::SubContextArrayElement<Model, SubContexts...>;
-    using self_t = FilterNew<Model, SubContexts...>;
-    using base_t = txml::XMLArray<FilterNew<Model, SubContexts...>,
-                                  filter_new::SubContextArrayElement<Model, SubContexts...>>;
+    using element_t = filter::SubContextArrayElement<Model, SubContexts...>;
+    using self_t = Filter<Model, SubContexts...>;
+    using base_t = txml::XMLArray<Filter<Model, SubContexts...>,
+                                  filter::SubContextArrayElement<Model, SubContexts...>>;
     using base_t::base_t;
 
     static constexpr std::string_view class_name()
@@ -374,21 +374,21 @@ public:
     }
 
 
-    FilterNew(const FilterNew &src) {
+    Filter(const Filter &src) {
         this->getValue() = src.getValue();
     }
 
-    FilterNew(FilterNew &&src) {
+    Filter(Filter &&src) {
         this->getValue().swap(src.getValue());
     }
 
     template<class ...SpecificSubContexts,
                         class = std::enable_if_t<
                                                 not std::disjunction_v<
-                                                            std::is_same<std::decay_t<SpecificSubContexts>, FilterNew>...
+                                                            std::is_same<std::decay_t<SpecificSubContexts>, Filter>...
                                                                       >
                                                        , int>>
-    FilterNew(SpecificSubContexts && ...args) {
+    Filter(SpecificSubContexts && ...args) {
         auto elem = std::make_shared<element_t>();
         (elem->template emplace <SpecificSubContexts>(std::forward<SpecificSubContexts>(args)), ...);
         this->getValue().push_back(elem);
@@ -401,14 +401,14 @@ public:
     // To reduce variadic packs on one we should declare serializer as part of class
     template<class Parent>
     TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(serializer_parted_type, Parent, ToJSON,
-                                               FilterNew<Model, SubContexts...>,
-                                                    filter_new::SubContextArrayElement<Model, SubContexts...>,
+                                               Filter<Model, SubContexts...>,
+                                                    filter::SubContextArrayElement<Model, SubContexts...>,
                                                         SubContexts...)
     {
         TXML_SERIALIZER_DISPATCHABLE_OBJECT
 
         template<class Tracer>
-        void serialize_impl(const filter_new::SubContextArrayElement<Model, SubContexts...> &val, Tracer tracer)
+        void serialize_impl(const filter::SubContextArrayElement<Model, SubContexts...> &val, Tracer tracer)
         {
             tracer.trace(__FUNCTION__, " - skip SubContextArrayElement by itself");
             val.template format_serialize_elements(*this, tracer);

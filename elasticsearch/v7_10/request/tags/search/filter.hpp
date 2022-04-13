@@ -2,7 +2,7 @@
 #define ELASTICSEARCH_7_10_REQUEST_SEARCH_TAGS_FILTER_HPP
 
 #include <txml/applications/json/json.hpp>
-#include "elasticsearch/v7_10/answer_model/search/object/boolean/new_Bool.h"
+#include "elasticsearch/v7_10/answer_model/search/object/boolean/Bool.h"
 
 namespace elasticsearch
 {
@@ -15,7 +15,7 @@ namespace tag
 using namespace elasticsearch::v7::search;
 // the same as must
 template<class Model, class ...SpecificModelParams>
-using filter = ::model::search::FilterNew<Model, SpecificModelParams...>;
+using filter = ::model::search::Filter<Model, SpecificModelParams...>;
 
 namespace create
 {

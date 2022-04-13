@@ -8,7 +8,7 @@
 namespace model
 {
 namespace search {
-namespace must_new {
+namespace must {
 template<>
 class ElementToQuery<elasticsearch::image::model::data,
                      elasticsearch::image::model::element::Location> :

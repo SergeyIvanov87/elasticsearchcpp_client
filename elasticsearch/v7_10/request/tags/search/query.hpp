@@ -3,7 +3,7 @@
 
 #include <txml/applications/json/json.hpp>
 #include "elasticsearch/v7_10/answer_model/search/serializer.hpp"
-#include "elasticsearch/v7_10/answer_model/search/object/boolean/new_Bool.h"
+#include "elasticsearch/v7_10/answer_model/search/object/boolean/Bool.h"
 
 namespace elasticsearch
 {

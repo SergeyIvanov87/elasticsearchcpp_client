@@ -12,35 +12,35 @@
 #include <gtest/gtest.h>
 
 //
-#include "elasticsearch/v7_10/answer_model/search/object/boolean/new_Bool.h"
-#include "elasticsearch/v7_10/answer_model/search/object/full_text/new_QuerySimpleString.hpp"
-#include "elasticsearch/v7_10/answer_model/search/object/new_Query.h"
+#include "elasticsearch/v7_10/answer_model/search/object/boolean/Bool.h"
+#include "elasticsearch/v7_10/answer_model/search/object/full_text/QuerySimpleString.hpp"
+#include "elasticsearch/v7_10/answer_model/search/object/Query.h"
 
 namespace tests
 {
 using Model = StubModel;
 
 template<class Element>
-using MTerm = model::search::must_new::Term<Model, Element>;
+using MTerm = model::search::must::Term<Model, Element>;
 
 template<class Element>
-using MTerms = model::search::must_new::Terms<Model, Element>;
+using MTerms = model::search::must::Terms<Model, Element>;
 
 template<class Element>
-using FTerm = model::search::filter_new::Term<Model, Element>;
+using FTerm = model::search::filter::Term<Model, Element>;
 
 template<class ...Elements>
-using QSS = model::search::full_text_new::SimpleQueryString<Model, Elements...>;
+using QSS = model::search::full_text::SimpleQueryString<Model, Elements...>;
 
 TEST(NEW_MustQSS, serializer)
 {
-    model::search::MustNew<StubModel, MTerm<StubLeafNode_bool>,
+    model::search::Must<StubModel, MTerm<StubLeafNode_bool>,
                               MTerm<StubLeafNode_int>,
                               MTerms<StubLeafNode_string>,
                               QSS<StubLeafNode_string>> must_instance(MTerm<StubLeafNode_bool>(true), MTerms<StubLeafNode_string>("my_string_0"),
                                                                       QSS<StubLeafNode_string>("aaaa"));
 
-    typename model::search::MustNew<StubModel, MTerm<StubLeafNode_bool>,
+    typename model::search::Must<StubModel, MTerm<StubLeafNode_bool>,
                               MTerm<StubLeafNode_int>,
                               MTerms<StubLeafNode_string>,
                               QSS<StubLeafNode_string>>::aggregator_serializer_type ser;
@@ -53,7 +53,7 @@ TEST(NEW_MustQSS, serializer)
 
 TEST(NEW_BooleanMustQSS, serializer)
 {
-    using MustTag = model::search::MustNew<StubModel,
+    using MustTag = model::search::Must<StubModel,
                                    MTerm<StubLeafNode_bool>,
                                    MTerm<StubLeafNode_int>,
                                    MTerms<StubLeafNode_string>,
@@ -74,7 +74,7 @@ TEST(NEW_BooleanMustQSS, serializer)
 
 TEST(NEW_QueryBooleanQSSMustQSS, serializer)
 {
-    using MustTag = model::search::MustNew<StubModel,
+    using MustTag = model::search::Must<StubModel,
                                    MTerm<StubLeafNode_bool>,
                                    MTerm<StubLeafNode_int>,
                                    MTerms<StubLeafNode_string>,
@@ -101,7 +101,7 @@ TEST(NEW_QueryBooleanQSSMustQSS, serializer)
 
 TEST(NEW_BooleanMustQSSFilter, init)
 {
-    using MustTag = model::search::MustNew<StubModel,
+    using MustTag = model::search::Must<StubModel,
                                    MTerm<StubLeafNode_bool>,
                                    MTerm<StubLeafNode_int>,
                                    MTerms<StubLeafNode_string>,
@@ -110,7 +110,7 @@ TEST(NEW_BooleanMustQSSFilter, init)
                           MTerms<StubLeafNode_string>("my_string_0"),
                           QSS<StubLeafNode_string>("aaaa"));
 
-    using FilterTag = model::search::FilterNew<StubModel,
+    using FilterTag = model::search::Filter<StubModel,
                                        FTerm<StubLeafNode_bool>,
                                        FTerm<StubLeafNode_int>,
                                        FTerm<StubLeafNode_string>>;
@@ -241,7 +241,7 @@ TEST_F(SearchTagFixtureComplex, request_create_match_all)
     ASSERT_TRUE(pit.getValue<model::Id>());
 
     txml::StdoutTracer tracer;
-    using MustTag = model::search::MustNew<StubModel,
+    using MustTag = model::search::Must<StubModel,
                                    MTerm<StubLeafNode_bool>,
                                    MTerm<StubLeafNode_int>,
                                    MTerm<StubLeafNode_string>,
@@ -251,7 +251,7 @@ TEST_F(SearchTagFixtureComplex, request_create_match_all)
                           MTerm<StubLeafNode_string>("my_string_0"),
                           QSS<StubLeafNode_string>("my_string_0"));
 
-    using FilterTag = model::search::FilterNew<StubModel,
+    using FilterTag = model::search::Filter<StubModel,
                                    FTerm<StubLeafNode_bool>,
                                    FTerm<StubLeafNode_int>,
                                    FTerm<StubLeafNode_string>>;

@@ -1,7 +1,7 @@
 #ifndef ELASTICSEARCH_7_10_REQUEST_SEARCH_TAGS_SIMPLE_QUERY_STRING_HPP
 #define ELASTICSEARCH_7_10_REQUEST_SEARCH_TAGS_SIMPLE_QUERY_STRING_HPP
 
-#include "elasticsearch/v7_10/answer_model/search/object/full_text/new_QuerySimpleString.hpp"
+#include "elasticsearch/v7_10/answer_model/search/object/full_text/QuerySimpleString.hpp"
 
 namespace elasticsearch
 {
@@ -14,7 +14,7 @@ namespace tag
 using namespace elasticsearch::v7::search;
 
 template<class Model, class ...SpecificModelParams>
-using simple_query_string = ::model::search::full_text_new::SimpleQueryString<Model, SpecificModelParams...>;
+using simple_query_string = ::model::search::full_text::SimpleQueryString<Model, SpecificModelParams...>;
 
 namespace create
 {

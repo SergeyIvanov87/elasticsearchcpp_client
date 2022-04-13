@@ -3,7 +3,7 @@
 
 #include "elasticsearch/v7_10/answer_model/pit/object/Pit.h"
 #include "elasticsearch/v7_10/answer_model/object/Size.h"
-#include "elasticsearch/v7_10/answer_model/search/object/new_Query.h"
+#include "elasticsearch/v7_10/answer_model/search/object/Query.h"
 #include "elasticsearch/v7_10/answer_model/search/object/sort/sort_array.h"
 #include "elasticsearch/v7_10/answer_model/search/object/sort/UnmappedType.h"
 

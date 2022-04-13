@@ -4,7 +4,7 @@
 #include <optional>
 
 #include <txml/applications/json/json.hpp>
-#include "elasticsearch/v7_10/answer_model/search/object/boolean/new_Bool.h"
+#include "elasticsearch/v7_10/answer_model/search/object/boolean/Bool.h"
 
 namespace elasticsearch
 {
@@ -17,7 +17,7 @@ namespace tag
 using namespace elasticsearch::v7::search;
 
 template<class Model, class ...SpecificModelParams>
-using must = ::model::search::MustNew<Model, SpecificModelParams...>;
+using must = ::model::search::Must<Model, SpecificModelParams...>;
 
 namespace create
 {

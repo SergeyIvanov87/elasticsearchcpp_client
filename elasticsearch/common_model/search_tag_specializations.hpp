@@ -12,7 +12,7 @@ namespace model
 {
 namespace search
 {
-namespace must_new
+namespace must
 {
 template<class SpecificModel>
 class ElementToQuery<SpecificModel, elasticsearch::common_model::Tags> :

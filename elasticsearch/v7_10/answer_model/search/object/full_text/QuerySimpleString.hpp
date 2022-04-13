@@ -8,7 +8,7 @@ namespace model
 {
 namespace search
 {
-namespace full_text_new
+namespace full_text
 {
 class Query: public txml::XMLNodeLeaf<Query, std::string>
 {
@@ -136,7 +136,7 @@ public:
         TXML_SERIALIZER_DISPATCHABLE_OBJECT
 
         template<class Tracer>
-        void serialize_impl(const full_text_new::FieldsArrayElement<Model, FieldsElements...> &val, Tracer tracer)
+        void serialize_impl(const full_text::FieldsArrayElement<Model, FieldsElements...> &val, Tracer tracer)
         {
             tracer.trace(__FUNCTION__, " - skip FieldsArrayElement by itself");
             val.template format_serialize_elements(*this, tracer);

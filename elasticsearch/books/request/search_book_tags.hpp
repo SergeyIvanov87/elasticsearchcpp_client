@@ -15,15 +15,15 @@ namespace tag
 using namespace elasticsearch::book::search;
 
 template <class ...SubContexts>
-using must = ::model::search::MustNew<elasticsearch::book::model::data, SubContexts...>;
+using must = ::model::search::Must<elasticsearch::book::model::data, SubContexts...>;
 
 template<class ModelElement>
-using mterm = ::model::search::must_new::Term<elasticsearch::book::model::data, ModelElement>;
+using mterm = ::model::search::must::Term<elasticsearch::book::model::data, ModelElement>;
 template<class ModelElement>
-using mterms = ::model::search::must_new::Terms<elasticsearch::book::model::data, ModelElement>;
+using mterms = ::model::search::must::Terms<elasticsearch::book::model::data, ModelElement>;
 
 template<class ModelElement>
-using fterm = ::model::search::filter_new::Term<elasticsearch::book::model::data, ModelElement>;
+using fterm = ::model::search::filter::Term<elasticsearch::book::model::data, ModelElement>;
 
 
 template <class T>
@@ -58,7 +58,7 @@ inline auto make(Args &&...args)
 
 namespace create
 {
-    template<class ...SpecificModelParams, class = std::enable_if_t<::model::search::details::enable_for_node_args<::model::search::MustNew, SpecificModelParams...>()
+    template<class ...SpecificModelParams, class = std::enable_if_t<::model::search::details::enable_for_node_args<::model::search::Must, SpecificModelParams...>()
                               && ::model::search::details::enable_for_must_element<SpecificModelParams...>(), int>>
     must<SpecificModelParams...> must_tag(SpecificModelParams &&...args)
     {
