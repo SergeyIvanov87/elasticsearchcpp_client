@@ -1,7 +1,7 @@
 #ifndef ELASTICSEARCH_7_10_REQUEST_SEARCH_TAGS_SORT_HPP
 #define ELASTICSEARCH_7_10_REQUEST_SEARCH_TAGS_SORT_HPP
 
-#include "elasticsearch/v7_10/answer_model/search/object/boolean/serializer.hpp"
+#include <txml/applications/json/json.hpp>
 
 namespace elasticsearch
 {

@@ -12,13 +12,18 @@ namespace v7
 namespace put_json_data
 {
 using namespace json;
-
+/*
+template<class SpecificModel, template<typename> class ...SpecificModelSerializer>
+TXML_DECLARE_SERIALIZER_AGGREGATOR_CLASS(RequestSerializer, SpecificModelSerializer<RequestSerializer<SpecificModel, SpecificModelSerializer...>>...)
+{
+    TXML_SERIALIZER_AGGREGATOR_OBJECT
+}*/
 
 template<class SpecificModel, template<typename> class ...SpecificModelSerializer>
-struct RequestSerializer : public txml::SerializerDispatcher<SpecificModelSerializer<RequestSerializer<SpecificModel,
+struct RequestSerializer : public txml::SerializerVirtualDispatcher<SerializerCore, SpecificModelSerializer<RequestSerializer<SpecificModel,
                                                                                                              SpecificModelSerializer...>>...>
 {
-    using base_t = txml::SerializerDispatcher<SpecificModelSerializer<RequestSerializer<SpecificModel,
+    using base_t = txml::SerializerVirtualDispatcher<SerializerCore, SpecificModelSerializer<RequestSerializer<SpecificModel,
                                                                               SpecificModelSerializer...>>...>;
 //    using json = nlohmann::json;
     RequestSerializer(std::shared_ptr<std::stack<json::SerializerCore::json_core_t>> external_iterators_stack =

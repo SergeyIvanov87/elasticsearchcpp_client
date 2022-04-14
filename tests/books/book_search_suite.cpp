@@ -70,7 +70,7 @@ elasticsearch::book::model::data get_test_book_model_by_index(const std::string&
 {
     using namespace elasticsearch::book::model;
     data data_model;
-    data_model.emplace<element::Title>("title_search" + index_str);
+    data_model.emplace<element::Title>("title_search " + index_str + " word" + index_str);
     data_model.emplace<element::Identifier>("identifier_search" + index_str);
     data_model.emplace<element::Contributor>("contributor_search" + index_str);
     data_model.emplace<element::Creator>("creator_search" + index_str);
@@ -304,9 +304,8 @@ TEST_F(BookMultipleCreateSearchFixture_11, create_n_search_boolean_2_terms)
 
     txml::StdoutTracer tracer;
 
-    auto mu = search::tag::create::must_tag<element::Creator,
-                                            element::Language>(std::string("creator_search10"),
-                                                               std::string("language_search10"));
+    auto mu = search::tag::create::must_tag(search::tag::make<element::Creator>(std::string("creator_search10")),
+                                            search::tag::make<element::Language>(std::string("language_search10")));
     auto boo = search::tag::create::boolean_tag(mu);
     search::transaction s(get_host());
 
@@ -342,6 +341,55 @@ TEST_F(BookMultipleCreateSearchFixture_11, create_n_search_boolean_2_terms)
         }
     }
     ASSERT_TRUE(found);
+}
+
+
+TEST_F(BookMultipleCreateSearchFixture_11, create_n_search_query_simple_string)
+{
+    using namespace elasticsearch::book;
+    using namespace elasticsearch::book::model;
+
+    std::set<std::string> inserted_items = this->get_generated_ids();
+
+    txml::StdoutTracer tracer;
+    auto qst = search::tag::create::simple_query_string_tag<element::Title>("word1|word10");
+    search::transaction s(get_host());
+
+    ASSERT_NO_THROW(s.execute(get_index(), 10, 10s,
+                              search::tag::create::query_tag(qst),
+                              search::tag::sort<element::Contributor> ({::model::Order("desc")}),
+                              curl_verbose(),
+                              tracer));
+    std::shared_ptr<search::transaction::response> search_ans_ptr;
+    search_ans_ptr = s.get_response(tracer);
+    ASSERT_TRUE(search_ans_ptr->getValue<::model::HitsNode<elasticsearch::book::model::data>>());
+    auto hits = search_ans_ptr->getValue<::model::HitsNode<elasticsearch::book::model::data>>();
+
+    ASSERT_TRUE(hits->getValue<::model::HitsArray<elasticsearch::book::model::data>>());
+    auto hits_array = hits->getValue<::model::HitsArray<elasticsearch::book::model::data>>()->getValue();
+    ASSERT_FALSE(hits_array.empty());
+
+    size_t found = 0;
+    for (const auto &hit : hits_array)
+    {
+        std::cout << hit->getValue<::model::_Index>()->getValue() << std::endl;
+        std::cout << hit->getValue<::model::_Id>()->getValue() << std::endl;
+        std::cout << hit->getValue<::model::_Type>()->getValue() << std::endl;
+        auto source_ptr = hit->getValue<::model::_Source<elasticsearch::book::model::data>>();
+        if (source_ptr)
+        {
+            auto found_model_ptr = source_ptr->getValue<elasticsearch::book::model::data>();
+            if (found_model_ptr)
+            {
+                if(hit->getValue<::model::_Id>()->getValue() =="1" ||
+                  hit->getValue<::model::_Id>()->getValue() =="10")
+                {
+                    found++;
+                }
+            }
+        }
+    }
+    ASSERT_EQ(found, 2);
 }
 
 }

@@ -1,11 +1,21 @@
 #ifndef TESTS_COMMON_SETTING_HPP
 #define TESTS_COMMON_SETTING_HPP
 #include <string>
+#include <stdlib.h>
 
 namespace tests
 {
 struct Settings
 {
+    static const char *get_cfg_env_name() { return "UT_HOST_ADDR"; }
+    Settings()
+    {
+        char* host_addr = getenv(Settings::get_cfg_env_name());
+        if (host_addr)
+        {
+            host = host_addr;
+        }
+    }
     std::string set_index(std::string new_index)
     {
         std::swap(new_index, index);

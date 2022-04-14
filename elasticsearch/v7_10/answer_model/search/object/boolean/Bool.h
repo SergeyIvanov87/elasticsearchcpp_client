@@ -1,183 +1,20 @@
 #ifndef ANSWER_MODEL_SEARCH_BOOLEAN_BOOL_H
 #define ANSWER_MODEL_SEARCH_BOOLEAN_BOOL_H
 
-#include <txml/txml_fwd.h>
+#include "elasticsearch/v7_10/answer_model/search/object/boolean/must/elements.hpp"
+#include "elasticsearch/v7_10/answer_model/search/object/boolean/filter/elements.hpp"
+
 namespace model
 {
-namespace must {
-template<class Model, class Element>
-class ElementToQuery: public txml::XMLNodeLeaf<ElementToQuery<Model, Element>, typename Element::value_t>
+namespace search
 {
-public:
-    using base_t = txml::XMLNodeLeaf<ElementToQuery<Model, Element>, typename Element::value_t>;
-
-    static constexpr std::string_view class_name()
-    {
-        return Model::template get_path<Element>();
-    }
-
-    static constexpr txml::TextReaderWrapper::NodeType class_node_type()
-    {
-        return txml::TextReaderWrapper::NodeType::Element;
-    }
-
-    ElementToQuery(const typename Element::value_t& value) :
-        base_t(value)
-    {
-    }
-};
-
-template<class Model, class QueryElement>
-class Term : public txml::XMLNode<Term<Model, QueryElement>,
-                                       ElementToQuery<Model, QueryElement>>
-{
-public:
-    using base_t = txml::XMLNode<Term<Model, QueryElement>,
-                                 ElementToQuery<Model, QueryElement>>;
-
-    static constexpr std::string_view class_name()
-    {
-        return "term";
-    }
-
-    static constexpr txml::TextReaderWrapper::NodeType class_node_type()
-    {
-        return txml::TextReaderWrapper::NodeType::Element;
-    }
-};
-
-
-template<class Model, class ...SortedElements>
-class SpecificQueryArrayElement : public txml::XMLNode<SpecificQueryArrayElement<Model, SortedElements...>,
-                                                       Term<Model, SortedElements>...>
-{
-public:
-    using base_t = txml::XMLNode<SpecificQueryArrayElement<Model, SortedElements...>,
-                                 Term<Model, SortedElements>...>;
-
-    static constexpr std::string_view class_name()
-    {
-        return "";
-    }
-
-    static constexpr txml::TextReaderWrapper::NodeType class_node_type()
-    {
-        return txml::TextReaderWrapper::NodeType::Element;
-    }
-};
-}
-
-template<class Model, class ...SortedElements>
-class Must: public txml::XMLArray<Must<Model, SortedElements...>,
-                                              must::SpecificQueryArrayElement<Model, SortedElements...>>
-{
-public:
-    using element_t = must::SpecificQueryArrayElement<Model, SortedElements...>;
-    using base_t = txml::XMLArray<Must<Model, SortedElements...>,
-                                  must::SpecificQueryArrayElement<Model, SortedElements...>>;
-    using base_t::base_t;
-
-    static constexpr std::string_view class_name()
-    {
-        return "must";
-    }
-
-    static constexpr txml::TextReaderWrapper::NodeType class_node_type()
-    {
-        return txml::TextReaderWrapper::NodeType::Element;
-    }
-};
-
-
-namespace filter {
-template<class Model, class Element>
-class ElementToQuery: public txml::XMLNodeLeaf<ElementToQuery<Model, Element>, typename Element::value_t>
-{
-public:
-    using base_t = txml::XMLNodeLeaf<ElementToQuery<Model, Element>, typename Element::value_t>;
-
-    static constexpr std::string_view class_name()
-    {
-        return Model::template get_path<Element>();
-    }
-
-    static constexpr txml::TextReaderWrapper::NodeType class_node_type()
-    {
-        return txml::TextReaderWrapper::NodeType::Element;
-    }
-
-    ElementToQuery(const typename Element::value_t& value) :
-        base_t(value)
-    {
-    }
-};
-
-template<class Model, class QueryElement>
-class Term : public txml::XMLNode<Term<Model, QueryElement>,
-                                       ElementToQuery<Model, QueryElement>>
-{
-public:
-    using base_t = txml::XMLNode<Term<Model, QueryElement>,
-                                 ElementToQuery<Model, QueryElement>>;
-
-    static constexpr std::string_view class_name()
-    {
-        return "term";
-    }
-
-    static constexpr txml::TextReaderWrapper::NodeType class_node_type()
-    {
-        return txml::TextReaderWrapper::NodeType::Element;
-    }
-};
-
-
-template<class Model, class ...SortedElements>
-class SpecificQueryArrayElement : public txml::XMLNode<SpecificQueryArrayElement<Model, SortedElements...>,
-                                                       Term<Model, SortedElements>...>
-{
-public:
-    using base_t = txml::XMLNode<SpecificQueryArrayElement<Model, SortedElements...>,
-                                 Term<Model, SortedElements>...>;
-
-    static constexpr std::string_view class_name()
-    {
-        return "";
-    }
-
-    static constexpr txml::TextReaderWrapper::NodeType class_node_type()
-    {
-        return txml::TextReaderWrapper::NodeType::Element;
-    }
-};
-}
-
-template<class Model, class ...SortedElements>
-class Filter: public txml::XMLArray<Filter<Model, SortedElements...>,
-                                              filter::SpecificQueryArrayElement<Model, SortedElements...>>
-{
-public:
-    using element_t = filter::SpecificQueryArrayElement<Model, SortedElements...>;
-    using base_t = txml::XMLArray<Filter<Model, SortedElements...>,
-                                  filter::SpecificQueryArrayElement<Model, SortedElements...>>;
-    using base_t::base_t;
-
-    static constexpr std::string_view class_name()
-    {
-        return "filter";
-    }
-
-    static constexpr txml::TextReaderWrapper::NodeType class_node_type()
-    {
-        return txml::TextReaderWrapper::NodeType::Element;
-    }
-};
-
 template<class Model, class ...SubContexts>
 class Boolean : public txml::XMLNode<Boolean<Model, SubContexts...>,
-                                     SubContexts...>
+                                     SubContexts...>, //Must, Filter,
+                public TagHolder<QueryElementTag>
 {
 public:
+    using self_t = Boolean<Model, SubContexts...>;
     using base_t = txml::XMLNode<Boolean<Model, SubContexts...>,
                                  SubContexts...>;
 
@@ -190,6 +27,48 @@ public:
     {
         return txml::TextReaderWrapper::NodeType::Element;
     }
+
+
+    Boolean(const Boolean &src) {
+        this->getValue() = src.getValue();
+    }
+
+    Boolean(Boolean &&src) {
+        this->getValue().swap(src.getValue());
+    }
+
+    template<class ...BooleanParamsTagsPack,
+                        class = std::enable_if_t<
+                                                not std::disjunction_v<
+                                                            std::is_same<std::decay_t<BooleanParamsTagsPack>, Boolean>...
+                                                                      >
+                                                        , int>>
+    Boolean(BooleanParamsTagsPack &&...args)
+    {
+        (this->template set<std::decay_t<BooleanParamsTagsPack>>(std::make_shared<std::decay_t<BooleanParamsTagsPack>>(std::forward<BooleanParamsTagsPack>(args))),...);
+    }
+
+    template<class Parent>
+    TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(serializer_parted_type, Parent, ToJSON,
+                                               Boolean<Model, SubContexts...>,
+                                                        SubContexts...) {
+        TXML_SERIALIZER_DISPATCHABLE_OBJECT
+    };
+
+    TXML_DECLARE_SERIALIZER_AGGREGATOR_CLASS(aggregator_serializer_type,
+                                             serializer_parted_type<aggregator_serializer_type>,
+                                             typename SubContexts::serializer_parted_type<aggregator_serializer_type>...)
+    {
+        TXML_SERIALIZER_AGGREGATOR_OBJECT
+    };
+
+    template<class Formatter, class Tracer>
+    void format_serialize_impl(Formatter& out, Tracer tracer) const
+    {
+        aggregator_serializer_type ser(out.get_shared_mediator_object());
+        base_t:: template format_serialize_impl(ser, tracer);
+    }
 };
-}
+} // namespace search
+} // namespace model
 #endif

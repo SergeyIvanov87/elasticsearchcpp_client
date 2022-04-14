@@ -31,3 +31,5 @@ add_subdirectory(books)
 add_subdirectory(images)
 
 add_subdirectory(curl_cpp)
+
+add_subdirectory(utils)

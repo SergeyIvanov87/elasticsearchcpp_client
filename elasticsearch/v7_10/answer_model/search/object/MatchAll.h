@@ -5,6 +5,9 @@
 
 namespace model
 {
+class EmptyModel {};
+struct EmptyParam {using value_type = EmptyParam; };
+
 class MatchAll : public txml::XMLNode<MatchAll>
 {
 public:

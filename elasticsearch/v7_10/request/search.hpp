@@ -249,9 +249,11 @@ private:
     void serialize_query_params_impl(const tag::query<Model, SpecificQueryParams...> &q,
                                      Tracer tracer = Tracer())
     {
+        typename tag::query<Model, SpecificQueryParams...>::aggregator_serializer_type serializer;
         {
             auto acc = json_data_provider->access();
-            q.serialize(acc.object(), tracer);
+            q.template format_serialize(serializer, tracer);
+            serializer. template finalize(acc.object(), tracer);
         }
     }
 

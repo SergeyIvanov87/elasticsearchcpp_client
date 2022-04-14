@@ -23,24 +23,6 @@ namespace search
  * It is impossible to write down `request` in fully templated manner.
  * So let's take consideration to write down multiple subrequests which can be highly template customizable by itself
  * */
-template<class Model, class ...SpecificQueryParams>
-class query_subrequest : public txml::XMLNode<query_subrequest<Model, SpecificQueryParams...>,
-                                              ::model::Query<Model, SpecificQueryParams...>>
-{
-public:
-    using base = txml::XMLNode<query_subrequest<Model, SpecificQueryParams...>,
-                               ::model::Query<Model, SpecificQueryParams...>>;
-
-    static constexpr std::string_view class_name()
-    {
-        return "";
-    }
-
-    static constexpr txml::TextReaderWrapper::NodeType class_node_type()
-    {
-        return txml::TextReaderWrapper::NodeType::Element;
-    }
-};
 template<class Model, class ...SpecificSortParams>
 class sort_subrequest : public txml::XMLNode<sort_subrequest<Model, SpecificSortParams...>,
                                             ::model::SortArray<Model, SpecificSortParams...>>

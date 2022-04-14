@@ -14,19 +14,37 @@ namespace tag
 {
 using namespace elasticsearch::image::search;
 
-template<class ...SpecificModelParams>
-using must = elasticsearch::v7::search::tag::must<elasticsearch::image::model::data, SpecificModelParams...>;
+template<class ModelElement>
+using mterm = ::model::search::must::Term<elasticsearch::image::model::data, ModelElement>;
+template<class ModelElement>
+using mterms = ::model::search::must::Terms<elasticsearch::image::model::data, ModelElement>;
+
+template<class ModelElement>
+using fterm = ::model::search::filter::Term<elasticsearch::image::model::data, ModelElement>;
+
+
+template <class T>
+inline auto make(const std::optional<T> &arg)
+{
+    return arg.has_value() ? std::optional<mterm<T>>(arg.value())  : std::optional<mterm<T>>{};
+}
+template <class T>
+inline auto make(std::optional<T> &&arg)
+{
+    return arg.has_value() ? std::optional<mterm<T>>(std::move(arg.value())) : std::optional<mterm<T>>{};
+}
+
+template <class T, class ...Args>
+inline auto make(Args &&...args)
+{
+    return make(std::optional<T>(std::forward<Args>(args)...));
+}
 namespace create
 {
     template<class ...SpecificModelParams>
-    must<SpecificModelParams...> must_tag(typename SpecificModelParams::value_t &&...args)
+    auto must_tag(SpecificModelParams &&...args)
     {
-        return must<SpecificModelParams...> (std::forward<typename SpecificModelParams::value_t>(args)...);
-    }
-    template<class ...SpecificModelParams>
-    must<SpecificModelParams...> must_tag(std::optional<typename SpecificModelParams::value_t> &&...args)
-    {
-        return must<SpecificModelParams...> (std::forward<std::optional<typename SpecificModelParams::value_t>>(args)...);
+        return elasticsearch::v7::search::tag::create::must_tag<elasticsearch::image::model::data>(std::forward<SpecificModelParams>(args)...);
     }
 } // namespace create
 
@@ -37,24 +55,24 @@ using query_all = elasticsearch::v7::search::tag::query_all;
 namespace create
 {
     template<class ...SpecificQueryParams>
-    query<std::decay_t<SpecificQueryParams>...> query_tag(SpecificQueryParams &&...args)
+    auto query_tag(SpecificQueryParams &&...args)
     {
-        return query<std::decay_t<SpecificQueryParams>...> (std::forward<SpecificQueryParams>(args)...);
+        return elasticsearch::v7::search::tag::create::query_tag<elasticsearch::image::model::data>(std::forward<SpecificQueryParams>(args)...);
     }
-} // namespace create
 
-
-template<class ...SpecificBooleanParams>
-using boolean = elasticsearch::v7::search::tag::boolean<elasticsearch::image::model::data, SpecificBooleanParams...>;
-namespace create
-{
     template<class ...SpecificBooleanParams>
-    boolean<std::decay_t<SpecificBooleanParams>...> boolean_tag(SpecificBooleanParams &&...args)
+    auto boolean_tag(SpecificBooleanParams &&...args)
     {
-        return boolean<std::decay_t<SpecificBooleanParams>...> (std::forward<SpecificBooleanParams>(args)...);
+        return elasticsearch::v7::search::tag::create::boolean_tag<elasticsearch::image::model::data>(std::forward<SpecificBooleanParams>(args)...);
+    }
+
+    template<class ...SpecificModelElements>
+    auto simple_query_string_tag(const std::string &query_string)
+    {
+        return elasticsearch::v7::search::tag::create::simple_query_string_tag<elasticsearch::image::model::data,
+                                                                               SpecificModelElements...>(query_string);
     }
 } // namespace create
-
 
 template<class ...SortParams>
 using sort  = elasticsearch::v7::search::tag::sort<elasticsearch::image::model::data, SortParams...>;
@@ -70,4 +88,5 @@ namespace create
 } // namespace search
 } // namespace image
 } // namespace elasticsearch
+
 #endif // ELASTICSEARCH_IMAGES_REQUEST_SEARCH_TAG_HPP
