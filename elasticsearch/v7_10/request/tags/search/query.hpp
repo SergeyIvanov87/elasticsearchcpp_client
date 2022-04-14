@@ -25,7 +25,7 @@ namespace create
                                                                                      SpecificQueryParams...>(), int>>
     query<Model, std::decay_t<SpecificQueryParams>...> query_tag(SpecificQueryParams &&...args)
     {
-        static_assert(::model::search::details::enable_for_query_element<SpecificQueryParams...>(),
+        static_assert(::model::search::all_of_tag<model::search::QueryElementTag, SpecificQueryParams...>(),
                       "Query assert must be constructed from QueryElementTag elements only");
         return query<Model, std::decay_t<SpecificQueryParams>...> (std::forward<SpecificQueryParams>(args)...);
     }

@@ -1,5 +1,5 @@
-#ifndef ANSWER_MODEL_SEARCH_BOOLEAN_NEW_BOOL_H
-#define ANSWER_MODEL_SEARCH_BOOLEAN_NEW_BOOL_H
+#ifndef ANSWER_MODEL_SEARCH_BOOLEAN_BOOL_H
+#define ANSWER_MODEL_SEARCH_BOOLEAN_BOOL_H
 
 #include "elasticsearch/v7_10/answer_model/search/object/boolean/must/elements.hpp"
 #include "elasticsearch/v7_10/answer_model/search/object/boolean/filter/elements.hpp"
@@ -8,20 +8,10 @@ namespace model
 {
 namespace search
 {
-namespace details
-{
-template <class Target>
-struct is_boolean_element : std::integral_constant<bool, model::search::has_tag<BooleanElementTag, Target>()> {};
-
-template<class ...All>
-static constexpr bool
-enable_for_boolean_element() {return  std::conjunction_v<is_boolean_element<std::decay_t<All>>...>; }
-} // namespace details
-
 template<class Model, class ...SubContexts>
 class Boolean : public txml::XMLNode<Boolean<Model, SubContexts...>,
-                                        SubContexts...>, //Must, Filter,
-                   public TagHolder<QueryElementTag>
+                                     SubContexts...>, //Must, Filter,
+                public TagHolder<QueryElementTag>
 {
 public:
     using self_t = Boolean<Model, SubContexts...>;
@@ -80,7 +70,6 @@ public:
     {
         aggregator_serializer_type ser(out.get_shared_mediator_object());
         base_t:: template format_serialize_impl(ser, tracer);
-        //*(out.get_shared_mediator_object()) = ser. template finalize(tracer);
     }
 };
 } // namespace search

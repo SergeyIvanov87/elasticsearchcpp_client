@@ -24,7 +24,7 @@ namespace create
                                                                                      SpecificBooleanParams...>(), int>>
     boolean<Model, std::decay_t<SpecificBooleanParams>...> boolean_tag(SpecificBooleanParams &&...args)
     {
-        static_assert(::model::search::details::enable_for_boolean_element<SpecificBooleanParams...>(),
+        static_assert(::model::search::all_of_tag<::model::search::BooleanElementTag, SpecificBooleanParams...>(),
                       "Boolean assert must be constructed from BooleanElementTag elements only");
         return boolean<Model, std::decay_t<SpecificBooleanParams>...> (std::forward<SpecificBooleanParams>(args)...);
     }

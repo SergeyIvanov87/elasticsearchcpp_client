@@ -9,24 +9,16 @@ namespace model
 {
 namespace search
 {
-namespace details
+namespace must
 {
-template <class Target>
-struct is_must_element : std::integral_constant<bool, model::search::has_tag<MustElementTag, Target>()> {};
-
-template<class ...All>
-static constexpr bool
-enable_for_must_element() {return  std::conjunction_v<is_must_element<std::decay_t<All>>...>; }
-} // namespace details
-
-
-namespace must {
 using namespace json;
 template<class Model, class Element>
-class ElementToQuery: public txml::XMLNodeLeaf<ElementToQuery<Model, Element>, typename Element::value_t>
+class ElementToQuery: public txml::XMLNodeLeaf<ElementToQuery<Model, Element>,
+                                               typename Element::value_t>
 {
 public:
-    using base_t = txml::XMLNodeLeaf<ElementToQuery<Model, Element>, typename Element::value_t>;
+    using base_t = txml::XMLNodeLeaf<ElementToQuery<Model, Element>,
+                                     typename Element::value_t>;
     using element_t = Element;
 
     static constexpr std::string_view class_name()
@@ -136,7 +128,7 @@ public:
 
 template<class Model, class ...SubContexts>
 class SubContextArrayElement : public txml::XMLNode<SubContextArrayElement<Model, SubContexts...>,
-                                                       SubContexts...>
+                                                    SubContexts...>
 {
 public:
     using base_t = txml::XMLNode<SubContextArrayElement<Model, SubContexts...>,
@@ -158,8 +150,8 @@ public:
 using namespace json;
 template<class Model, class ...SubContexts>
 class Must: public txml::XMLArray<Must<Model, SubContexts...>,
-                                              must::SubContextArrayElement<Model, SubContexts...>>,
-               public TagHolder<BooleanElementTag>
+                                  must::SubContextArrayElement<Model, SubContexts...>>,
+            public TagHolder<BooleanElementTag>
 {
 public:
     using element_t = must::SubContextArrayElement<Model, SubContexts...>;
@@ -187,14 +179,9 @@ public:
         this->getValue().swap(src.getValue());
     }
 
-    /*template<class ...SpecificSubContexts,
-                        class = std::enable_if_t<elasticsearch::utils::is_all_not<Must, SpecificSubContexts>
-                                                 and
-                                                 elasticsearch::utils::is_all_base_not<details::TermKind, SpecificSubContexts>,
-                                                 int>>*/
     template<class ...SpecificSubContexts, class =
              std::enable_if_t<details::enable_for_node_args<Must, SpecificSubContexts...>()
-                              && details::enable_for_must_element<SpecificSubContexts...>(), int>>
+                              && all_of_tag<MustElementTag, SpecificSubContexts...>(), int>>
     Must(SpecificSubContexts && ...args) {
         auto elem = std::make_shared<element_t>();
         (elem->template emplace <SpecificSubContexts>(std::forward<SpecificSubContexts>(args)), ...);
@@ -202,16 +189,14 @@ public:
     }
 
     template<class ...SpecificSubContexts, class =
-             std::enable_if_t<details::enable_for_node_args<Must, SpecificSubContexts...>()/*
-                              && not details::enable_for_must_element<SpecificSubContexts...>()*/, int>>
+             std::enable_if_t<details::enable_for_node_args<Must, SpecificSubContexts...>(), int>>
     Must(const std::optional<SpecificSubContexts>&...args)
     {
-        static_assert(details::enable_for_must_element<SpecificSubContexts...>(), "ssss");
+        static_assert(all_of_tag<MustElementTag, SpecificSubContexts...>(), "ssss");
         auto elem = std::make_shared<element_t>();
         ( (args.has_value() ? elem->template emplace <SpecificSubContexts>(args.value()),true : false), ...);
         this->getValue().push_back(elem);
     }
-/////////////////////////
 
     // Subcontext Array element constitute a lot of variadic subitem templates : Term, Terms, QuerySimpleString and something other
     // Many of them require its own variadic templates. So it's it not possible to enumerate several variadic packs here in standalone serializer

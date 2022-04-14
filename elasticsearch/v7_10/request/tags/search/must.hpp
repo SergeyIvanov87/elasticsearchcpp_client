@@ -57,7 +57,7 @@ namespace create
     template<class Model, class ...SpecificModelParams,
              class = std::enable_if_t<::model::search::details::enable_for_node_args<::model::search::Must<Model, SpecificModelParams...>,
                                                                                      SpecificModelParams...>()
-                                      && ::model::search::details::enable_for_must_element<SpecificModelParams...>(), int>>
+                                      && ::model::search::all_of_tag<model::search::MustElementTag, SpecificModelParams...>(), int>>
     must<Model, SpecificModelParams...> must_tag(SpecificModelParams &&...args)
     {
         return must<Model, SpecificModelParams...> (std::forward<SpecificModelParams>(args)...);
@@ -66,7 +66,7 @@ namespace create
     template<class Model, class ...SpecificModelParams>
     must<Model, SpecificModelParams...> must_tag(const std::optional<SpecificModelParams> &...args)
     {
-        static_assert(::model::search::details::enable_for_must_element<SpecificModelParams...>(),
+        static_assert(::model::search::all_of_tag<model::search::MustElementTag, SpecificModelParams...>(),
                       "Must assert must be constructed from MustElementTag elements only");
         return must<Model, SpecificModelParams...> (args...);
     }

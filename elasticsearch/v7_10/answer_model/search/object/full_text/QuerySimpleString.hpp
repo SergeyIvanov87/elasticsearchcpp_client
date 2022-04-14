@@ -52,7 +52,7 @@ public:
 
 template<class Model, class ...SortedElements>
 class FieldsArrayElement : public txml::XMLNode<FieldsArrayElement<Model, SortedElements...>,
-                                                       Fields<Model, SortedElements>...>
+                                                Fields<Model, SortedElements>...>
 {
 public:
     using base_t = txml::XMLNode<FieldsArrayElement<Model, SortedElements...>,

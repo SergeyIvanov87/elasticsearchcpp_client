@@ -9,24 +9,16 @@ namespace model
 {
 namespace search
 {
-namespace details
-{
-template <class Target>
-struct is_filter_element : std::integral_constant<bool, model::search::has_tag<FilterElementTag, Target>()> {};
-
-template<class ...All>
-static constexpr bool
-enable_for_filter_element() {return  std::conjunction_v<is_filter_element<std::decay_t<All>>...>; }
-} // namespace details
-
 namespace filter
 {
 using namespace json;
 template<class Model, class Element>
-class ElementToQuery: public txml::XMLNodeLeaf<ElementToQuery<Model, Element>, typename Element::value_t>
+class ElementToQuery: public txml::XMLNodeLeaf<ElementToQuery<Model, Element>,
+                                               typename Element::value_t>
 {
 public:
-    using base_t = txml::XMLNodeLeaf<ElementToQuery<Model, Element>, typename Element::value_t>;
+    using base_t = txml::XMLNodeLeaf<ElementToQuery<Model, Element>,
+                                     typename Element::value_t>;
     using element_t = Element;
 
     static constexpr std::string_view class_name()
@@ -83,7 +75,7 @@ public:
 
 template<class Model, class ...SubContexts>
 class SubContextArrayElement : public txml::XMLNode<SubContextArrayElement<Model, SubContexts...>,
-                                                       SubContexts...>
+                                                    SubContexts...>
 {
 public:
     using base_t = txml::XMLNode<SubContextArrayElement<Model, SubContexts...>,
@@ -103,8 +95,8 @@ public:
 
 template<class Model, class ...SubContexts>
 class Filter: public txml::XMLArray<Filter<Model, SubContexts...>,
-                                              filter::SubContextArrayElement<Model, SubContexts...>>,
-                public TagHolder<BooleanElementTag>
+                                    filter::SubContextArrayElement<Model, SubContexts...>>,
+              public TagHolder<BooleanElementTag>
 {
 public:
     using element_t = filter::SubContextArrayElement<Model, SubContexts...>;
