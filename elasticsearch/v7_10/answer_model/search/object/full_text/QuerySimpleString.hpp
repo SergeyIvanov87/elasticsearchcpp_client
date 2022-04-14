@@ -151,9 +151,6 @@ public:
         TXML_SERIALIZER_AGGREGATOR_OBJECT
     };
 
-    template<class Parent>
-    using subcontext_serializer_type = serializer_parted_type<Parent>;
-
     template<class Formatter, class Tracer>
     void format_serialize_impl(Formatter& out, Tracer tracer) const
     {

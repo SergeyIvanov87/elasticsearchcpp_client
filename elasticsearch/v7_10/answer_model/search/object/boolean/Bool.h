@@ -57,13 +57,10 @@ public:
 
     TXML_DECLARE_SERIALIZER_AGGREGATOR_CLASS(aggregator_serializer_type,
                                              serializer_parted_type<aggregator_serializer_type>,
-                                             typename SubContexts::subcontext_serializer_type<aggregator_serializer_type>...)
+                                             typename SubContexts::serializer_parted_type<aggregator_serializer_type>...)
     {
         TXML_SERIALIZER_AGGREGATOR_OBJECT
     };
-
-    template<class Parent>
-    using subcontext_serializer_type = serializer_parted_type<Parent>;
 
     template<class Formatter, class Tracer>
     void format_serialize_impl(Formatter& out, Tracer tracer) const

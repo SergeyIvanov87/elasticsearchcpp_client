@@ -44,7 +44,7 @@ public:
 
     TXML_DECLARE_SERIALIZER_AGGREGATOR_CLASS(aggregator_serializer_type,
                                              serializer_parted_type<aggregator_serializer_type>,
-                                             typename Params::subcontext_serializer_type<aggregator_serializer_type>...)
+                                             typename Params::serializer_parted_type<aggregator_serializer_type>...)
     {
         TXML_SERIALIZER_AGGREGATOR_OBJECT
     };

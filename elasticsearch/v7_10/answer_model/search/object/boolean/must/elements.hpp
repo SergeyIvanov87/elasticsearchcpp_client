@@ -74,7 +74,7 @@ public:
     }
 
     template<class Parent>
-    TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(subcontext_serializer_type, Parent, ToJSON,
+    TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(serializer_parted_type, Parent, ToJSON,
                                                //Term<Model, value_t>,
                                                     ElementToQuery<Model, value_t>)  {
         TXML_SERIALIZER_DISPATCHABLE_OBJECT
@@ -119,7 +119,7 @@ public:
     }
 
     template<class Parent>
-    TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(subcontext_serializer_type, Parent, ToJSON,
+    TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(serializer_parted_type, Parent, ToJSON,
                                                //Terms<Model, QueryElement>,
                                                     ElementToQuery<Model, value_t>)  {
         TXML_SERIALIZER_DISPATCHABLE_OBJECT
@@ -221,7 +221,7 @@ public:
     // standalone serializier
     TXML_DECLARE_SERIALIZER_AGGREGATOR_CLASS(aggregator_serializer_type,
                                              serializer_parted_type<aggregator_serializer_type>,
-                                             typename SubContexts::subcontext_serializer_type<aggregator_serializer_type>...)
+                                             typename SubContexts::serializer_parted_type<aggregator_serializer_type>...)
     {
         TXML_SERIALIZER_AGGREGATOR_OBJECT
     };
@@ -233,9 +233,6 @@ public:
         aggregator_serializer_type ser(ext);
         base_t:: template format_serialize_impl(ser, tracer);
     }
-
-    template<class Parent>
-    using subcontext_serializer_type = serializer_parted_type<Parent>;
 };
 } // namespace search
 } // namespace model
