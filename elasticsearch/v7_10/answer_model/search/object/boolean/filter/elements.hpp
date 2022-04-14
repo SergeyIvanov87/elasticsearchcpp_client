@@ -16,7 +16,7 @@ struct is_filter_element : std::integral_constant<bool, model::search::has_tag<F
 
 template<class ...All>
 static constexpr bool
-enable_for_filter_element() {return  std::conjunction_v<is_filter_element<All>...>; }
+enable_for_filter_element() {return  std::conjunction_v<is_filter_element<std::decay_t<All>>...>; }
 } // namespace details
 
 namespace filter

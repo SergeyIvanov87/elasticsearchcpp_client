@@ -8,6 +8,16 @@ namespace model
 {
 namespace search
 {
+namespace details
+{
+template <class Target>
+struct is_boolean_element : std::integral_constant<bool, model::search::has_tag<BooleanElementTag, Target>()> {};
+
+template<class ...All>
+static constexpr bool
+enable_for_boolean_element() {return  std::conjunction_v<is_boolean_element<std::decay_t<All>>...>; }
+} // namespace details
+
 template<class Model, class ...SubContexts>
 class Boolean : public txml::XMLNode<Boolean<Model, SubContexts...>,
                                         SubContexts...>, //Must, Filter,

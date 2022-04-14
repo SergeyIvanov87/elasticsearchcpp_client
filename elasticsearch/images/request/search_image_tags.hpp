@@ -14,8 +14,6 @@ namespace tag
 {
 using namespace elasticsearch::image::search;
 
-template<class ...SubContexts>
-using must = ::model::search::Must<elasticsearch::image::model::data, SubContexts...>;
 template<class ModelElement>
 using mterm = ::model::search::must::Term<elasticsearch::image::model::data, ModelElement>;
 template<class ModelElement>
@@ -57,34 +55,25 @@ using query_all = elasticsearch::v7::search::tag::query_all;
 namespace create
 {
     template<class ...SpecificQueryParams>
-    query<std::decay_t<SpecificQueryParams>...> query_tag(SpecificQueryParams &&...args)
+    auto query_tag(SpecificQueryParams &&...args)
     {
-        return query<std::decay_t<SpecificQueryParams>...> (std::forward<SpecificQueryParams>(args)...);
+        return elasticsearch::v7::search::tag::create::query_tag<elasticsearch::image::model::data>(std::forward<SpecificQueryParams>(args)...);
     }
-} // namespace create
 
-
-template<class ...SpecificBooleanParams>
-using boolean = elasticsearch::v7::search::tag::boolean<elasticsearch::image::model::data, SpecificBooleanParams...>;
-namespace create
-{
     template<class ...SpecificBooleanParams>
-    boolean<std::decay_t<SpecificBooleanParams>...> boolean_tag(SpecificBooleanParams &&...args)
+    auto boolean_tag(SpecificBooleanParams &&...args)
     {
-        return boolean<std::decay_t<SpecificBooleanParams>...> (std::forward<SpecificBooleanParams>(args)...);
+        return elasticsearch::v7::search::tag::create::boolean_tag<elasticsearch::image::model::data>(std::forward<SpecificBooleanParams>(args)...);
+    }
+
+    template<class ...SpecificModelElements>
+    auto simple_query_string_tag(const std::string &query_string)
+    {
+        return elasticsearch::v7::search::tag::create::simple_query_string_tag<elasticsearch::image::model::data,
+                                                                               SpecificModelElements...>(query_string);
     }
 } // namespace create
 
-template<class ...SpecificModelElements>
-using simple_query_string = elasticsearch::v7::search::tag::simple_query_string<elasticsearch::image::model::data, SpecificModelElements...>;
-namespace create
-{
-    template<class ...SpecificModelElements>
-    simple_query_string<SpecificModelElements...> simple_query_string_tag(const std::string &query_string)
-    {
-        return simple_query_string<SpecificModelElements...> (query_string);
-    }
-}
 template<class ...SortParams>
 using sort  = elasticsearch::v7::search::tag::sort<elasticsearch::image::model::data, SortParams...>;
 namespace create

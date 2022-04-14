@@ -2,7 +2,7 @@
 #define ANSWER_MODEL_SEARCH_FULL_TEXT_SIMPLE_QUERY_STRING_NEW_HPP
 
 #include <txml/txml_fwd.h>
-#include "elasticsearch/v7_10/answer_model/search/object/boolean/tags.hpp"
+#include "elasticsearch/v7_10/answer_model/search/object/full_text/tags.hpp"
 
 namespace model
 {
@@ -10,7 +10,8 @@ namespace search
 {
 namespace full_text
 {
-class Query: public txml::XMLNodeLeaf<Query, std::string>
+class Query: public txml::XMLNodeLeaf<Query, std::string>,
+             public TagHolder<SimpleQueryStringTag>
 {
 public:
     using base_t = txml::XMLNodeLeaf<Query, std::string>;
@@ -72,9 +73,11 @@ public:
         (this->template emplace<Fields<Model, SortedElements>>(), ...);
     }
 };
+
 template<class Model, class ...FieldsElements>
 class FieldsArray: public txml::XMLArray<FieldsArray<Model, FieldsElements...>,
-                                         FieldsArrayElement<Model, FieldsElements...>>
+                                         FieldsArrayElement<Model, FieldsElements...>>,
+                   public TagHolder<SimpleQueryStringTag>
 {
 public:
     using element_t = FieldsArrayElement<Model, FieldsElements...>;
@@ -102,7 +105,7 @@ template<class Model, class ...FieldsElements>
 class SimpleQueryString : public txml::XMLNode<SimpleQueryString<Model, FieldsElements...>,
                                                Query,
                                                FieldsArray<Model, FieldsElements...>>,
-                          public TagHolder<BooleanElementTag, MustElementTag>
+                          public TagHolder<QueryElementTag, MustElementTag>
 {
 public:
     using self_t = SimpleQueryString<Model, FieldsElements...>;

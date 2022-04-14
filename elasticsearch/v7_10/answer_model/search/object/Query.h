@@ -9,6 +9,17 @@ namespace model
 {
 namespace search
 {
+namespace details
+{
+template <class Target>
+struct is_query_element : std::integral_constant<bool, model::search::has_tag<QueryElementTag, Target>()> {};
+
+template<class ...All>
+static constexpr bool
+enable_for_query_element() {return  std::conjunction_v<is_query_element<std::decay_t<All>>...>; }
+} // namespace details
+
+
 using namespace json;
 template<class Model, class ...Params>
 class Query: public txml::XMLNode<Query<Model, Params...>,

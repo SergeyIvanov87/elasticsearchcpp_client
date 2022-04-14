@@ -19,10 +19,44 @@ using namespace elasticsearch::v7::search;
 template<class Model, class ...SpecificModelParams>
 using must = ::model::search::Must<Model, SpecificModelParams...>;
 
+
+template <class Model, class ModelElement>
+inline auto make_term(const std::optional<ModelElement> &arg)
+{
+    return arg.has_value() ?
+           std::optional<::model::search::must::Term<Model, ModelElement>>(arg.value()) :
+           std::optional<::model::search::must::Term<Model, ModelElement>>{};
+}
+
+template <class Model, class ModelElement>
+inline auto make_term(std::optional<ModelElement> &&arg)
+{
+    return arg.has_value() ?
+           std::optional<::model::search::must::Term<Model, ModelElement>>(std::move(arg.value())) :
+           std::optional<::model::search::must::Term<Model, ModelElement>>{};
+}
+
+template <class Model, class ModelElement>
+inline auto make_terms(const std::optional<ModelElement> &arg)
+{
+    return arg.has_value() ?
+           std::optional<::model::search::must::Terms<Model, ModelElement>>(arg.value()) :
+           std::optional<::model::search::must::Terms<Model, ModelElement>>{};
+}
+
+template <class Model, class ModelElement>
+inline auto make_terms(std::optional<ModelElement> &&arg)
+{
+    return arg.has_value() ?
+           std::optional<::model::search::must::Terms<Model, ModelElement>>(std::move(arg.value())) :
+           std::optional<::model::search::must::Terms<Model, ModelElement>>{};
+}
+
 namespace create
 {
     template<class Model, class ...SpecificModelParams,
-             class = std::enable_if_t<::model::search::details::enable_for_node_args<::model::search::Must, SpecificModelParams...>()
+             class = std::enable_if_t<::model::search::details::enable_for_node_args<::model::search::Must<Model, SpecificModelParams...>,
+                                                                                     SpecificModelParams...>()
                                       && ::model::search::details::enable_for_must_element<SpecificModelParams...>(), int>>
     must<Model, SpecificModelParams...> must_tag(SpecificModelParams &&...args)
     {
@@ -32,6 +66,8 @@ namespace create
     template<class Model, class ...SpecificModelParams>
     must<Model, SpecificModelParams...> must_tag(const std::optional<SpecificModelParams> &...args)
     {
+        static_assert(::model::search::details::enable_for_must_element<SpecificModelParams...>(),
+                      "Must assert must be constructed from MustElementTag elements only");
         return must<Model, SpecificModelParams...> (args...);
     }
 } // namespace create

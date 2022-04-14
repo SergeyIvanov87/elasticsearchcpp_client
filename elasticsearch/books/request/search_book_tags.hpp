@@ -14,9 +14,6 @@ namespace tag
 {
 using namespace elasticsearch::book::search;
 
-template <class ...SubContexts>
-using must = ::model::search::Must<elasticsearch::book::model::data, SubContexts...>;
-
 template<class ModelElement>
 using mterm = ::model::search::must::Term<elasticsearch::book::model::data, ModelElement>;
 template<class ModelElement>
@@ -29,25 +26,22 @@ using fterm = ::model::search::filter::Term<elasticsearch::book::model::data, Mo
 template <class T>
 inline auto make(const std::optional<T> &arg)
 {
-    return arg.has_value() ? std::optional<mterm<T>>(arg.value())  : std::optional<mterm<T>>{};
+    return elasticsearch::v7::search::tag::make_term<elasticsearch::book::model::data>(arg);
 }
 template <class T>
 inline auto make(std::optional<T> &&arg)
 {
-    //return elasticsearch::v7::search::tag::make<elasticsearch::v7::search::tag::Term>(std::move(arg));
-    return arg.has_value() ? std::optional<mterm<T>>(std::move(arg.value())) : std::optional<mterm<T>>{};
+    return elasticsearch::v7::search::tag::make_term<elasticsearch::book::model::data>(std::move(arg));
 }
 
 inline auto make(const std::optional<elasticsearch::common_model::Tags> &arg)
 {
-    //return elasticsearch::v7::search::tag::make<elasticsearch::v7::search::tag::Terms>(arg);
-    return arg.has_value() ? std::optional<mterms<elasticsearch::common_model::Tags>>(arg.value()) : std::optional<mterms<elasticsearch::common_model::Tags>>{};
+    return elasticsearch::v7::search::tag::make_terms<elasticsearch::book::model::data>(arg);
 }
 
 inline auto make(std::optional<elasticsearch::common_model::Tags> &&arg)
 {
-    //return elasticsearch::v7::search::tag::make<elasticsearch::v7::search::tag::Terms>(std::move(arg));
-    return arg.has_value() ? std::optional<mterms<elasticsearch::common_model::Tags>>(arg.value()) : std::optional<mterms<elasticsearch::common_model::Tags>>{};
+    return elasticsearch::v7::search::tag::make_terms<elasticsearch::book::model::data>(std::move(arg));
 }
 
 template <class T, class ...Args>
@@ -72,32 +66,22 @@ using query_all = elasticsearch::v7::search::tag::query_all;
 namespace create
 {
     template<class ...SpecificQueryParams>
-    query<std::decay_t<SpecificQueryParams>...> query_tag(SpecificQueryParams &&...args)
+    auto query_tag(SpecificQueryParams &&...args)
     {
-        return query<std::decay_t<SpecificQueryParams>...> (std::forward<SpecificQueryParams>(args)...);
+        return elasticsearch::v7::search::tag::create::query_tag<elasticsearch::book::model::data>(std::forward<SpecificQueryParams>(args)...);
     }
-} // namespace create
 
-
-template<class ...SpecificBooleanParams>
-using boolean = elasticsearch::v7::search::tag::boolean<elasticsearch::book::model::data, SpecificBooleanParams...>;
-namespace create
-{
     template<class ...SpecificBooleanParams>
-    boolean<std::decay_t<SpecificBooleanParams>...> boolean_tag(SpecificBooleanParams &&...args)
+    auto boolean_tag(SpecificBooleanParams &&...args)
     {
-        return boolean<std::decay_t<SpecificBooleanParams>...> (std::forward<SpecificBooleanParams>(args)...);
+        return elasticsearch::v7::search::tag::create::boolean_tag<elasticsearch::book::model::data>(std::forward<SpecificBooleanParams>(args)...);
     }
-} // namespace create
 
-template<class ...SpecificModelElements>
-using simple_query_string = elasticsearch::v7::search::tag::simple_query_string<elasticsearch::book::model::data, SpecificModelElements...>;
-namespace create
-{
     template<class ...SpecificModelElements>
-    simple_query_string<SpecificModelElements...> simple_query_string_tag(const std::string &query_string)
+    auto simple_query_string_tag(const std::string &query_string)
     {
-        return simple_query_string<SpecificModelElements...> (query_string);
+        return elasticsearch::v7::search::tag::create::simple_query_string_tag<elasticsearch::book::model::data,
+                                                                               SpecificModelElements...>(query_string);
     }
 } // namespace create
 
