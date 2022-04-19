@@ -2,7 +2,7 @@
 #define ELASTICSEARCH_IMAGES_REQUEST_SEARCH_TAG_HPP
 
 #include "elasticsearch/images/data_model/model.hpp"
-#include "elasticsearch/v7_10/request/tags/search/tags.hpp"
+#include "elasticsearch/common_model/search_common_tags.hpp"
 
 namespace elasticsearch
 {
@@ -26,12 +26,30 @@ using fterm = ::model::search::filter::Term<elasticsearch::image::model::data, M
 template <class T>
 inline auto make(const std::optional<T> &arg)
 {
-    return arg.has_value() ? std::optional<mterm<T>>(arg.value())  : std::optional<mterm<T>>{};
+    //return arg.has_value() ? std::optional<mterm<T>>(arg.value())  : std::optional<mterm<T>>{};
+    return elasticsearch::common_model::search::tag::make<elasticsearch::image::model::data>(arg);
 }
 template <class T>
 inline auto make(std::optional<T> &&arg)
 {
-    return arg.has_value() ? std::optional<mterm<T>>(std::move(arg.value())) : std::optional<mterm<T>>{};
+    //return arg.has_value() ? std::optional<mterm<T>>(std::move(arg.value())) : std::optional<mterm<T>>{};
+    return elasticsearch::common_model::search::tag::make<elasticsearch::image::model::data>(std::move(arg));
+}
+
+inline auto make(const std::optional<elasticsearch::image::model::element::Title> &arg)
+{
+    return arg.has_value() ?
+            std::optional<elasticsearch::v7::search::tag::simple_query_string<elasticsearch::image::model::data,
+                          elasticsearch::image::model::element::Title>>(
+                                elasticsearch::v7::search::tag::create::simple_query_string_tag<elasticsearch::image::model::data,
+                                                                                                elasticsearch::image::model::element::Title>(arg.value().getValue())) :
+            std::optional<elasticsearch::v7::search::tag::simple_query_string<elasticsearch::image::model::data,
+                          elasticsearch::image::model::element::Title>>();
+}
+
+inline auto make(std::optional<elasticsearch::image::model::element::Title> &&arg)
+{
+    return make(arg);
 }
 
 template <class T, class ...Args>
