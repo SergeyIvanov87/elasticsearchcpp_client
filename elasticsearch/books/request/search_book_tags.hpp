@@ -44,6 +44,51 @@ inline auto make(std::optional<elasticsearch::common_model::Tags> &&arg)
     return elasticsearch::v7::search::tag::make_terms<elasticsearch::book::model::data>(std::move(arg));
 }
 
+inline auto make(const std::optional<elasticsearch::book::model::element::Title> &arg)
+{
+    return arg.has_value() ?
+            std::optional<elasticsearch::v7::search::tag::simple_query_string<elasticsearch::book::model::data,
+                          elasticsearch::book::model::element::Title>>(
+                                elasticsearch::v7::search::tag::create::simple_query_string_tag<elasticsearch::book::model::data,
+                                                                                                elasticsearch::book::model::element::Title>(arg.value().getValue())) :
+            std::optional<elasticsearch::v7::search::tag::simple_query_string<elasticsearch::book::model::data,
+                          elasticsearch::book::model::element::Title>>();
+}
+
+inline auto make(std::optional<elasticsearch::book::model::element::Title> &&arg)
+{
+    return arg.has_value() ?
+            std::optional<elasticsearch::v7::search::tag::simple_query_string<elasticsearch::book::model::data,
+                          elasticsearch::book::model::element::Title>>(
+                                elasticsearch::v7::search::tag::create::simple_query_string_tag<elasticsearch::book::model::data,
+                                                                                                elasticsearch::book::model::element::Title>(arg.value().getValue())) :
+            std::optional<elasticsearch::v7::search::tag::simple_query_string<elasticsearch::book::model::data,
+                          elasticsearch::book::model::element::Title>>();
+}
+
+
+inline auto make(const std::optional<elasticsearch::book::model::element::Creator> &arg)
+{
+    return arg.has_value() ?
+            std::optional<elasticsearch::v7::search::tag::simple_query_string<elasticsearch::book::model::data,
+                          elasticsearch::book::model::element::Creator>>(
+                                elasticsearch::v7::search::tag::create::simple_query_string_tag<elasticsearch::book::model::data,
+                                                                                                elasticsearch::book::model::element::Creator>(arg.value().getValue())) :
+            std::optional<elasticsearch::v7::search::tag::simple_query_string<elasticsearch::book::model::data,
+                          elasticsearch::book::model::element::Creator>>();
+}
+
+inline auto make(std::optional<elasticsearch::book::model::element::Creator> &&arg)
+{
+    return arg.has_value() ?
+            std::optional<elasticsearch::v7::search::tag::simple_query_string<elasticsearch::book::model::data,
+                          elasticsearch::book::model::element::Creator>>(
+                                elasticsearch::v7::search::tag::create::simple_query_string_tag<elasticsearch::book::model::data,
+                                                                                                elasticsearch::book::model::element::Creator>(arg.value().getValue())) :
+            std::optional<elasticsearch::v7::search::tag::simple_query_string<elasticsearch::book::model::data,
+                          elasticsearch::book::model::element::Creator>>();
+}
+
 template <class T, class ...Args>
 inline auto make(Args &&...args)
 {
