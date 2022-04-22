@@ -162,6 +162,67 @@ TEST(NEW_QSS, init)
     ASSERT_EQ(node.dump(), R"({"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string","test_stub_model.test_stub_leaf_int","test_stub_model.test_stub_leaf_bool"],"query":"abba"}})");
 }
 
+TEST(GeoBB, init)
+{
+    using GeoBBTag = model::search::GeoBoundingBox<StubModel, StubLeafNode_string>;
+    GeoBBTag geo_bb_instance(model::search::geo::BBTopLeft{10.f, 10.f},
+                             model::search::geo::BBBottomRight{20.f, 20.f});
+
+    typename GeoBBTag::aggregator_serializer_type ser;
+
+    txml::StdoutTracer tracer;
+    nlohmann::json node;
+    geo_bb_instance.template format_serialize(ser, tracer);
+    ser. template finalize(node, tracer);
+    ASSERT_EQ(node.dump(), R"({"geo_bounding_box":{"test_stub_model.test_stub_leaf_string":{"bottom_right":{"lat":20.0,"lon":20.0},"top_left":{"lat":10.0,"lon":10.0}}}})");
+}
+
+
+TEST(NEW_BooleanMustQSSGeoBBFilter, init)
+{
+    using MustTag = model::search::Must<StubModel,
+                                   MTerm<StubLeafNode_bool>,
+                                   MTerm<StubLeafNode_int>,
+                                   MTerms<StubLeafNode_string>,
+                                   QSS<StubLeafNode_string>>;
+    MustTag must_instance(MTerm<StubLeafNode_bool>(true),
+                          MTerms<StubLeafNode_string>("my_string_0"),
+                          QSS<StubLeafNode_string>("aaaa"));
+
+    using GeoBBTag = model::search::GeoBoundingBox<StubModel, StubLeafNode_string>;
+
+    using FilterTag = model::search::Filter<StubModel,
+                                       FTerm<StubLeafNode_bool>,
+                                       FTerm<StubLeafNode_int>,
+                                       FTerm<StubLeafNode_string>,
+                                       GeoBBTag>;
+
+    GeoBBTag geo_bb_instance(model::search::geo::BBTopLeft{10.f, 10.f},
+                             model::search::geo::BBBottomRight{20.f, 20.f});
+
+
+    FilterTag filter_instance(FTerm<StubLeafNode_bool>(false),
+                              FTerm<StubLeafNode_int>(22),
+                              FTerm<StubLeafNode_string>("my_string_filter"),
+                              geo_bb_instance);
+
+    using BooleanTag = model::search::Boolean<StubModel, MustTag, FilterTag>;
+    BooleanTag bool_instance(must_instance, filter_instance);
+
+    using QSSTag = QSS<StubLeafNode_string>;
+    QSSTag sqt_param("acdc");
+
+    using QueryTag = model::search::Query<StubModel, BooleanTag, QSSTag>;
+    QueryTag q_instance(bool_instance, sqt_param);
+    typename QueryTag::aggregator_serializer_type ser;
+    nlohmann::json node = nlohmann::json::object();
+    txml::StdoutTracer tracer;
+    q_instance.template format_serialize(ser, tracer);
+    ser. template finalize(node, tracer);
+    ASSERT_EQ(node.dump(), R"({"query":{"bool":{"filter":[{"geo_bounding_box":{"test_stub_model.test_stub_leaf_string":{"bottom_right":{"lat":20.0,"lon":20.0},"top_left":{"lat":10.0,"lon":10.0}}}},{"term":{"test_stub_model.test_stub_leaf_string":"my_string_filter"}},{"term":{"test_stub_model.test_stub_leaf_int":22}},{"term":{"test_stub_model.test_stub_leaf_bool":false}}],"must":[{"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"aaaa"}},{"terms":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]},"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"acdc"}}})");
+}
+
+
 class SearchTagFixtureMatchAll : public ::testing::Test,
                          public Settings
 {
