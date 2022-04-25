@@ -74,7 +74,8 @@ int main(int argc, char* argv[])
     {
         if (argc < 2)
         {
-            std::cerr << "Please set <filename>";
+            std::cerr << "Please set <filename>" << std::endl;
+            return -1;
         }
         if (argc == 2)
         {
@@ -89,8 +90,8 @@ int main(int argc, char* argv[])
     {
         if (argc < 3)
         {
-            std::cerr << "Please set <index> <type/if>";
-
+            std::cerr << "Please set <index> <type/if>" << std::endl;
+            return -1;
         }
         d.rm_data(argv[1], argv[2]);
     }
@@ -98,7 +99,8 @@ int main(int argc, char* argv[])
     {
         if (argc < 2)
         {
-            std::cerr << "Please set <model_name>";
+            std::cerr << "Please set <model_name>" << std::endl;
+            return -1;
         }
         if (argc == 2)
         {
@@ -117,7 +119,8 @@ int main(int argc, char* argv[])
     {
         if (argc < 2)
         {
-            std::cerr << "Please set <filename>";
+            std::cerr << "Please set <filename>" << std::endl;
+            return -1;
         }
         auto map = d.collect_model_data(argv[1]);
         std::cout << "Document attributes: " << std::endl;

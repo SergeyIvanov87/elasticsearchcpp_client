@@ -192,7 +192,8 @@ public:
              std::enable_if_t<details::enable_for_node_args<Must, SpecificSubContexts...>(), int>>
     Must(const std::optional<SpecificSubContexts>&...args)
     {
-        static_assert(all_of_tag<MustElementTag, SpecificSubContexts...>(), "ssss");
+        static_assert(all_of_tag<MustElementTag, SpecificSubContexts...>(),
+                      "Must creation from std::optional assumes list of Node Element");
         auto elem = std::make_shared<element_t>();
         ( (args.has_value() ? elem->template emplace <SpecificSubContexts>(args.value()),true : false), ...);
         this->getValue().push_back(elem);

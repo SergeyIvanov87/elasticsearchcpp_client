@@ -24,7 +24,14 @@ TXML_PREPARE_DESERIALIZER_DISPATCHABLE_CLASS(ResponseFromJSON, Parent,
                                                                         ::model::HitsTotal, ::model::MaxScore, ::model::HitsArray<SpecificModel>,
                                                                             ::model::Value, ::model::Relation, typename ::model::HitsArray<SpecificModel>::element_t,
                                                                             ::model::_Index, ::model::_Id, ::model::_Score, ::model::_Type, ::model::_Source<SpecificModel>,
-                                                                     ::model::PitID)
+                                                                     ::model::PitID,
+                                                                     Error,
+                                                                        RootCause,
+                                                                            typename RootCause::element_t,
+                                                                        ::model::Type,
+                                                                        ::model::Reason,
+                                                                        ::model::CausedBy,
+                                                                        ::model::Status)
 {
     TXML_DESERIALIZER_DISPATCHABLE_OBJECT
     using json = nlohmann::json;
@@ -52,6 +59,24 @@ TXML_PREPARE_DESERIALIZER_DISPATCHABLE_CLASS(ResponseFromJSON, Parent,
 
         mediator->emplace(begin_it.value().begin(), begin_it.value().end());
         auto ret = this->template create_deserialized_node< typename ::model::HitsArray<SpecificModel>::element_t>(tracer, std::distance(begin_it.value().begin(), begin_it.value().end()));
+        mediator->pop();
+        ++begin_it;
+
+        return ret;
+    }
+
+    template<class Tracer>
+    std::shared_ptr<typename RootCause::element_t> deserialize_impl(txml::details::SchemaDTag< typename RootCause::element_t>, Tracer tracer)
+    {
+        auto mediator = this->get_shared_mediator_object();
+        auto& [begin_it, end_it] = mediator->top();
+        if (!this-> template check_array_node_param< typename RootCause::element_t>(begin_it, end_it, json::value_t::object, tracer))
+        {
+            return {};
+        }
+
+        mediator->emplace(begin_it.value().begin(), begin_it.value().end());
+        auto ret = this-> template create_deserialized_node< typename RootCause::element_t>(tracer, std::distance(begin_it.value().begin(), begin_it.value().end()));
         mediator->pop();
         ++begin_it;
 

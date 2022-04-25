@@ -26,13 +26,11 @@ using fterm = ::model::search::filter::Term<elasticsearch::image::model::data, M
 template <class T>
 inline auto make(const std::optional<T> &arg)
 {
-    //return arg.has_value() ? std::optional<mterm<T>>(arg.value())  : std::optional<mterm<T>>{};
     return elasticsearch::common_model::search::tag::make<elasticsearch::image::model::data>(arg);
 }
 template <class T>
 inline auto make(std::optional<T> &&arg)
 {
-    //return arg.has_value() ? std::optional<mterm<T>>(std::move(arg.value())) : std::optional<mterm<T>>{};
     return elasticsearch::common_model::search::tag::make<elasticsearch::image::model::data>(std::move(arg));
 }
 
@@ -52,6 +50,22 @@ inline auto make(std::optional<elasticsearch::image::model::element::Title> &&ar
     return make(arg);
 }
 
+using geo_bbox = elasticsearch::v7::search::tag::geo_bbox<elasticsearch::image::model::data,
+                                                          elasticsearch::image::model::element::Location>;
+
+inline auto make(const std::optional<geo_bbox> &arg)
+{
+    return arg.has_value() ?
+            std::optional<geo_bbox>(arg.value()) :
+            std::optional<geo_bbox>();
+}
+
+inline auto make(std::optional<geo_bbox> &&arg)
+{
+    return make(arg);
+}
+
+
 template <class T, class ...Args>
 inline auto make(Args &&...args)
 {
@@ -63,6 +77,15 @@ namespace create
     auto must_tag(SpecificModelParams &&...args)
     {
         return elasticsearch::v7::search::tag::create::must_tag<elasticsearch::image::model::data>(std::forward<SpecificModelParams>(args)...);
+    }
+} // namespace create
+
+namespace create
+{
+    template<class ...SpecificModelParams>
+    auto filter_tag(SpecificModelParams &&...args)
+    {
+        return elasticsearch::v7::search::tag::create::filter_tag<elasticsearch::image::model::data>(std::forward<SpecificModelParams>(args)...);
     }
 } // namespace create
 
