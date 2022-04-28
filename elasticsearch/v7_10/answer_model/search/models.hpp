@@ -13,6 +13,12 @@
 #include "elasticsearch/v7_10/answer_model/search/object/resp/PitID.h"
 #include "elasticsearch/v7_10/answer_model/data_creation/object/_Shards.h"
 
+//todo put up common header with types list!!!
+#include "elasticsearch/v7_10/answer_model/object/Error.h"
+#include "elasticsearch/v7_10/answer_model/object/CausedBy.h"
+#include "elasticsearch/v7_10/answer_model/object/RootCause.h"
+#include "elasticsearch/v7_10/answer_model/object/Status.h"
+
 namespace elasticsearch
 {
 namespace v7
@@ -60,6 +66,9 @@ public:
     }
 };
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+//TODO put specicid search elements in 'search/Error.h' additinal file
+using RootCause = ::model::RootCause<>;
+using Error = ::model::Error<RootCause, ::model::CausedBy>;
 
 template<class SpecificModel>
 class response: public txml::XMLNode<response<SpecificModel>,
@@ -67,7 +76,14 @@ class response: public txml::XMLNode<response<SpecificModel>,
                                      ::model::Took,
                                      ::model::_Shards,
                                      ::model::HitsNode<SpecificModel>,
-                                     ::model::PitID>
+                                     ::model::PitID,
+                                     Error,
+                                        RootCause,
+                                            typename RootCause::element_t,
+                                        ::model::Type,
+                                        ::model::Reason,
+                                        ::model::CausedBy,
+                                     ::model::Status>
 {
 public:
     using base = txml::XMLNode<response<SpecificModel>,
@@ -75,7 +91,14 @@ public:
                                ::model::Took,
                                ::model::_Shards,
                                ::model::HitsNode<SpecificModel>,
-                               ::model::PitID>;
+                               ::model::PitID,
+                               Error,
+                                        RootCause,
+                                            typename RootCause::element_t,
+                                        ::model::Type,
+                                        ::model::Reason,
+                                        ::model::CausedBy,
+                               ::model::Status>;
 
     static constexpr std::string_view class_name()
     {

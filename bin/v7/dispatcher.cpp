@@ -3,6 +3,7 @@
 
 #include "bin/cfg_param_names.hpp"
 #include "bin/v7/dispatcher.hpp"
+#include "bin/utils/parse_string.hpp"
 
 #include "elasticsearch/books/book_reader.hpp"
 #include "elasticsearch/images/image_reader.hpp"
@@ -45,6 +46,46 @@ std::optional<Element> get_match_elem(const std::map<std::string, std::string> &
 }
 
 
+template <>
+std::optional<elasticsearch::image::search::tag::geo_bbox>
+get_match_elem<elasticsearch::image::search::tag::geo_bbox,
+               elasticsearch::image::search::tag::geo_bbox, char>(const std::map<std::string, std::string> &data_storage, char &&sep)
+{
+    if (auto it = data_storage.find(std::string(elasticsearch::image::search::tag::geo_bbox::class_name())); it != data_storage.end())
+    {
+        const size_t float_num = 4;
+        const char *pStart = it->second.c_str();
+        std::vector<float> values;
+        const char *pEnd = pStart;
+        while (*pStart && values.size() != float_num)
+        {
+            const char *pEnd = bin::utils::get_next_char_if(pStart, [sep]( const char* sym) { return (*sym == sep);});
+            try
+            {
+                values.push_back(stof(std::string(pStart, pEnd - pStart)));
+            }
+            catch (const std::exception &ex)
+            {
+                throw std::runtime_error(std::string("Cannot parse geo bounding box: ") +
+                                         "4 float values, which enumerated by \"" + sep +
+                                         "\", are expected, got: " + it->second);
+            }
+            pStart = pEnd + 1;
+        }
+
+        if (float_num != values.size())
+        {
+            throw std::runtime_error(std::string("Invalid geo bounding box: ") +
+                                         "4 float values required, got: " + it->second);
+        }
+
+        return std::make_optional<elasticsearch::image::search::tag::geo_bbox>(model::search::geo::BBTopLeft {values[0], values[1]},
+                                                                          model::search::geo::BBBottomRight {values[2], values[3]});
+    }
+    return {};
+}
+
+
 template<class Model>
 using record_t = std::pair<std::string, std::shared_ptr<Model>>;
 
@@ -63,6 +104,15 @@ extract_model_records(const std::shared_ptr<SearchRequest> &search_ptr, Tracer t
     }
 
     std::shared_ptr<typename transaction::response> search_ans_ptr = search_ptr->get_response(tracer);
+    auto status = search_ans_ptr->template getValue<::model::Status>();
+    if (status->getValue() != 200)
+    {
+        auto fail_reason = search_ans_ptr->template getValue<elasticsearch::v7::search::Error>()->template getValue<::model::Reason>();
+        auto caused_reason = search_ans_ptr->template getValue<elasticsearch::v7::search::Error>()->template getValue<::model::CausedBy>()->template getValue<::model::Reason>();
+        throw std::runtime_error("unexpected search response, status: " + std::to_string(status->getValue()) + "\nError: " + fail_reason->getValue() +
+                                 ", details: " + caused_reason->getValue());
+    }
+
     auto hits = search_ans_ptr->template getValue<::model::HitsNode<data>>();
     if (!hits)
     {
@@ -207,7 +257,7 @@ request_image_search_match(const dispatcher &d,
         auto mu = tag::create::must_tag(tag::make(details::get_match_elem<element::Camera, std::string>(match_params)),
                                         tag::make(details::get_match_elem<element::CameraModel, std::string>(match_params)),
                                         tag::make(details::get_match_elem<element::DigitizeTime, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<element::Location, std::string>(match_params)),
+                                        //tag::make(details::get_match_elem<element::Location, std::string>(match_params)),
                                         tag::make(details::get_match_elem<element::OriginalTime, std::string>(match_params)),
                                         //tag::make(details::get_match_elem<element::Resolution, std::string>(match_params)),
                                         tag::make(details::get_match_elem<element::Title, std::string>(match_params)),
@@ -220,7 +270,10 @@ request_image_search_match(const dispatcher &d,
                                         tag::make(details::get_match_elem<elasticsearch::common_model::SourceName, std::string>(match_params)),
                                         tag::make(details::get_match_elem<elasticsearch::common_model::Tags, elasticsearch::common_model::Tags>(match_params, ",")));
 
-        auto boo = tag::create::boolean_tag(mu);
+                                        auto fff = tag::make(details::get_match_elem<tag::geo_bbox, tag::geo_bbox, char>(match_params, ','));
+        auto fi = tag::create::filter_tag(fff);
+
+        auto boo = tag::create::boolean_tag(mu, fi);
         search_ptr = d.execute_request<transaction>(schema_indices[1], schema_indices[1],
                                                     max_count, pit_interval,
                                                     tag::create::query_tag(boo),

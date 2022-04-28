@@ -19,10 +19,21 @@ using filter = ::model::search::Filter<Model, SpecificModelParams...>;
 
 namespace create
 {
-    template<class Model, class ...SpecificModelParams>
+    template<class Model, class ...SpecificModelParams,
+             class = std::enable_if_t<::model::search::details::enable_for_node_args<::model::search::Filter<Model, SpecificModelParams...>,
+                                                                                     SpecificModelParams...>()
+                                      && ::model::search::all_of_tag<model::search::FilterElementTag, SpecificModelParams...>(), int>>
     filter<Model, SpecificModelParams...> filter_tag(typename SpecificModelParams::value_t &&...args)
     {
         return filter<Model, SpecificModelParams...> (std::forward<typename SpecificModelParams::value_t>(args)...);
+    }
+
+    template<class Model, class ...SpecificModelParams>
+    filter<Model, SpecificModelParams...> filter_tag(const std::optional<SpecificModelParams> &...args)
+    {
+        static_assert(::model::search::all_of_tag<model::search::FilterElementTag, SpecificModelParams...>(),
+                      "Filter assert must be constructed from FilterElementTag elements only");
+        return filter<Model, SpecificModelParams...> (args...);
     }
 } // namespace create
 } // namespace tag

@@ -124,6 +124,28 @@ public:
         this->getValue().swap(src.getValue());
     }
 
+
+    template<class ...SpecificSubContexts, class =
+             std::enable_if_t<details::enable_for_node_args<Filter, SpecificSubContexts...>()
+                              && all_of_tag<FilterElementTag, SpecificSubContexts...>(), int>>
+    Filter(SpecificSubContexts && ...args) {
+        auto elem = std::make_shared<element_t>();
+        (elem->template emplace <SpecificSubContexts>(std::forward<SpecificSubContexts>(args)), ...);
+        this->getValue().push_back(elem);
+    }
+
+    template<class ...SpecificSubContexts, class =
+             std::enable_if_t<details::enable_for_node_args<Filter, SpecificSubContexts...>(), int>>
+    Filter(const std::optional<SpecificSubContexts>&...args)
+    {
+        static_assert(all_of_tag<FilterElementTag, SpecificSubContexts...>(),
+                      "Filter creation from std::optional assumes list of Node Element");
+        auto elem = std::make_shared<element_t>();
+        ( (args.has_value() ? elem->template emplace <SpecificSubContexts>(args.value()),true : false), ...);
+        this->getValue().push_back(elem);
+    }
+
+/*
     template<class ...SpecificSubContexts,
                         class = std::enable_if_t<
                                                 not std::disjunction_v<
@@ -135,7 +157,7 @@ public:
         (elem->template emplace <SpecificSubContexts>(std::forward<SpecificSubContexts>(args)), ...);
         this->getValue().push_back(elem);
     }
-
+*/
 
 
     // Subcontext Array element constitute a lot of variadic subitem templates : Term, Terms, QuerySimpleString and something other
