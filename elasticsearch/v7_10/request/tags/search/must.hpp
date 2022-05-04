@@ -19,6 +19,17 @@ using namespace elasticsearch::v7::search;
 template<class Model, class ...SpecificModelParams>
 using must = ::model::search::Must<Model, SpecificModelParams...>;
 
+namespace must_helper
+{
+namespace translation
+{
+template<class ModelElement>
+struct table {
+    template<class Model>
+    using value_t = ::model::search::must::Term<Model, ModelElement>;
+};
+}
+}
 
 template <class Model, class ModelElement>
 inline auto make_term(const std::optional<ModelElement> &arg)
@@ -61,6 +72,17 @@ namespace create
     must<Model, SpecificModelParams...> must_tag(SpecificModelParams &&...args)
     {
         return must<Model, SpecificModelParams...> (std::forward<SpecificModelParams>(args)...);
+    }
+
+    template<class Model, class ...SpecificModelParams,
+             class = std::enable_if_t<::model::search::details::enable_for_node_args<::model::search::Must<Model,
+                                                                                                           typename elasticsearch::v7::search::tag::must_helper::translation::table<SpecificModelParams>::value_t<Model>...>,
+                                                                                     typename elasticsearch::v7::search::tag::must_helper::translation::table<SpecificModelParams>::value_t<Model>...>()
+                                      && ::model::search::all_of_tag<model::search::MustElementTag, typename elasticsearch::v7::search::tag::must_helper::translation::table<SpecificModelParams>::value_t<Model>...>(), int>>
+    must<Model, typename elasticsearch::v7::search::tag::must_helper::translation::table<SpecificModelParams>::value_t<Model>...> must_raw_tag(SpecificModelParams &&...args)
+    {
+        return must<Model, typename elasticsearch::v7::search::tag::must_helper::translation::table<SpecificModelParams>::value_t<Model>...> (
+            typename elasticsearch::v7::search::tag::must_helper::translation::table<SpecificModelParams>::value_t<Model>(std::forward<SpecificModelParams>(args))...);
     }
 
     template<class Model, class ...SpecificModelParams>

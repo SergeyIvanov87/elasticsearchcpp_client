@@ -304,8 +304,8 @@ TEST_F(BookMultipleCreateSearchFixture_11, create_n_search_boolean_2_terms)
 
     txml::StdoutTracer tracer;
 
-    auto mu = search::tag::create::must_tag(search::tag::make<element::Creator>(std::string("creator_search10")),
-                                            search::tag::make<element::Language>(std::string("language_search10")));
+    auto mu = search::tag::create::must_tag(element::Creator("creator_search10"),
+                                            element::Language("language_search10"));
     auto boo = search::tag::create::boolean_tag(mu);
     search::transaction s(get_host());
 

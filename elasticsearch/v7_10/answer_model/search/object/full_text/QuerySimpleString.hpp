@@ -123,6 +123,11 @@ public:
         return txml::TextReaderWrapper::NodeType::Element;
     }
 
+    SimpleQueryString(const FieldsElements &...elems) {
+        this->template set(std::make_shared<FieldsArray<Model, FieldsElements...>>());
+        this->template emplace<Query>( (elems.getValue() + ... + "") );
+    }
+
     SimpleQueryString(const std::string &query_string) {
         this->template set(std::make_shared<FieldsArray<Model, FieldsElements...>>());
         this->template emplace<Query>(query_string);

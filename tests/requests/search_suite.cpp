@@ -8,7 +8,7 @@
 #include "tests/common/Serializers.hpp"
 
 
-#include "tests/common/Nodes.hpp"
+#include "tests/common/NodesSearchTagMapping.hpp"
 #include <gtest/gtest.h>
 
 //
@@ -51,6 +51,21 @@ TEST(NEW_MustQSS, serializer)
     ser. template finalize(node_0, tracer);
     ASSERT_EQ(node_0.dump(), R"({"must":[{"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"aaaa"}},{"terms":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]})");
 }
+
+TEST(NEW_MustQSSTag, serializer)
+{
+    auto must_instance = elasticsearch::v7::search::tag::create::must_raw_tag<StubModel>(StubLeafNode_bool(true),
+                                                                                         StubLeafNode_int(0),
+                                                                                         StubLeafNode_string("aaaa"));
+    typename decltype(must_instance)::aggregator_serializer_type ser;
+    txml::StdoutTracer tracer;
+    nlohmann::json node_0 = nlohmann::json::object();
+    must_instance.template format_serialize(ser, tracer);
+    ser. template finalize(node_0, tracer);
+    ASSERT_EQ(node_0.dump(), R"({"must":[{"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"aaaa"}},{"term":{"test_stub_model.test_stub_leaf_int":0}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]})");
+
+}
+
 
 TEST(NEW_BooleanMustQSS, serializer)
 {

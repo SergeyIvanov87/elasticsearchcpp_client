@@ -3,6 +3,7 @@
 
 #include "elasticsearch/books/data_model/model.hpp"
 #include "elasticsearch/common_model/search_common_tags.hpp"
+#include "elasticsearch/books/request/search_book_tags_mapping.hpp"
 
 namespace elasticsearch
 {
@@ -13,15 +14,6 @@ namespace search
 namespace tag
 {
 using namespace elasticsearch::book::search;
-
-template<class ModelElement>
-using mterm = ::model::search::must::Term<elasticsearch::book::model::data, ModelElement>;
-template<class ModelElement>
-using mterms = ::model::search::must::Terms<elasticsearch::book::model::data, ModelElement>;
-
-template<class ModelElement>
-using fterm = ::model::search::filter::Term<elasticsearch::book::model::data, ModelElement>;
-
 
 template <class T>
 inline auto make(const std::optional<T> &arg)
@@ -93,7 +85,13 @@ namespace create
     template<class ...SpecificModelParams>
     auto must_tag(SpecificModelParams &&...args)
     {
-        return elasticsearch::v7::search::tag::create::must_tag<elasticsearch::book::model::data>(std::forward<SpecificModelParams>(args)...);
+        return elasticsearch::v7::search::tag::create::must_tag<elasticsearch::book::model::data>(
+                typename elasticsearch::v7::search::tag::must_helper::translation::table<SpecificModelParams>::value_t<elasticsearch::book::model::data>(std::forward<SpecificModelParams>(args))...);
+    }
+    template<class ...SpecificModelParams>
+    auto must_opt_tag(SpecificModelParams &&...args)
+    {
+        return elasticsearch::v7::search::tag::create::must_tag<elasticsearch::book::model::data>(make(std::forward<SpecificModelParams>(args))...);
     }
 } // namespace create
 
