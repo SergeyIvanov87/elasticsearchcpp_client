@@ -28,6 +28,31 @@ struct table {
     template<class Model>
     using value_t = ::model::search::must::Term<Model, ModelElement>;
 };
+
+template<class Model>
+struct table_mapper
+{
+    template<class ModelElement>
+    static auto map(const ModelElement &v)
+    {
+        return typename table<ModelElement>::value_t<Model>(v);
+    }
+
+    template<class ModelElement>
+    static auto map(const std::optional<ModelElement> &v)
+    {
+        return v.has_value() ?
+                    std::optional<decltype(map<ModelElement>(std::declval<ModelElement>()))>(v.value()) :
+                    std::optional<decltype(map<ModelElement>(std::declval<ModelElement>()))>();
+    }
+};
+
+template<class T>
+struct decay_optional { using type = T; };
+template<class T>
+struct decay_optional<std::optional<T>> { using type = T; };
+template<class T>
+using decay_optional_t = typename decay_optional<T>::type;
 }
 }
 
@@ -66,31 +91,16 @@ inline auto make_terms(std::optional<ModelElement> &&arg)
 namespace create
 {
     template<class Model, class ...SpecificModelParams,
-             class = std::enable_if_t<::model::search::details::enable_for_node_args<::model::search::Must<Model, SpecificModelParams...>,
-                                                                                     SpecificModelParams...>()
-                                      && ::model::search::all_of_tag<model::search::MustElementTag, SpecificModelParams...>(), int>>
-    must<Model, SpecificModelParams...> must_tag(SpecificModelParams &&...args)
-    {
-        return must<Model, SpecificModelParams...> (std::forward<SpecificModelParams>(args)...);
-    }
-
-    template<class Model, class ...SpecificModelParams,
              class = std::enable_if_t<::model::search::details::enable_for_node_args<::model::search::Must<Model,
-                                                                                                           typename elasticsearch::v7::search::tag::must_helper::translation::table<SpecificModelParams>::value_t<Model>...>,
-                                                                                     typename elasticsearch::v7::search::tag::must_helper::translation::table<SpecificModelParams>::value_t<Model>...>()
-                                      && ::model::search::all_of_tag<model::search::MustElementTag, typename elasticsearch::v7::search::tag::must_helper::translation::table<SpecificModelParams>::value_t<Model>...>(), int>>
-    must<Model, typename elasticsearch::v7::search::tag::must_helper::translation::table<SpecificModelParams>::value_t<Model>...> must_raw_tag(SpecificModelParams &&...args)
+                                                                                                           elasticsearch::v7::search::tag::must_helper::translation::decay_optional_t<decltype(elasticsearch::v7::search::tag::must_helper::translation::table_mapper<Model>::template map(std::declval<SpecificModelParams>()))>...>,
+                                                                                     elasticsearch::v7::search::tag::must_helper::translation::decay_optional_t<decltype(elasticsearch::v7::search::tag::must_helper::translation::table_mapper<Model>::template map(std::declval<SpecificModelParams>()))>...>()
+                                      && ::model::search::all_of_tag<model::search::MustElementTag,
+                                                                     elasticsearch::v7::search::tag::must_helper::translation::decay_optional_t<decltype(elasticsearch::v7::search::tag::must_helper::translation::table_mapper<Model>::template map(std::declval<SpecificModelParams>()))>...>(), int>>
+    must<Model, elasticsearch::v7::search::tag::must_helper::translation::decay_optional_t<decltype(elasticsearch::v7::search::tag::must_helper::translation::table_mapper<Model>::template map(std::declval<SpecificModelParams>()))>...>
+    must_tag(SpecificModelParams &&...args)
     {
-        return must<Model, typename elasticsearch::v7::search::tag::must_helper::translation::table<SpecificModelParams>::value_t<Model>...> (
-            typename elasticsearch::v7::search::tag::must_helper::translation::table<SpecificModelParams>::value_t<Model>(std::forward<SpecificModelParams>(args))...);
-    }
-
-    template<class Model, class ...SpecificModelParams>
-    must<Model, SpecificModelParams...> must_tag(const std::optional<SpecificModelParams> &...args)
-    {
-        static_assert(::model::search::all_of_tag<model::search::MustElementTag, SpecificModelParams...>(),
-                      "Must assert must be constructed from MustElementTag elements only");
-        return must<Model, SpecificModelParams...> (args...);
+        return must<Model, elasticsearch::v7::search::tag::must_helper::translation::decay_optional_t<decltype(elasticsearch::v7::search::tag::must_helper::translation::table_mapper<Model>::template map(std::declval<SpecificModelParams>()))>...> (
+            elasticsearch::v7::search::tag::must_helper::translation::table_mapper<Model>::template map(std::forward<SpecificModelParams>(args))...);
     }
 } // namespace create
 } // namespace tag

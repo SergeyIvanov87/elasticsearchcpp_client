@@ -27,10 +27,10 @@ struct table<::elasticsearch::common_model::Description> {
     template<class Model>
     using value_t = elasticsearch::v7::search::tag::simple_query_string<Model, ::elasticsearch::common_model::Description>;
 };
-}
-}
-}
-}
-}
+} // namespace translation
+} // namespace must_helper
+} // namespace tag
+} // namespace search
+} // namespace v7
 } // namespace elasticsearch
 #endif // ELASTICSEARCH_COMMON_MODEL_SEARCH_TAGS_MAPPING_HPP

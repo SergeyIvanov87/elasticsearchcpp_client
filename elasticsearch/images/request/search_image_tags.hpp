@@ -14,63 +14,9 @@ namespace tag
 {
 using namespace elasticsearch::image::search;
 
-template<class ModelElement>
-using mterm = ::model::search::must::Term<elasticsearch::image::model::data, ModelElement>;
-template<class ModelElement>
-using mterms = ::model::search::must::Terms<elasticsearch::image::model::data, ModelElement>;
-
-template<class ModelElement>
-using fterm = ::model::search::filter::Term<elasticsearch::image::model::data, ModelElement>;
-
-
-template <class T>
-inline auto make(const std::optional<T> &arg)
-{
-    return elasticsearch::common_model::search::tag::make<elasticsearch::image::model::data>(arg);
-}
-template <class T>
-inline auto make(std::optional<T> &&arg)
-{
-    return elasticsearch::common_model::search::tag::make<elasticsearch::image::model::data>(std::move(arg));
-}
-
-inline auto make(const std::optional<elasticsearch::image::model::element::Title> &arg)
-{
-    return arg.has_value() ?
-            std::optional<elasticsearch::v7::search::tag::simple_query_string<elasticsearch::image::model::data,
-                          elasticsearch::image::model::element::Title>>(
-                                elasticsearch::v7::search::tag::create::simple_query_string_tag<elasticsearch::image::model::data,
-                                                                                                elasticsearch::image::model::element::Title>(arg.value().getValue())) :
-            std::optional<elasticsearch::v7::search::tag::simple_query_string<elasticsearch::image::model::data,
-                          elasticsearch::image::model::element::Title>>();
-}
-
-inline auto make(std::optional<elasticsearch::image::model::element::Title> &&arg)
-{
-    return make(arg);
-}
-
 using geo_bbox = elasticsearch::v7::search::tag::geo_bbox<elasticsearch::image::model::data,
                                                           elasticsearch::image::model::element::Location>;
 
-inline auto make(const std::optional<geo_bbox> &arg)
-{
-    return arg.has_value() ?
-            std::optional<geo_bbox>(arg.value()) :
-            std::optional<geo_bbox>();
-}
-
-inline auto make(std::optional<geo_bbox> &&arg)
-{
-    return make(arg);
-}
-
-
-template <class T, class ...Args>
-inline auto make(Args &&...args)
-{
-    return make(std::optional<T>(std::forward<Args>(args)...));
-}
 namespace create
 {
     template<class ...SpecificModelParams>

@@ -54,15 +54,28 @@ TEST(NEW_MustQSS, serializer)
 
 TEST(NEW_MustQSSTag, serializer)
 {
-    auto must_instance = elasticsearch::v7::search::tag::create::must_raw_tag<StubModel>(StubLeafNode_bool(true),
+    auto must_instance_from_opt = elasticsearch::v7::search::tag::create::must_tag<StubModel>(std::optional<StubLeafNode_bool>(true),
+                                                                                                  std::optional<StubLeafNode_int>(0),
+                                                                                                  std::optional<StubLeafNode_string>("aaaa"));
+    auto must_instance = elasticsearch::v7::search::tag::create::must_tag<StubModel>(StubLeafNode_bool(true),
                                                                                          StubLeafNode_int(0),
                                                                                          StubLeafNode_string("aaaa"));
+    static_assert(std::is_same_v<decltype(must_instance_from_opt), decltype(must_instance)>, "Must be the same");
+    typename decltype(must_instance_from_opt)::aggregator_serializer_type ser_from_opt;
     typename decltype(must_instance)::aggregator_serializer_type ser;
+
     txml::StdoutTracer tracer;
-    nlohmann::json node_0 = nlohmann::json::object();
+    nlohmann::json node_from_opt = nlohmann::json::object();
+    nlohmann::json node = nlohmann::json::object();
+
+    must_instance_from_opt.template format_serialize(ser_from_opt, tracer);
     must_instance.template format_serialize(ser, tracer);
-    ser. template finalize(node_0, tracer);
-    ASSERT_EQ(node_0.dump(), R"({"must":[{"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"aaaa"}},{"term":{"test_stub_model.test_stub_leaf_int":0}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]})");
+    ser_from_opt. template finalize(node_from_opt, tracer);
+    ser. template finalize(node, tracer);
+
+    static const std::string expected(R"({"must":[{"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"aaaa"}},{"term":{"test_stub_model.test_stub_leaf_int":0}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]})");
+    ASSERT_EQ(node_from_opt.dump(), expected);
+    ASSERT_EQ(node.dump(), expected);
 
 }
 
