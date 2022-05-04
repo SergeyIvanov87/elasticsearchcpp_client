@@ -3,7 +3,6 @@
 
 #include <txml/txml_fwd.h>
 #include "elasticsearch/v7_10/answer_model/search/object/MatchAll.h"
-#include "elasticsearch/v7_10/answer_model/search/object/boolean/Bool.h"
 
 namespace model
 {

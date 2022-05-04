@@ -273,6 +273,9 @@ request_image_search_match(const dispatcher &d,
                                         auto fff = tag::make(details::get_match_elem<tag::geo_bbox, tag::geo_bbox, char>(match_params, ','));
         auto fi = tag::create::filter_tag(fff);
 
+
+        //auto r = tag::create::range_create_time_tag<model::search::range::GTE>(std::string("17-07-1987"));
+
         auto boo = tag::create::boolean_tag(mu, fi);
         search_ptr = d.execute_request<transaction>(schema_indices[1], schema_indices[1],
                                                     max_count, pit_interval,

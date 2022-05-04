@@ -14,6 +14,7 @@
 //
 #include "elasticsearch/v7_10/answer_model/search/object/boolean/Bool.h"
 #include "elasticsearch/v7_10/answer_model/search/object/full_text/QuerySimpleString.hpp"
+#include "elasticsearch/v7_10/answer_model/search/object/range/Range.hpp"
 #include "elasticsearch/v7_10/answer_model/search/object/Query.h"
 
 namespace tests
@@ -222,6 +223,53 @@ TEST(NEW_BooleanMustQSSGeoBBFilter, init)
     ASSERT_EQ(node.dump(), R"({"query":{"bool":{"filter":[{"geo_bounding_box":{"test_stub_model.test_stub_leaf_string":{"bottom_right":{"lat":20.0,"lon":20.0},"top_left":{"lat":10.0,"lon":10.0}}}},{"term":{"test_stub_model.test_stub_leaf_string":"my_string_filter"}},{"term":{"test_stub_model.test_stub_leaf_int":22}},{"term":{"test_stub_model.test_stub_leaf_bool":false}}],"must":[{"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"aaaa"}},{"terms":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]},"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"acdc"}}})");
 }
 
+TEST(BooleanMustQSSGeoBBFilterRange, init)
+{
+    using MustTag = model::search::Must<StubModel,
+                                   MTerm<StubLeafNode_bool>,
+                                   MTerm<StubLeafNode_int>,
+                                   MTerms<StubLeafNode_string>,
+                                   QSS<StubLeafNode_string>>;
+    MustTag must_instance(MTerm<StubLeafNode_bool>(true),
+                          MTerms<StubLeafNode_string>("my_string_0"),
+                          QSS<StubLeafNode_string>("aaaa"));
+
+    using GeoBBTag = model::search::GeoBoundingBox<StubModel, StubLeafNode_string>;
+
+    using FilterTag = model::search::Filter<StubModel,
+                                       FTerm<StubLeafNode_bool>,
+                                       FTerm<StubLeafNode_int>,
+                                       FTerm<StubLeafNode_string>,
+                                       GeoBBTag>;
+
+    GeoBBTag geo_bb_instance(model::search::geo::BBTopLeft{10.f, 10.f},
+                             model::search::geo::BBBottomRight{20.f, 20.f});
+
+
+    FilterTag filter_instance(FTerm<StubLeafNode_bool>(false),
+                              FTerm<StubLeafNode_int>(22),
+                              FTerm<StubLeafNode_string>("my_string_filter"),
+                              geo_bb_instance);
+
+    using BooleanTag = model::search::Boolean<StubModel, MustTag, FilterTag>;
+    BooleanTag bool_instance(must_instance, filter_instance);
+
+    using QSSTag = QSS<StubLeafNode_string>;
+    QSSTag sqt_param("acdc");
+
+    using RangeTag = model::search::Range<StubModel, StubLeafNode_int>;
+    RangeTag range_instance(model::search::range::GTE<int>(10),
+                            model::search::range::LTE<int>(100));
+
+    using QueryTag = model::search::Query<StubModel, BooleanTag, QSSTag, RangeTag>;
+    QueryTag q_instance(bool_instance, sqt_param, range_instance);
+    typename QueryTag::aggregator_serializer_type ser;
+    nlohmann::json node = nlohmann::json::object();
+    txml::StdoutTracer tracer;
+    q_instance.template format_serialize(ser, tracer);
+    ser. template finalize(node, tracer);
+    ASSERT_EQ(node.dump(), R"({"query":{"bool":{"filter":[{"geo_bounding_box":{"test_stub_model.test_stub_leaf_string":{"bottom_right":{"lat":20.0,"lon":20.0},"top_left":{"lat":10.0,"lon":10.0}}}},{"term":{"test_stub_model.test_stub_leaf_string":"my_string_filter"}},{"term":{"test_stub_model.test_stub_leaf_int":22}},{"term":{"test_stub_model.test_stub_leaf_bool":false}}],"must":[{"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"aaaa"}},{"terms":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]},"range":{"test_stub_model.test_stub_leaf_int":{"gte":10,"lte":100}},"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"acdc"}}})");
+}
 
 class SearchTagFixtureMatchAll : public ::testing::Test,
                          public Settings

@@ -1,26 +1,26 @@
-#ifndef ANSWER_MODEL_SEARCH_GEO_GEO_BOUNDING_BOX_H
-#define ANSWER_MODEL_SEARCH_GEO_GEO_BOUNDING_BOX_H
+#ifndef ANSWER_MODEL_SEARCH_RANGE_RANGE_HPP
+#define ANSWER_MODEL_SEARCH_RANGE_RANGE_HPP
 
-#include "elasticsearch/v7_10/answer_model/search/object/geo/GeoBoundingBoxElement.hpp"
+#include "elasticsearch/v7_10/answer_model/search/object/range/RangeElement.hpp"
 
 namespace model
 {
 namespace search
 {
 template<class Model, class Element>
-class GeoBoundingBox : public txml::XMLNode<GeoBoundingBox<Model, Element>,
-                                            geo::ElementToQuery<Model, Element>>,
-                public TagHolder<QueryElementTag, FilterElementTag>
+class Range : public txml::XMLNode<Range<Model, Element>,
+                                   range::ElementToQuery<Model, Element>>,
+                public TagHolder<QueryElementTag>
 {
 public:
-    using self_t = GeoBoundingBox<Model, Element>;
-    using element_t = geo::ElementToQuery<Model, Element>;
-    using base_t = txml::XMLNode<GeoBoundingBox<Model, Element>,
+    using self_t = Range<Model, Element>;
+    using element_t = range::ElementToQuery<Model, Element>;
+    using base_t = txml::XMLNode<Range<Model, Element>,
                                  element_t>;
 
     static constexpr std::string_view class_name()
     {
-        return "geo_bounding_box";
+        return "range";
     }
 
     static constexpr txml::TextReaderWrapper::NodeType class_node_type()
@@ -29,29 +29,26 @@ public:
     }
 
 
-    GeoBoundingBox(const GeoBoundingBox &src)
+    Range(const Range &src)
     {
         this->getValue() = src.getValue();
     }
 
-    GeoBoundingBox(GeoBoundingBox &&src)
+    Range(Range &&src)
     {
         this->getValue().swap(src.getValue());
     }
 
-    GeoBoundingBox(const element_t &bounding_box_value)
-    {
-        this->template emplace<element_t>(bounding_box_value);
-    }
-
-    GeoBoundingBox (const geo::BBTopLeft &t_l, const geo::BBBottomRight &b_r)
-    {
-        this->template emplace<element_t>(t_l, b_r);
+    template<class ...RangeTags, class =
+             std::enable_if_t<details::enable_for_node_args<Range, RangeTags...>()
+                              && all_of_tag<RangeElementTag, RangeTags...>(), int>>
+    Range(RangeTags && ...args) {
+        this->template emplace<element_t>(std::forward<RangeTags>(args)...);
     }
 
     template<class Parent>
     TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(serializer_parted_type, Parent, ToJSON,
-                                               GeoBoundingBox<Model, Element>,
+                                               Range<Model, Element>,
                                                element_t) {
         TXML_SERIALIZER_DISPATCHABLE_OBJECT
     };
@@ -72,4 +69,4 @@ public:
 };
 } // namespace search
 } // namespace model
-#endif
+#endif // ANSWER_MODEL_SEARCH_RANGE_RANGE_HPP
