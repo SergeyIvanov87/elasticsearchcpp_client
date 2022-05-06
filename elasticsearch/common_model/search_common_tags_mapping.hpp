@@ -12,23 +12,24 @@ namespace search
 {
 namespace tag
 {
-namespace must_helper
-{
 namespace translation
 {
 template<>
-struct table<::elasticsearch::common_model::Tags> {
+struct table<model::search::MustElementTag,
+            ::elasticsearch::common_model::Tags>
+{
     template<class Model>
     using value_t = ::model::search::must::Terms<Model, ::elasticsearch::common_model::Tags>;
 };
 
 template<>
-struct table<::elasticsearch::common_model::Description> {
+struct table<model::search::MustElementTag,
+             ::elasticsearch::common_model::Description>
+{
     template<class Model>
     using value_t = elasticsearch::v7::search::tag::simple_query_string<Model, ::elasticsearch::common_model::Description>;
 };
 } // namespace translation
-} // namespace must_helper
 } // namespace tag
 } // namespace search
 } // namespace v7

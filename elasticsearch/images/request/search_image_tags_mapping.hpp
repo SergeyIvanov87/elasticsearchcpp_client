@@ -12,17 +12,15 @@ namespace search
 {
 namespace tag
 {
-namespace must_helper
-{
 namespace translation
 {
 template<>
-struct table<elasticsearch::image::model::element::Title {
+struct table<model::search::MustElementTag,
+             elasticsearch::image::model::element::Title> {
     template<class Model>
     using value_t = elasticsearch::v7::search::tag::simple_query_string<Model, elasticsearch::image::model::element::Title>;
 };
 } // namespace translation
-} // namespace must_helper
 
 } // namespace tag
 } // namespace search

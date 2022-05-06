@@ -12,29 +12,32 @@ namespace search
 {
 namespace tag
 {
-namespace must_helper
-{
 namespace translation
 {
 template<>
-struct table<elasticsearch::book::model::element::Title> {
+struct table<model::search::MustElementTag,
+             elasticsearch::book::model::element::Title>
+{
     template<class Model>
     using value_t = elasticsearch::v7::search::tag::simple_query_string<Model, elasticsearch::book::model::element::Title>;
 };
 
 template<>
-struct table<elasticsearch::book::model::element::Contributor> {
+struct table<model::search::MustElementTag,
+             elasticsearch::book::model::element::Contributor>
+{
     template<class Model>
     using value_t = elasticsearch::v7::search::tag::simple_query_string<Model, elasticsearch::book::model::element::Contributor>;
 };
 
 template<>
-struct table<elasticsearch::book::model::element::Creator> {
+struct table<model::search::MustElementTag,
+             elasticsearch::book::model::element::Creator>
+{
     template<class Model>
     using value_t = elasticsearch::v7::search::tag::simple_query_string<Model, elasticsearch::book::model::element::Creator>;
 };
 } // namespace translation
-} // namespace must_helper
 
 } // namespace tag
 } // namespace search
