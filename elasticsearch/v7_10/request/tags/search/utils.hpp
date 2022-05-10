@@ -46,6 +46,10 @@ struct decay_optional<std::optional<T>> { using type = T; };
 
 template<class T>
 using decay_optional_t = typename decay_optional<T>::type;
+
+template<class Model, class Tag, class ModelElement>
+using mapped_tagged_element_t = decay_optional_t<decltype(translation::table_mapper<Model, Tag>::template map(std::declval<ModelElement>()))>;
+
 } // namespace tag
 } // namespace elasticsearch
 } // namespace v7

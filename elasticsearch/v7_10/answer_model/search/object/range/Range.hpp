@@ -41,7 +41,12 @@ public:
 
     template<class ...RangeTags, class =
              std::enable_if_t<details::enable_for_node_args<Range, RangeTags...>()
-                              && all_of_tag<RangeElementTag, RangeTags...>(), int>>
+                              && all_of_tag<RangeElementTag, RangeTags...>()
+                              || (/*std::is_same_v<typename std::integral_constant<int, sizeof...(RangeTags)>::type,
+                                                typename std::integral_constant<int, 1>::type>
+!!!!!is_trivially_constructible
+
+                                  &&*/ !std::conjunction_v<std::is_same<std::decay_t<RangeTags>, Range>...>), int>>
     Range(RangeTags && ...args) {
         this->template emplace<element_t>(std::forward<RangeTags>(args)...);
     }

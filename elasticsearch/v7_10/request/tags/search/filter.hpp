@@ -21,14 +21,14 @@ namespace create
 {
     template<class Model, class ...SpecificModelParams,
              class = std::enable_if_t<::model::search::details::enable_for_node_args<::model::search::Filter<Model,
-                                                                                                           elasticsearch::v7::search::tag::decay_optional_t<decltype(elasticsearch::v7::search::tag::translation::table_mapper<Model, model::search::FilterElementTag>::template map(std::declval<SpecificModelParams>()))>...>,
-                                                                                     elasticsearch::v7::search::tag::decay_optional_t<decltype(elasticsearch::v7::search::tag::translation::table_mapper<Model, model::search::FilterElementTag>::template map(std::declval<SpecificModelParams>()))>...>()
+                                                                                                           elasticsearch::v7::search::tag::mapped_tagged_element_t<Model, model::search::FilterElementTag, SpecificModelParams>...>,
+                                                                                     elasticsearch::v7::search::tag::mapped_tagged_element_t<Model, model::search::FilterElementTag, SpecificModelParams>...>()
                                       && ::model::search::all_of_tag<model::search::FilterElementTag,
-                                                                     elasticsearch::v7::search::tag::decay_optional_t<decltype(elasticsearch::v7::search::tag::translation::table_mapper<Model, model::search::FilterElementTag>::template map(std::declval<SpecificModelParams>()))>...>(), int>>
-    filter<Model, elasticsearch::v7::search::tag::decay_optional_t<decltype(elasticsearch::v7::search::tag::translation::table_mapper<Model, model::search::FilterElementTag>::template map(std::declval<SpecificModelParams>()))>...>
+                                                                     elasticsearch::v7::search::tag::mapped_tagged_element_t<Model, model::search::FilterElementTag, SpecificModelParams>...>(), int>>
+    filter<Model, elasticsearch::v7::search::tag::mapped_tagged_element_t<Model, model::search::FilterElementTag, SpecificModelParams>...>
     filter_tag(SpecificModelParams &&...args)
     {
-        return filter<Model, elasticsearch::v7::search::tag::decay_optional_t<decltype(elasticsearch::v7::search::tag::translation::table_mapper<Model, model::search::FilterElementTag>::template map(std::declval<SpecificModelParams>()))>...> (
+        return filter<Model, elasticsearch::v7::search::tag::mapped_tagged_element_t<Model, model::search::FilterElementTag, SpecificModelParams>...> (
             elasticsearch::v7::search::tag::translation::table_mapper<Model, model::search::FilterElementTag>::template map(std::forward<SpecificModelParams>(args))...);
     }
 

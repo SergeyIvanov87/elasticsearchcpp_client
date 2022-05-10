@@ -29,6 +29,13 @@ struct table<model::search::MustElementTag,
     template<class Model>
     using value_t = elasticsearch::v7::search::tag::simple_query_string<Model, ::elasticsearch::common_model::Description>;
 };
+
+template<>
+struct table<model::search::RangeElementTag,
+             ::elasticsearch::common_model::CreationDateTime> {
+    template<class Model>
+    using value_t = elasticsearch::v7::search::tag::range_element<Model, elasticsearch::common_model::CreationDateTime>;
+};
 } // namespace translation
 } // namespace tag
 } // namespace search

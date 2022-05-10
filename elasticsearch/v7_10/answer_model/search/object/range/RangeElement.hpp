@@ -4,6 +4,7 @@
 #include <txml/txml_fwd.h>
 #include "elasticsearch/utils/traits.hpp"
 #include "elasticsearch/v7_10/answer_model/search/object/range/tags.hpp"
+#include "elasticsearch/utils/strings.hpp"
 
 namespace model
 {
@@ -93,7 +94,7 @@ template<class Model, class Element>
 class ElementToQuery: public txml::XMLNode<ElementToQuery<Model, Element>,
                                            GTE<typename Element::value_t>, GT<typename Element::value_t>,
                                            LTE<typename Element::value_t>, LT<typename Element::value_t>>,
-                      public TagHolder<GeoElementTag>
+                      public TagHolder<RangeElementTag>
 {
 public:
     using base_t = txml::XMLNode<ElementToQuery<Model, Element>,
@@ -110,6 +111,45 @@ public:
     static constexpr txml::TextReaderWrapper::NodeType class_node_type()
     {
         return txml::TextReaderWrapper::NodeType::Element;
+    }
+
+    ElementToQuery (const std::optional<std::string> &range_description, char value_sep = ',')
+    {
+        if (range_description.has_value())
+        {
+            *this = ElementToQuery(range_description.value(), value_sep);
+        }
+    }
+
+    ElementToQuery (const std::string &range_description, char value_sep = ',')
+    {
+        auto range_pair = elasticsearch::utils::get_range_values(range_description, value_sep);
+        auto greater = std::get<0>(range_pair);
+        if (greater.has_value())
+        {
+            const auto &gte = greater.value();
+            if (gte.border_included)
+            {
+                this->template emplace<GTE<element_value_t>>(gte.value);
+            }
+            else
+            {
+                this->template emplace<GTE<element_value_t>>(gte.value);
+            }
+        }
+        auto lower = std::get<1>(range_pair);
+        if (lower.has_value())
+        {
+            const auto &lte = lower.value();
+            if (lte.border_included)
+            {
+                this->template emplace<LTE<element_value_t>>(lte.value);
+            }
+            else
+            {
+                this->template emplace<LT<element_value_t>>(lte.value);
+            }
+        }
     }
 
     ElementToQuery (const GTE<element_value_t> &gte)

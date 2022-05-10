@@ -25,7 +25,7 @@ cfg_reader::cfg_reader(const std::filesystem::path &file_path, const char separa
         // test on commented/default param
         if (!name.empty() && name[0]=='#')
         {
-            const char *default_param_start_ptr = get_next_char_not_if(name.c_str() + 1, ::isspace);
+            const char *default_param_start_ptr = elasticsearch::utils::get_next_char_not_if(name.c_str() + 1, ::isspace);
             if (default_param_start_ptr && *default_param_start_ptr != '\0')
             {
                 avp_default_map.emplace(std::piecewise_construct,
@@ -74,10 +74,10 @@ const cfg_reader::value_t &cfg_reader::get_impl(const name_t &name,  const stora
 std::list<std::string> cfg_reader::parse_discovery_cluster(const std::string &cluster_list, const std::string &default_port, const std::string &url_prefix)
 {
     std::list<std::string> ret;
-    const char *peer_it = get_next_char_not_if(cluster_list.c_str(), [] (const char *s) {return *s =='[' || *s=='"';});
+    const char *peer_it = elasticsearch::utils::get_next_char_not_if(cluster_list.c_str(), [] (const char *s) {return *s =='[' || *s=='"';});
     while(peer_it && *peer_it)
     {
-        const char *peer_next_it = get_next_char_if(peer_it + 1, [] (const char *s) {return *s =='"';});
+        const char *peer_next_it = elasticsearch::utils::get_next_char_if(peer_it + 1, [] (const char *s) {return *s =='"';});
         if (peer_next_it && *peer_next_it)
         {
             if (!default_port.empty())
@@ -89,7 +89,7 @@ std::list<std::string> cfg_reader::parse_discovery_cluster(const std::string &cl
                 ret.push_back(url_prefix + std::string(peer_it, peer_next_it));
             }
         }
-        peer_it = get_next_char_if(peer_next_it + 1, [] (const char *s) {return *s =='"';});
+        peer_it = elasticsearch::utils::get_next_char_if(peer_next_it + 1, [] (const char *s) {return *s =='"';});
     }
     return ret;
 }

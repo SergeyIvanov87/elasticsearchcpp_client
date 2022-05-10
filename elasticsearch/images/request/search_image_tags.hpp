@@ -3,6 +3,7 @@
 
 #include "elasticsearch/images/data_model/model.hpp"
 #include "elasticsearch/common_model/search_common_tags.hpp"
+#include "elasticsearch/images/request/search_image_tags_mapping.hpp"
 
 namespace elasticsearch
 {
@@ -63,40 +64,28 @@ namespace create
 
 namespace create
 {
-    template<template<class> class Limit, class Value>
-    auto range_create_time_tag(const Value &l)
+    template<class RangedElement>
+    auto range_tag(const std::string &ranged_string, char sep = ',')
     {
-        return elasticsearch::v7::search::tag::create::range_tag<elasticsearch::image::model::data, elasticsearch::common_model::CreationDateTime>(Limit<Value>(l));
+        return elasticsearch::v7::search::tag::range_element<elasticsearch::image::model::data, RangedElement>(ranged_string, sep);
     }
 
-    template<class Value_1, class Value_2>
-    auto range_create_time_tag(const Value_1 &l1, const Value_2 &l2)
+    template<class RangedElement>
+    auto range_tag(const std::optional<std::string> &ranged_string, char sep = ',')
     {
-        return elasticsearch::v7::search::tag::create::range_tag<elasticsearch::image::model::data, elasticsearch::common_model::CreationDateTime>(l1, l2);
+        return elasticsearch::v7::search::tag::range_element<elasticsearch::image::model::data, RangedElement>(ranged_string, sep);
     }
 
-    template<class Value>
-    auto range_orig_time_tag(const Value &l)
+    template<class RangedElement, template<class> class Limit, class Value>
+    auto range_tag(const Value &l)
     {
-        return elasticsearch::v7::search::tag::create::range_tag<elasticsearch::image::model::data, elasticsearch::image::model::element::OriginalTime>(l);
+        return elasticsearch::v7::search::tag::create::range_tag<elasticsearch::image::model::data, RangedElement>(Limit<Value>(l));
     }
 
-    template<class Value_1, class Value_2>
-    auto range_orig_time_tag(const Value_1 &l1, const Value_2 &l2)
+    template<class RangedElement, class Value_1, class Value_2>
+    auto range_tag(const Value_1 &l1, const Value_2 &l2)
     {
-        return elasticsearch::v7::search::tag::create::range_tag<elasticsearch::image::model::data, elasticsearch::image::model::element::OriginalTime>(l1, l2);
-    }
-
-    template<class Value>
-    auto range_digitize_time_tag(const Value &l)
-    {
-        return elasticsearch::v7::search::tag::create::range_tag<elasticsearch::image::model::data, elasticsearch::image::model::element::DigitizeTime>(l);
-    }
-
-    template<class Value_1, class Value_2>
-    auto range_digitize_time_tag(const Value_1 &l1, const Value_2 &l2)
-    {
-        return elasticsearch::v7::search::tag::create::range_tag<elasticsearch::image::model::data, elasticsearch::image::model::element::DigitizeTime>(l1, l2);
+        return elasticsearch::v7::search::tag::create::range_tag<elasticsearch::image::model::data, RangedElement>(l1, l2);
     }
 } // namespace create
 

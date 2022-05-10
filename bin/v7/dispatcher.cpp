@@ -15,27 +15,6 @@ namespace v7
 namespace details
 {
 template <class Element, class ElementValue, class ...Args>
-std::optional<ElementValue> get_match_param(const std::map<std::string, std::string> &data_storage, Args&& ...args)
-{
-    if (auto it = data_storage.find(std::string(Element::class_name())); it != data_storage.end())
-    {
-        return ElementValue{it->second, std::forward<Args>(args)...};
-    }
-    return {};
-}
-
-std::optional<std::list<std::string>>
-get_match_tag_param(const std::map<std::string, std::string> &data_storage, const std::string &sep)
-{
-    if (auto it = data_storage.find(std::string(elasticsearch::common_model::Tags::class_name())); it != data_storage.end())
-    {
-        elasticsearch::common_model::Tags t{it->second, sep};
-        return t.getValue();
-    }
-    return {};
-}
-
-template <class Element, class ElementValue, class ...Args>
 std::optional<Element> get_match_elem(const std::map<std::string, std::string> &data_storage, Args&& ...args)
 {
     if (auto it = data_storage.find(std::string(Element::class_name())); it != data_storage.end())
@@ -45,6 +24,17 @@ std::optional<Element> get_match_elem(const std::map<std::string, std::string> &
     return {};
 }
 
+template<>
+std::optional<std::string>
+get_match_elem<std::string,
+               elasticsearch::common_model::CreationDateTime>(const std::map<std::string, std::string> &data_storage)
+{
+    if (auto it = data_storage.find(std::string(elasticsearch::common_model::CreationDateTime::class_name())); it != data_storage.end())
+    {
+        return std::optional<std::string>(it->second);
+    }
+    return {};
+}
 
 template <>
 std::optional<elasticsearch::image::search::tag::geo_bbox>
@@ -59,7 +49,7 @@ get_match_elem<elasticsearch::image::search::tag::geo_bbox,
         const char *pEnd = pStart;
         while (*pStart && values.size() != float_num)
         {
-            const char *pEnd = bin::utils::get_next_char_if(pStart, [sep]( const char* sym) { return (*sym == sep);});
+            const char *pEnd = elasticsearch::utils::get_next_char_if(pStart, [sep]( const char* sym) { return (*sym == sep);});
             try
             {
                 values.push_back(stof(std::string(pStart, pEnd - pStart)));
@@ -200,7 +190,7 @@ request_book_search_match(const dispatcher &d,
                                         details::get_match_elem<element::Language, std::string>(match_params),
                                         details::get_match_elem<element::Title, std::string>(match_params),
                                         details::get_match_elem<elasticsearch::common_model::BinaryBlob, std::string>(match_params),
-                                        details::get_match_elem<elasticsearch::common_model::CreationDateTime, std::string>(match_params),
+                                        //details::get_match_elem<elasticsearch::common_model::CreationDateTime, std::string>(match_params),
                                         details::get_match_elem<elasticsearch::common_model::Description, std::string>(match_params),
                                         details::get_match_elem<elasticsearch::common_model::Format, std::string>(match_params),
                                         details::get_match_elem<elasticsearch::common_model::OriginalPath, std::string>(match_params),
@@ -262,7 +252,7 @@ request_image_search_match(const dispatcher &d,
                                         //tag::make(details::get_match_elem<element::Resolution, std::string>(match_params)),
                                         details::get_match_elem<element::Title, std::string>(match_params),
                                         details::get_match_elem<elasticsearch::common_model::BinaryBlob, std::string>(match_params),
-                                        details::get_match_elem<elasticsearch::common_model::CreationDateTime, std::string>(match_params),
+                                        //details::get_match_elem<elasticsearch::common_model::CreationDateTime, std::string>(match_params),
                                         details::get_match_elem<elasticsearch::common_model::Description, std::string>(match_params),
                                         details::get_match_elem<elasticsearch::common_model::Format, std::string>(match_params),
                                         details::get_match_elem<elasticsearch::common_model::OriginalPath, std::string>(match_params),
@@ -272,14 +262,13 @@ request_image_search_match(const dispatcher &d,
 
                                         auto fff = details::get_match_elem<tag::geo_bbox, tag::geo_bbox, char>(match_params, ',');
         auto fi = tag::create::filter_tag(fff);
-
-
-        //auto r = tag::create::range_create_time_tag<model::search::range::GTE>(std::string("17-07-1987"));
-
         auto boo = tag::create::boolean_tag(mu, fi);
+
+        auto r = tag::create::range_tag<elasticsearch::common_model::CreationDateTime>(details::get_match_elem<std::string, elasticsearch::common_model::CreationDateTime>(match_params));
+        auto query = tag::create::query_tag(boo, r);
         search_ptr = d.execute_request<transaction>(schema_indices[1], schema_indices[1],
                                                     max_count, pit_interval,
-                                                    tag::create::query_tag(boo),
+                                                    query,
                                                     tag::sort<element::Camera> ({::model::Order("desc")}),
                                                     d.get_settings().curl_verbose,
                                                     tracer);

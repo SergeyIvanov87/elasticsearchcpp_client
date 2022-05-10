@@ -34,14 +34,14 @@ namespace create
 {
     template<class Model, class ...SpecificModelParams,
              class = std::enable_if_t<::model::search::details::enable_for_node_args<::model::search::Must<Model,
-                                                                                                           elasticsearch::v7::search::tag::decay_optional_t<decltype(elasticsearch::v7::search::tag::translation::table_mapper<Model, model::search::MustElementTag>::template map(std::declval<SpecificModelParams>()))>...>,
-                                                                                     elasticsearch::v7::search::tag::decay_optional_t<decltype(elasticsearch::v7::search::tag::translation::table_mapper<Model, model::search::MustElementTag>::template map(std::declval<SpecificModelParams>()))>...>()
+                                                                                                           elasticsearch::v7::search::tag::mapped_tagged_element_t<Model, model::search::MustElementTag, SpecificModelParams>...>,
+                                                                                     elasticsearch::v7::search::tag::mapped_tagged_element_t<Model, model::search::MustElementTag, SpecificModelParams>...>()
                                       && ::model::search::all_of_tag<model::search::MustElementTag,
-                                                                     elasticsearch::v7::search::tag::decay_optional_t<decltype(elasticsearch::v7::search::tag::translation::table_mapper<Model, model::search::MustElementTag>::template map(std::declval<SpecificModelParams>()))>...>(), int>>
-    must<Model, elasticsearch::v7::search::tag::decay_optional_t<decltype(elasticsearch::v7::search::tag::translation::table_mapper<Model, model::search::MustElementTag>::template map(std::declval<SpecificModelParams>()))>...>
+                                                                     elasticsearch::v7::search::tag::mapped_tagged_element_t<Model, model::search::MustElementTag, SpecificModelParams>...>(), int>>
+    must<Model, elasticsearch::v7::search::tag::mapped_tagged_element_t<Model, model::search::MustElementTag, SpecificModelParams>...>
     must_tag(SpecificModelParams &&...args)
     {
-        return must<Model, elasticsearch::v7::search::tag::decay_optional_t<decltype(elasticsearch::v7::search::tag::translation::table_mapper<Model, model::search::MustElementTag>::template map(std::declval<SpecificModelParams>()))>...> (
+        return must<Model, elasticsearch::v7::search::tag::mapped_tagged_element_t<Model, model::search::MustElementTag, SpecificModelParams>...> (
             elasticsearch::v7::search::tag::translation::table_mapper<Model, model::search::MustElementTag>::template map(std::forward<SpecificModelParams>(args))...);
     }
 } // namespace create
