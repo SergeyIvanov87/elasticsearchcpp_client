@@ -207,6 +207,27 @@ TEST(GeoBB, init)
 }
 
 
+TEST(Range, init_multi)
+{
+    using namespace elasticsearch::v7;
+
+    auto range_instance =
+    search::tag::create::range_tag(
+                search::tag::create::range_element_tag<StubModel, StubLeafNode_int,
+                                                       model::search::range::GTE,
+                                                       model::search::range::LTE>(10, 100),
+                search::tag::create::range_element_tag<StubModel, StubLeafNode_string,
+                                                       model::search::range::GTE,
+                                                       model::search::range::LTE>(std::string("10"), std::string("100")));
+
+    typename decltype(range_instance)::aggregator_serializer_type ser;
+    nlohmann::json node = nlohmann::json::object();
+    txml::StdoutTracer tracer;
+    range_instance.template format_serialize(ser, tracer);
+    ser. template finalize(node, tracer);
+    ASSERT_EQ(node.dump(), R"({"range":{"test_stub_model.test_stub_leaf_int":{"gte":10,"lte":100},"test_stub_model.test_stub_leaf_string":{"gte":"10","lte":"100"}}})");
+}
+
 TEST(NEW_BooleanMustQSSGeoBBFilter, init)
 {
     using MustTag = model::search::Must<StubModel,

@@ -45,6 +45,11 @@ public:
     }
 
     template<class ...SpecificElement>
+    Range(range::element<Model, SpecificElement>&& ...args) {
+        (this->template emplace<range::element<Model, SpecificElement>>(std::move(args)), ...);
+    }
+
+    template<class ...SpecificElement>
     Range(const std::optional<range::element<Model, SpecificElement>> & ...args)
     {
         ((args.has_value() ? this->template emplace<range::element<Model, SpecificElement>>(args),true : false), ...);
@@ -53,7 +58,7 @@ public:
     template<size_t N>
     Range(const std::array<std::string, N> &arr, char sep = ',')
     {
-        static_assert(sizeof...(Element) == N, "optional string array must be the same size as elements in ranges");
+        static_assert(sizeof...(Element) == N, "string array must be the same size as elements in ranges");
         (this->template emplace<range::element<Model, Element>>(arr[elasticsearch::utils::tuple_element_index_v<range::element<Model, Element>, tuple_t>], sep), ...);
     }
 
@@ -63,18 +68,6 @@ public:
         static_assert(sizeof...(Element) == N, "optional string array must be the same size as elements in ranges");
         (this->template emplace<range::element<Model, Element>>(arr[elasticsearch::utils::tuple_element_index_v<range::element<Model, Element>, tuple_t>], sep), ...);
     }
-/*
-    template<class ...RangeTags, class =
-             std::enable_if_t<details::enable_for_node_args<Range, RangeTags...>()
-                              && all_of_tag<RangeElementTag, RangeTags...>()
-                              || (/*std::is_same_v<typename std::integral_constant<int, sizeof...(RangeTags)>::type,
-                                                typename std::integral_constant<int, 1>::type>
-!!!!!is_trivially_constructible
-
-                                  &&* / !std::conjunction_v<std::is_same<std::decay_t<RangeTags>, Range>...>), int>>
-    Range(RangeTags && ...args) {
-        this->template emplace<element_t>(std::forward<RangeTags>(args)...);
-    }*/
 
     template<class Parent>
     TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(serializer_parted_type, Parent, ToJSON,
@@ -96,7 +89,6 @@ public:
         aggregator_serializer_type ser(out.get_shared_mediator_object());
         base_t:: template format_serialize_impl(ser, tracer);
     }
-private:
 };
 } // namespace search
 } // namespace model

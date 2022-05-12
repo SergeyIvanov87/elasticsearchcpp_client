@@ -35,14 +35,14 @@ template<>
 struct table<model::search::RangeElementTag,
              elasticsearch::image::model::element::OriginalTime> {
     template<class Model>
-    using value_t = elasticsearch::v7::search::tag::range_element<Model, elasticsearch::image::model::element::OriginalTime>;
+    using value_t = elasticsearch::v7::search::tag::range<Model, elasticsearch::image::model::element::OriginalTime>;
 };
 
 template<>
 struct table<model::search::RangeElementTag,
              elasticsearch::image::model::element::DigitizeTime> {
     template<class Model>
-    using value_t = elasticsearch::v7::search::tag::range_element<Model, elasticsearch::image::model::element::DigitizeTime>;
+    using value_t = elasticsearch::v7::search::tag::range<Model, elasticsearch::image::model::element::DigitizeTime>;
 };
 } // namespace translation
 

@@ -270,13 +270,10 @@ request_image_search_match(const dispatcher &d,
     {
         auto mu = tag::create::must_tag(details::get_match_elem<element::Camera, std::string>(match_params),
                                         details::get_match_elem<element::CameraModel, std::string>(match_params),
-                                        details::get_match_elem<element::DigitizeTime, std::string>(match_params),
                                         //tag::make(details::get_match_elem<element::Location, std::string>(match_params)),
-                                        details::get_match_elem<element::OriginalTime, std::string>(match_params),
                                         //tag::make(details::get_match_elem<element::Resolution, std::string>(match_params)),
                                         details::get_match_elem<element::Title, std::string>(match_params),
                                         details::get_match_elem<elasticsearch::common_model::BinaryBlob, std::string>(match_params),
-                                        //details::get_match_elem<elasticsearch::common_model::CreationDateTime, std::string>(match_params),
                                         details::get_match_elem<elasticsearch::common_model::Description, std::string>(match_params),
                                         details::get_match_elem<elasticsearch::common_model::Format, std::string>(match_params),
                                         details::get_match_elem<elasticsearch::common_model::OriginalPath, std::string>(match_params),
@@ -284,8 +281,8 @@ request_image_search_match(const dispatcher &d,
                                         details::get_match_elem<elasticsearch::common_model::SourceName, std::string>(match_params),
                                         details::get_match_elem<elasticsearch::common_model::Tags, elasticsearch::common_model::Tags>(match_params, ","));
 
-                                        auto fff = details::get_match_elem<tag::geo_bbox, tag::geo_bbox, char>(match_params, ',');
-        auto fi = tag::create::filter_tag(fff);
+        auto fi = tag::create::filter_tag(details::get_match_elem<tag::geo_bbox, tag::geo_bbox, char>(match_params, ','));
+
         auto boo = tag::create::boolean_tag(mu, fi);
 
         auto r = tag::create::range_tag<elasticsearch::common_model::CreationDateTime,
@@ -294,6 +291,7 @@ request_image_search_match(const dispatcher &d,
                 {details::get_match_elem<std::string, elasticsearch::common_model::CreationDateTime>(match_params),
                  details::get_match_elem<std::string, element::DigitizeTime>(match_params),
                  details::get_match_elem<std::string, element::OriginalTime>(match_params)});
+
         auto query = tag::create::query_tag(boo, r);
         search_ptr = d.execute_request<transaction>(schema_indices[1], schema_indices[1],
                                                     max_count, pit_interval,

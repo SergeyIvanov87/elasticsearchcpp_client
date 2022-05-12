@@ -34,7 +34,7 @@ template<>
 struct table<model::search::RangeElementTag,
              ::elasticsearch::common_model::CreationDateTime> {
     template<class Model>
-    using value_t = elasticsearch::v7::search::tag::range_element<Model, elasticsearch::common_model::CreationDateTime>;
+    using value_t = elasticsearch::v7::search::tag::range<Model, elasticsearch::common_model::CreationDateTime>;
 };
 } // namespace translation
 } // namespace tag
