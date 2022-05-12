@@ -286,8 +286,8 @@ TEST(BooleanMustQSSGeoBBFilterRange, init)
     QSSTag sqt_param("acdc");
 
     using RangeTag = model::search::Range<StubModel, StubLeafNode_int>;
-    RangeTag range_instance(model::search::range::GTE<int>(10),
-                            model::search::range::LTE<int>(100));
+    RangeTag range_instance(model::search::range::element<StubModel, StubLeafNode_int>::template make<model::search::range::GTE,
+                                                                                                      model::search::range::LTE>(10, 100));
 
     using QueryTag = model::search::Query<StubModel, BooleanTag, QSSTag, RangeTag>;
     QueryTag q_instance(bool_instance, sqt_param, range_instance);

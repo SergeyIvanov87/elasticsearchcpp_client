@@ -64,16 +64,16 @@ namespace create
 
 namespace create
 {
-    template<class RangedElement>
-    auto range_tag(const std::string &ranged_string, char sep = ',')
+    template<class ...RangedElements>
+    auto range_tag(const std::array<std::string, sizeof...(RangedElements)> &ranged_string, char sep = ',')
     {
-        return elasticsearch::v7::search::tag::range_element<elasticsearch::image::model::data, RangedElement>(ranged_string, sep);
+        return elasticsearch::v7::search::tag::range_element<elasticsearch::image::model::data, RangedElements...>(ranged_string, sep);
     }
 
-    template<class RangedElement>
-    auto range_tag(const std::optional<std::string> &ranged_string, char sep = ',')
+    template<class ...RangedElements>
+    auto range_tag(const std::array<std::optional<std::string>, sizeof...(RangedElements)> &ranged_string, char sep = ',')
     {
-        return elasticsearch::v7::search::tag::range_element<elasticsearch::image::model::data, RangedElement>(ranged_string, sep);
+        return elasticsearch::v7::search::tag::range_element<elasticsearch::image::model::data, RangedElements...>(ranged_string, sep);
     }
 
     template<class RangedElement, template<class> class Limit, class Value>

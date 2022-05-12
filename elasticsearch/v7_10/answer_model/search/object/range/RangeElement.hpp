@@ -90,14 +90,31 @@ public:
     }
 };
 
+template<template<class> class Cmp, class T>
+struct CmpWrap : public Cmp<T>
+{
+    using base_t = Cmp<T>;
+    using base_t::base_t;
+
+    static constexpr std::string_view class_name()
+    {
+        return base_t::class_name();
+    }
+
+    static constexpr txml::TextReaderWrapper::NodeType class_node_type()
+    {
+        return base_t::class_node_type();
+    }
+};
+
 template<class Model, class Element>
-class ElementToQuery: public txml::XMLNode<ElementToQuery<Model, Element>,
-                                           GTE<typename Element::value_t>, GT<typename Element::value_t>,
-                                           LTE<typename Element::value_t>, LT<typename Element::value_t>>,
+class element: public txml::XMLNode<element<Model, Element>,
+                                    GTE<typename Element::value_t>, GT<typename Element::value_t>,
+                                    LTE<typename Element::value_t>, LT<typename Element::value_t>>,
                       public TagHolder<RangeElementTag>
 {
 public:
-    using base_t = txml::XMLNode<ElementToQuery<Model, Element>,
+    using base_t = txml::XMLNode<element<Model, Element>,
                                  GTE<typename Element::value_t>, GT<typename Element::value_t>,
                                  LTE<typename Element::value_t>, LT<typename Element::value_t>>;
     using element_t = Element;
@@ -113,15 +130,29 @@ public:
         return txml::TextReaderWrapper::NodeType::Element;
     }
 
-    ElementToQuery (const std::optional<std::string> &range_description, char value_sep = ',')
+    template<template<class> class Cmp, class ElementValueT = element_value_t>
+    static element make(ElementValueT &&val)
+    {
+        return element(Cmp<element_value_t>(std::forward<ElementValueT>(val)));
+    }
+
+    template<template<class> class Cmp1, template<class> class Cmp2,
+             class ElementValueT = element_value_t>
+    static element make(ElementValueT &&val1, ElementValueT &&val2)
+    {
+        return element(Cmp1<element_value_t>(std::forward<ElementValueT>(val1)),
+                       Cmp2<element_value_t>(std::forward<ElementValueT>(val2)));
+    }
+
+    element (const std::optional<std::string> &range_description, char value_sep = ',')
     {
         if (range_description.has_value())
         {
-            *this = ElementToQuery(range_description.value(), value_sep);
+            *this = element(range_description.value(), value_sep);
         }
     }
 
-    ElementToQuery (const std::string &range_description, char value_sep = ',')
+    element (const std::string &range_description, char value_sep = ',')
     {
         auto range_pair = elasticsearch::utils::get_range_values(range_description, value_sep);
         auto greater = std::get<0>(range_pair);
@@ -152,51 +183,22 @@ public:
         }
     }
 
-    ElementToQuery (const GTE<element_value_t> &gte)
+    template<template<class> class Cmp>
+    element (const Cmp<element_value_t> &cmp)
     {
-        this->template emplace<GTE<element_value_t>>(gte);
-    }
-    ElementToQuery (const GT<element_value_t> &gt)
-    {
-        this->template emplace<GT<element_value_t>>(gt);
+        this->template emplace<Cmp<element_value_t>>(cmp);
     }
 
-    ElementToQuery (const LTE<element_value_t> &lte)
+    template<template<class> class Cmp1, template<class> class Cmp2>
+    element (const Cmp1<element_value_t> &cmp1, const Cmp2<element_value_t> &cmp2) :
+        element(cmp1)
     {
-        this->template emplace<LTE<element_value_t>>(lte);
-    }
-    ElementToQuery (const LT<element_value_t> &lte)
-    {
-        this->template emplace<LT<element_value_t>>(lte);
-    }
-
-    ElementToQuery (const GTE<element_value_t> &gte, const LTE<element_value_t> &lte)
-    {
-        this->template emplace<GTE<element_value_t>>(gte);
-        this->template emplace<LTE<element_value_t>>(lte);
-    }
-
-    ElementToQuery (const GT<element_value_t> &gt, const LTE<element_value_t> &lte)
-    {
-        this->template emplace<GT<element_value_t>>(gt);
-        this->template emplace<LTE<element_value_t>>(lte);
-    }
-
-    ElementToQuery (const GTE<element_value_t> &gte, const LT<element_value_t> &lt)
-    {
-        this->template emplace<GTE<element_value_t>>(gte);
-        this->template emplace<LT<element_value_t>>(lt);
-    }
-
-    ElementToQuery (const GT<element_value_t> &gte, const LT<element_value_t> &lt)
-    {
-        this->template emplace<GT<element_value_t>>(gte);
-        this->template emplace<LT<element_value_t>>(lt);
+        this->template emplace<Cmp2<element_value_t>>(cmp2);
     }
 
     template<class Parent>
     TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(serializer_parted_type, Parent, ToJSON,
-                                                    /*ElementToQuery<Model, Element>,*/
+                                                    /*element<Model, Element>,*/
                                                         GTE<element_value_t>, GT<element_value_t>,
                                                         LTE<element_value_t>, LT<element_value_t>)
     {

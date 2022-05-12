@@ -36,6 +36,30 @@ get_match_elem<std::string,
     return {};
 }
 
+template<>
+std::optional<std::string>
+get_match_elem<std::string,
+               elasticsearch::image::model::element::DigitizeTime>(const std::map<std::string, std::string> &data_storage)
+{
+    if (auto it = data_storage.find(std::string(elasticsearch::image::model::element::DigitizeTime::class_name())); it != data_storage.end())
+    {
+        return std::optional<std::string>(it->second);
+    }
+    return {};
+}
+
+template<>
+std::optional<std::string>
+get_match_elem<std::string,
+               elasticsearch::image::model::element::OriginalTime>(const std::map<std::string, std::string> &data_storage)
+{
+    if (auto it = data_storage.find(std::string(elasticsearch::image::model::element::OriginalTime::class_name())); it != data_storage.end())
+    {
+        return std::optional<std::string>(it->second);
+    }
+    return {};
+}
+
 template <>
 std::optional<elasticsearch::image::search::tag::geo_bbox>
 get_match_elem<elasticsearch::image::search::tag::geo_bbox,
@@ -264,7 +288,12 @@ request_image_search_match(const dispatcher &d,
         auto fi = tag::create::filter_tag(fff);
         auto boo = tag::create::boolean_tag(mu, fi);
 
-        auto r = tag::create::range_tag<elasticsearch::common_model::CreationDateTime>(details::get_match_elem<std::string, elasticsearch::common_model::CreationDateTime>(match_params));
+        auto r = tag::create::range_tag<elasticsearch::common_model::CreationDateTime,
+                                        element::DigitizeTime,
+                                        element::OriginalTime>(
+                {details::get_match_elem<std::string, elasticsearch::common_model::CreationDateTime>(match_params),
+                 details::get_match_elem<std::string, element::DigitizeTime>(match_params),
+                 details::get_match_elem<std::string, element::OriginalTime>(match_params)});
         auto query = tag::create::query_tag(boo, r);
         search_ptr = d.execute_request<transaction>(schema_indices[1], schema_indices[1],
                                                     max_count, pit_interval,

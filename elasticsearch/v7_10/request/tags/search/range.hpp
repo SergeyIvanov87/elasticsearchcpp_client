@@ -13,23 +13,23 @@ namespace tag
 {
 using namespace elasticsearch::v7::search;
 
-template<class Model, class SpecificModelParams>
-using range_element = ::model::search::Range<Model, SpecificModelParams>;
+template<class Model, class ...SpecificModelParams>
+using range_element = ::model::search::Range<Model, SpecificModelParams...>;
 
 namespace create
 {
-    template<class Model, class SpecificModelParam>
-    range_element<Model, SpecificModelParam>
-                range_tag(const std::string &range_in_str, char sep = ',')
+    template<class Model, class ...SpecificModelParam>
+    range_element<Model, SpecificModelParam...>
+                range_tag(const std::array<std::string, sizeof...(SpecificModelParam)> &range_in_str, char sep = ',')
     {
-        return range_element<Model, SpecificModelParam> (range_in_str, sep);
+        return range_element<Model, SpecificModelParam...> (range_in_str, sep);
     }
 
-    template<class Model, class SpecificModelParam>
-    range_element<Model, SpecificModelParam>
-                range_tag(const std::optional<std::string> &range_in_str, char sep = ',')
+    template<class Model, class ...SpecificModelParam>
+    range_element<Model, SpecificModelParam...>
+                range_tag(const std::array<std::optional<std::string>, sizeof...(SpecificModelParam)> &range_in_str, char sep = ',')
     {
-        return range_element<Model, SpecificModelParam> (range_in_str, sep);
+        return range_element<Model, SpecificModelParam...> (range_in_str, sep);
     }
 
 
