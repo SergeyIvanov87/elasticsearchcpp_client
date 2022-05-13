@@ -87,48 +87,43 @@ struct LT : public txml::XMLNodeLeaf<LT<T>, T>,
 };
 
 template<template<class> class Cmp, class ModelElement>
-struct CmpWrap : Cmp<typename ModelElement::value_t>/*,
-                 public txml::XMLFormatSerializable<CmpWrap<Cmp, ModelElement>>*/
+struct CmpWrap : txml::XMLNode<CmpWrap<Cmp, ModelElement>,
+                               Cmp<typename ModelElement::value_t>>
 {
     using element_t = ModelElement;
     using element_value_t = typename element_t::value_t;
 
-    using base_t = Cmp<element_value_t>;
+    using base_t = txml::XMLNode<CmpWrap<Cmp, ModelElement>,
+                                 Cmp<typename ModelElement::value_t>>;
     using base_t::base_t;
+    using cmp_t = Cmp<element_value_t>;
 
-    CmpWrap(const base_t& inst) :
-        base_t(inst)
+    CmpWrap(const cmp_t& inst)
     {
+        this->template emplace<cmp_t>(inst);
     }
 
     static constexpr std::string_view class_name()
     {
-        return base_t::class_name();
+        return cmp_t::class_name();
     }
 
     static constexpr txml::TextReaderWrapper::NodeType class_node_type()
     {
-        return base_t::class_node_type();
+        return cmp_t::class_node_type();
     }
 
-    /*template<class Parent>
-    TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(serializer_parted_type, Parent, ToJSON,
-                                               Cmp<typename ModelElement::value_t>)  {
-        TXML_SERIALIZER_DISPATCHABLE_OBJECT
-    };*/
-
-    TXML_DECLARE_SERIALIZER_AGGREGATOR_CLASS(aggregator_serializer_type,
+    TXML_DECLARE_SERIALIZER_CLASS(aggregator_serializer_type, ToJSON,
                                              Cmp<typename ModelElement::value_t>)
     {
-        TXML_SERIALIZER_AGGREGATOR_OBJECT
+        TXML_SERIALIZER_OBJECT
     };
-
 
     template<class Formatter, class Tracer>
     void format_serialize_impl(Formatter& out, Tracer tracer) const
     {
         aggregator_serializer_type ser(out.get_shared_mediator_object());
-        base_t::template format_serialize_impl(out, tracer);
+        this->template getValue<cmp_t>()->template format_serialize_impl(ser, tracer);
     }
 };
 
