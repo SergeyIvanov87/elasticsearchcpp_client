@@ -28,7 +28,7 @@ TXML_DECLARE_DESERIALIZER_CLASS(ResponseFromJSON, FromJSON, response,
     TXML_DESERIALIZER_OBJECT
 
     template<class Tracer>
-    std::shared_ptr<response> deserialize_impl(txml::details::SchemaDTag<response>, Tracer tracer)
+    std::optional<response> deserialize_impl(txml::details::SchemaDTag<response>, Tracer tracer)
     {
         auto& [begin_it, end_it] = get_shared_mediator_object()->top();
 
@@ -60,7 +60,7 @@ TXML_PREPARE_DESERIALIZER_DISPATCHABLE_CLASS(ResponseFromJSON, Parent,
     TXML_DESERIALIZER_DISPATCHABLE_OBJECT
 
     template<class Tracer>
-    std::shared_ptr<response<SpecificModel>> deserialize_impl(txml::details::SchemaDTag<response<SpecificModel>>, Tracer tracer)
+    std::optional<response<SpecificModel>> deserialize_impl(txml::details::SchemaDTag<response<SpecificModel>>, Tracer tracer)
     {
         auto& [begin_it, end_it] = this->get_shared_mediator_object()->top();
 
@@ -76,14 +76,19 @@ TXML_PREPARE_DESERIALIZER_DISPATCHABLE_CLASS(ResponseFromJSON, Parent,
 
 
 template<class SpecificModel, template<typename> class ...SpecificModelSerializer>
-struct ResponseDeSerializer : public txml::DeserializerDispatcher<ResponseFromJSON<SpecificModel, ResponseDeSerializer<SpecificModel, SpecificModelSerializer...>>,
-                                                      SpecificModelSerializer<ResponseDeSerializer<SpecificModel, SpecificModelSerializer...>>...>
+struct ResponseDeSerializer : public txml::DeserializerDispatcher<json::DeserializerCore,
+                                                                  ResponseFromJSON<SpecificModel, ResponseDeSerializer<SpecificModel, SpecificModelSerializer...>>,
+                                                                  SpecificModelSerializer<ResponseDeSerializer<SpecificModel, SpecificModelSerializer...>>...>
 {
-    using base_t = txml::DeserializerDispatcher<ResponseFromJSON<SpecificModel, ResponseDeSerializer<SpecificModel, SpecificModelSerializer...>>,
-                                    SpecificModelSerializer<ResponseDeSerializer<SpecificModel, SpecificModelSerializer...>>...>;
+    using base_t = txml::DeserializerDispatcher<json::DeserializerCore,
+                                                ResponseFromJSON<SpecificModel, ResponseDeSerializer<SpecificModel, SpecificModelSerializer...>>,
+                                                SpecificModelSerializer<ResponseDeSerializer<SpecificModel, SpecificModelSerializer...>>...>;
     using json = nlohmann::json;
+
+    static constexpr const char* name() { return "ResponseDeSerializer"; }
     ResponseDeSerializer(nlohmann::json &obj, std::shared_ptr<std::stack<DeserializerCore::range_iterator>> shared_iterators_stack =
                                         std::shared_ptr<std::stack<DeserializerCore::range_iterator>>(new std::stack<DeserializerCore::range_iterator>)) :
+        DeserializerCore(obj),
         base_t(obj, shared_iterators_stack)
     {
     }

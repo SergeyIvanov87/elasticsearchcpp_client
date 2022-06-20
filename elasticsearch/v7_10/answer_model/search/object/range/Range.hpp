@@ -17,7 +17,7 @@ public:
     using self_t = Range<Model, Element...>;
     using base_t = txml::XMLNode<Range<Model, Element...>,
                                  range::element<Model, Element>...>;
-
+    using base_t::base_t;
     static constexpr std::string_view class_name()
     {
         return "range";
@@ -28,15 +28,15 @@ public:
         return txml::TextReaderWrapper::NodeType::Element;
     }
 
-
+/*
     Range(const Range &src)
     {
-        this->getValue() = src.getValue();
+        this->value() = src.value();
     }
 
     Range(Range &&src)
     {
-        this->getValue().swap(src.getValue());
+        this->value().swap(src.value());
     }
 
     template<class ...SpecificElement>
@@ -54,7 +54,7 @@ public:
     {
         ((args.has_value() ? this->template emplace<range::element<Model, SpecificElement>>(args),true : false), ...);
     }
-
+*/
     template<size_t N>
     Range(const std::array<std::string, N> &arr, char sep = ',')
     {
@@ -84,10 +84,10 @@ public:
     };
 
     template<class Formatter, class Tracer>
-    void format_serialize_impl(Formatter& out, Tracer tracer) const
+    void format_serialize_request(Formatter& out, Tracer tracer) const
     {
         aggregator_serializer_type ser(out.get_shared_mediator_object());
-        base_t:: template format_serialize_impl(ser, tracer);
+        base_t:: template format_serialize_request(ser, tracer);
     }
 };
 } // namespace search

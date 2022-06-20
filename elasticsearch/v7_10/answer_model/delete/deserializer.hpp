@@ -28,7 +28,7 @@ TXML_DECLARE_DESERIALIZER_CLASS(ResponseFromJSON, FromJSON, response,
     TXML_DESERIALIZER_OBJECT
 
     template<class Tracer>
-    std::shared_ptr<response> deserialize_impl(txml::details::SchemaDTag<response>, Tracer tracer)
+    std::optional<response> deserialize_impl(txml::details::SchemaDTag<response>, Tracer tracer)
     {
         auto& [begin_it, end_it] = get_shared_mediator_object()->top();
 

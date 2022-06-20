@@ -41,7 +41,7 @@ public:
         Tags (value_t{})
     {
         std::regex rcore(separators);
-        getValue() = value_t{std::sregex_token_iterator(flat_list.begin(), flat_list.end(), rcore, -1), std::sregex_token_iterator()};
+        value() = value_t{std::sregex_token_iterator(flat_list.begin(), flat_list.end(), rcore, -1), std::sregex_token_iterator()};
     }
 };
 }

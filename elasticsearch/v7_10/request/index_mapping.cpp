@@ -27,13 +27,13 @@ const transaction::receiver& transaction::get_receiver() const
 }
 
 template<class Tracer>
-std::shared_ptr<transaction::response> transaction::get_response(Tracer tracer) const
+std::optional<transaction::response> transaction::get_response(Tracer tracer) const
 {
     std::string received_string = get_receiver().get();
     nlohmann::json json_data = nlohmann::json::parse(received_string);
 
     elasticsearch::v7::index_mapping::ResponseFromJSON in(json_data);
-    std::shared_ptr<response> resp_ptr = response::format_deserialize(in, tracer);
+    std::optional<response> resp_ptr = response::format_deserialize(in, tracer);
     if (!resp_ptr)
     {
         throw std::runtime_error(std::string("Cannot deserialize response: ") + response::class_name().data());
@@ -42,8 +42,8 @@ std::shared_ptr<transaction::response> transaction::get_response(Tracer tracer) 
     return resp_ptr;
 }
 
-template std::shared_ptr<transaction::response> transaction::get_response(txml::StdoutTracer) const;
-template std::shared_ptr<transaction::response> transaction::get_response(txml::EmptyTracer) const;
+template std::optional<transaction::response> transaction::get_response(txml::StdoutTracer) const;
+template std::optional<transaction::response> transaction::get_response(txml::EmptyTracer) const;
 } // namespace index_mapping
 } // namespace v7
 } // namespace elasticsearch

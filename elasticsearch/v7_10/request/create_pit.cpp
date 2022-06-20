@@ -33,7 +33,7 @@ transaction::~transaction() = default;
 void transaction::execute(const std::string& index_name, const model::KeepAlive& keep_alive, bool curl_verbose)
 {
     receiver->clear();
-    url->add_query_param("keep_alive=" + keep_alive.getValue());
+    url->add_query_param("keep_alive=" + keep_alive.value());
     base_t::execute_base(index_name + "/_pit/", curl_verbose);
     last_requested_ka = keep_alive;
 }

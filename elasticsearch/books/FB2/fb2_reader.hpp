@@ -16,12 +16,12 @@ public:
     reader(const std::string& file_path);
     ~reader();
 
-    std::shared_ptr<ShortFictionBook> getBook() const;
-    std::shared_ptr<elasticsearch::common_model::BinaryBlob> getBlob() const override;
-    std::shared_ptr<elasticsearch::common_model::OriginalPath> getPath() const override;
+    std::optional<ShortFictionBook> getBook() const;
+    std::optional<elasticsearch::common_model::BinaryBlob> getBlob() const override;
+    std::optional<elasticsearch::common_model::OriginalPath> getPath() const override;
 
-    std::shared_ptr<elasticsearch::book::model::data> to_model(txml::EmptyTracer tracer = txml::EmptyTracer()) const override;
-    std::shared_ptr<elasticsearch::book::model::data> to_model(txml::StdoutTracer tracer = txml::StdoutTracer()) const override;
+    std::optional<elasticsearch::book::model::data> to_model(txml::EmptyTracer tracer = txml::EmptyTracer()) const override;
+    std::optional<elasticsearch::book::model::data> to_model(txml::StdoutTracer tracer = txml::StdoutTracer()) const override;
 
     nlohmann::json to_json(txml::EmptyTracer tracer = txml::EmptyTracer()) const override;
     nlohmann::json to_json(txml::StdoutTracer tracer) const override;
@@ -29,12 +29,12 @@ private:
     void pack(const std::filesystem::path &path_to_pack) override;
 
     template<class Tracer = txml::EmptyTracer>
-    std::shared_ptr<elasticsearch::book::model::data> to_model_impl(Tracer tracer = Tracer()) const;
+    std::optional<elasticsearch::book::model::data> to_model_impl(Tracer tracer = Tracer()) const;
 
     template<class Tracer = txml::EmptyTracer>
     nlohmann::json to_json_impl(Tracer tracer = Tracer()) const;
 
-    std::shared_ptr<ShortFictionBook> book_ptr;
+    std::optional<ShortFictionBook> book_ptr;
     std::unique_ptr<packer> packer_impl;
 };
 }

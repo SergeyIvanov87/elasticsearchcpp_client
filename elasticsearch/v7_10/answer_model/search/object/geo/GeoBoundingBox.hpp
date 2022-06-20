@@ -28,17 +28,17 @@ public:
         return txml::TextReaderWrapper::NodeType::Element;
     }
 
-
+/*
     GeoBoundingBox(const GeoBoundingBox &src)
     {
-        this->getValue() = src.getValue();
+        this->value() = src.value();
     }
 
     GeoBoundingBox(GeoBoundingBox &&src)
     {
-        this->getValue().swap(src.getValue());
+        this->value().swap(src.value());
     }
-
+*/
     GeoBoundingBox(const element_t &bounding_box_value)
     {
         this->template emplace<element_t>(bounding_box_value);
@@ -64,10 +64,10 @@ public:
     };
 
     template<class Formatter, class Tracer>
-    void format_serialize_impl(Formatter& out, Tracer tracer) const
+    void format_serialize_request(Formatter& out, Tracer tracer) const
     {
         aggregator_serializer_type ser(out.get_shared_mediator_object());
-        base_t:: template format_serialize_impl(ser, tracer);
+        base_t:: template format_serialize_request(ser, tracer);
     }
 };
 } // namespace search

@@ -283,7 +283,7 @@ public:
     const receiver& get_receiver() const;
 
     template<class Tracer = txml::EmptyTracer>
-    std::shared_ptr<response> get_response(Tracer tracer = Tracer()) const;
+    std::optional<response> get_response(Tracer tracer = Tracer()) const;
 };
 } // namespace search
 } // namespace book

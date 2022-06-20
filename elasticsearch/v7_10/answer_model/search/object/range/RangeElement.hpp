@@ -103,6 +103,11 @@ struct CmpWrap : txml::XMLNode<CmpWrap<Cmp, ModelElement>,
         this->template emplace<cmp_t>(inst);
     }
 
+    CmpWrap(const element_value_t& inst)
+    {
+        this->template emplace<cmp_t>(inst);
+    }
+
     static constexpr std::string_view class_name()
     {
         return cmp_t::class_name();
@@ -120,10 +125,10 @@ struct CmpWrap : txml::XMLNode<CmpWrap<Cmp, ModelElement>,
     };
 
     template<class Formatter, class Tracer>
-    void format_serialize_impl(Formatter& out, Tracer tracer) const
+    void format_serialize_request(Formatter& out, Tracer tracer) const
     {
         aggregator_serializer_type ser(out.get_shared_mediator_object());
-        this->template getValue<cmp_t>()->template format_serialize_impl(ser, tracer);
+        this->template value<cmp_t>().template format_serialize(ser, tracer);
     }
 };
 
@@ -131,7 +136,7 @@ template<class Model, class Element>
 class element: public txml::XMLNode<element<Model, Element>,
                                     CmpWrap<GTE, Element>, CmpWrap<GT, Element>,
                                     CmpWrap<LTE, Element>, CmpWrap<LT, Element>>,
-                      public TagHolder<RangeElementTag>
+               public TagHolder<RangeElementTag>
 {
 public:
     using base_t = txml::XMLNode<element<Model, Element>,
@@ -188,7 +193,7 @@ public:
             }
             else
             {
-                this->template emplace<CmpWrap<GTE, Element>>(gte.value);
+                this->template emplace<CmpWrap<GT, Element>>(gte.value);
             }
         }
         auto lower = std::get<1>(range_pair);
@@ -223,9 +228,7 @@ public:
     TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(serializer_parted_type, Parent, ToJSON,
                                                     /*element<Model, Element>,*/
                                                     CmpWrap<GTE, Element>, CmpWrap<GT, Element>,
-                                                    CmpWrap<LTE, Element>, CmpWrap<LT, Element>/*,
-                                                    GTE<element_value_t>, GT<element_value_t>,
-                                                    LTE<element_value_t>, LT<element_value_t>*/)
+                                                    CmpWrap<LTE, Element>, CmpWrap<LT, Element>)
     {
         TXML_SERIALIZER_DISPATCHABLE_OBJECT
     };

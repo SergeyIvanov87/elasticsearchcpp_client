@@ -30,7 +30,7 @@ void transaction::execute(const model::Id& pit, bool curl_verbose/* = false*/)
     response_receiver->clear();
 
     std::string pit_json("{\"");
-    pit_json = pit_json + model::Id::class_name().data() + "\" : \"" + pit.getValue() + "\"}";
+    pit_json = pit_json + model::Id::class_name().data() + "\" : \"" + pit.value() + "\"}";
 
     if (!uploader)
     {
@@ -52,7 +52,7 @@ const transaction::receiver& transaction::get_receiver() const
 }
 
 template<class Tracer>
-std::shared_ptr<response> transaction::get_response(Tracer tracer) const
+std::optional<response> transaction::get_response(Tracer tracer) const
 {
     std::string received_string = get_receiver().get();
     nlohmann::json json_data = nlohmann::json::parse(received_string);
@@ -60,8 +60,8 @@ std::shared_ptr<response> transaction::get_response(Tracer tracer) const
     return get_receiver().response(in, tracer);
 }
 
-template std::shared_ptr<response> transaction::get_response(txml::StdoutTracer) const;
-template std::shared_ptr<response> transaction::get_response(txml::EmptyTracer) const;
+template std::optional<response> transaction::get_response(txml::StdoutTracer) const;
+template std::optional<response> transaction::get_response(txml::EmptyTracer) const;
 } // namespace delete_pit
 } // namespace v7
 } // namespace elasticsearch

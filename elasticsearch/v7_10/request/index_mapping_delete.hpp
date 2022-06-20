@@ -29,7 +29,7 @@ public:
     const receiver& get_receiver() const;
 
     template<class Tracer = txml::EmptyTracer>
-    std::shared_ptr<response> get_response(Tracer tracer) const;
+    std::optional<response> get_response(Tracer tracer) const;
 private:
     std::shared_ptr<receiver> response_receiver;
 };

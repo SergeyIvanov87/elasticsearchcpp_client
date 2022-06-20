@@ -10,10 +10,10 @@ struct ModelBasedSStreamReceiver : public adapter::easy::StringStreamReceiver
 {
 
 template<class Tracer = txml::EmptyTracer>
-std::shared_ptr<Response> response(Deserializer &in, Tracer tracer = Tracer{}) const
+std::optional<Response> response(Deserializer &in, Tracer tracer = Tracer{}) const
 {
     std::string string_response = adapter::easy::StringStreamReceiver::get();
-    std::shared_ptr<Response> resp_ptr = Response::format_deserialize(in, tracer);
+    std::optional<Response> resp_ptr = Response::format_deserialize(in, tracer);
     if (!resp_ptr)
     {
         throw std::runtime_error(std::string("Cannot deserialize response: ") + Response::class_name().data());

@@ -7,7 +7,6 @@
 #include <txml/txml.hpp>
 
 #include "elasticsearch/books/EPUB/epub_reader.hpp"
-#include "elasticsearch/books/EPUB/model/Package.h"
 #include "elasticsearch/books/EPUB/serializer/book_model_serializer.hpp"
 #include "elasticsearch/books/data_model/serializers/serializer.hpp"
 #include "elasticsearch/utils/file_to_base64_packer.hpp"
@@ -89,17 +88,17 @@ reader::reader(const std::string& file_path)
 
 reader::~reader() = default;
 
-std::shared_ptr<Package> reader::getOPF() const
+std::optional<Package> reader::getOPF() const
 {
     return open_packaging_format_ptr;
 }
 
-std::shared_ptr<elasticsearch::common_model::BinaryBlob> reader::getBlob() const
+std::optional<elasticsearch::common_model::BinaryBlob> reader::getBlob() const
 {
     return packer_impl->getBlob();
 }
 
-std::shared_ptr<elasticsearch::common_model::OriginalPath> reader::getPath() const
+std::optional<elasticsearch::common_model::OriginalPath> reader::getPath() const
 {
     return packer_impl->getPath();
 }
@@ -111,21 +110,21 @@ void reader::pack(const std::filesystem::path &path_to_pack)
 
 
 template<class Tracer>
-std::shared_ptr<elasticsearch::book::model::data> reader::to_model_impl(Tracer tracer) const
+std::optional<elasticsearch::book::model::data> reader::to_model_impl(Tracer tracer) const
 {
     elasticsearch::book::model::epub::to_model_data i2m;
     getOPF()->format_serialize(i2m, tracer);
     // postproc
-    i2m.data_model->set(getBlob());
-    i2m.data_model->set(getPath());
+    i2m.data_model->insert(getBlob());
+    i2m.data_model->insert(getPath());
     return i2m.data_model;
 }
 
-std::shared_ptr<elasticsearch::book::model::data> reader::to_model(txml::EmptyTracer tracer) const
+std::optional<elasticsearch::book::model::data> reader::to_model(txml::EmptyTracer tracer) const
 {
     return to_model_impl(std::move(tracer));
 }
-std::shared_ptr<elasticsearch::book::model::data> reader::to_model(txml::StdoutTracer tracer) const
+std::optional<elasticsearch::book::model::data> reader::to_model(txml::StdoutTracer tracer) const
 {
     return to_model_impl(std::move(tracer));
 }

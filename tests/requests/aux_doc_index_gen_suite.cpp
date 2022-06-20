@@ -18,10 +18,10 @@ protected:
         transaction req(get_host());
         ASSERT_NO_THROW(req.execute(get_index(), false));
 
-        std::shared_ptr<transaction::response> ans_ptr;
+        std::optional<transaction::response> ans_ptr;
         ASSERT_NO_THROW(ans_ptr = req.get_response());
-        ASSERT_TRUE(ans_ptr->getValue<model::Ack>());
-        ASSERT_EQ(ans_ptr->getValue<model::Ack>()->getValue(), true);
+        ASSERT_TRUE(ans_ptr->node<model::Ack>());
+        ASSERT_EQ(ans_ptr->value<model::Ack>().value(), true);
     }
 
     void TearDown() override {
@@ -36,30 +36,30 @@ TEST_F(DocIndexFixture, request_udated_version)
     transaction req(get_host());
     ASSERT_NO_THROW(req.execute(get_index() + "/_doc/0", curl_verbose()));
 
-    std::shared_ptr<transaction::response> ans_ptr;
+    std::optional<transaction::response> ans_ptr;
     txml::StdoutTracer tracer;
-    ASSERT_NO_THROW(ans_ptr = req.get_response());
-
+    ASSERT_NO_THROW(ans_ptr = req.get_response(tracer));
+//TODO remove extra method value() because optional has implicit type cast to underlyed type
     unsigned int requested_version = 1;
-    ASSERT_TRUE(ans_ptr->getValue<::model::Result>());
-    ASSERT_EQ(ans_ptr->getValue<::model::Result>()->getValue(), "created");
-    ASSERT_TRUE(ans_ptr->getValue<::model::_Version>());
-    ASSERT_EQ(ans_ptr->getValue<::model::_Version>()->getValue(), requested_version++);
-    ASSERT_TRUE(ans_ptr->getValue<::model::_Id>());
-    ASSERT_EQ(ans_ptr->getValue<::model::_Id>()->getValue(), "0");
-    ASSERT_TRUE(ans_ptr->getValue<::model::_Index>());
-    ASSERT_EQ(ans_ptr->getValue<::model::_Index>()->getValue(), get_index());
-    ASSERT_TRUE(ans_ptr->getValue<::model::_Type>());
-    ASSERT_EQ(ans_ptr->getValue<::model::_Type>()->getValue(), "_doc");
+    ASSERT_TRUE(ans_ptr->node<::model::Result>());
+    ASSERT_EQ(ans_ptr->value<::model::Result>().value(), "created");
+    ASSERT_TRUE(ans_ptr->node<::model::_Version>());
+    ASSERT_EQ(ans_ptr->value<::model::_Version>().value(), requested_version++);
+    ASSERT_TRUE(ans_ptr->node<::model::_Id>());
+    ASSERT_EQ(ans_ptr->value<::model::_Id>().value(), "0");
+    ASSERT_TRUE(ans_ptr->node<::model::_Index>());
+    ASSERT_EQ(ans_ptr->value<::model::_Index>().value(), get_index());
+    ASSERT_TRUE(ans_ptr->node<::model::_Type>());
+    ASSERT_EQ(ans_ptr->value<::model::_Type>().value(), "_doc");
 
 
     for (size_t i = 0; i < 100; i++)
     {
         ASSERT_NO_THROW(req.execute(get_index() + "/_doc/0", curl_verbose()));
         ASSERT_NO_THROW(ans_ptr = req.get_response());
-        ASSERT_TRUE(ans_ptr->getValue<::model::Result>());
-        ASSERT_EQ(ans_ptr->getValue<::model::Result>()->getValue(), "updated");
-        ASSERT_EQ(ans_ptr->getValue<::model::_Version>()->getValue(), requested_version++);
+        ASSERT_TRUE(ans_ptr->node<::model::Result>());
+        ASSERT_EQ(ans_ptr->value<::model::Result>().value(), "updated");
+        ASSERT_EQ(ans_ptr->value<::model::_Version>().value(), requested_version++);
     }
 }
 }

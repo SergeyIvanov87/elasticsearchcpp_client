@@ -16,7 +16,7 @@ class Query: public txml::XMLNode<Query<Model, Params...>,
 public:
     using base_t = txml::XMLNode<Query<Model, Params...>,
                                  Params...>;
-
+    using base_t::base_t;
     static constexpr std::string_view class_name()
     {
         return "query";
@@ -26,13 +26,13 @@ public:
     {
         return txml::TextReaderWrapper::NodeType::Element;
     }
-
+/*
     template<class ...SpecificParams>
     Query(SpecificParams &&...args)
     {
-        (this->template set<std::decay_t<SpecificParams>>(std::make_shared<std::decay_t<SpecificParams>>(std::forward<SpecificParams>(args))),...);
+        (this->template emplace<std::decay_t<SpecificParams>>(std::forward<SpecificParams>(args)),...);
     }
-
+*/
     template<class ParentAggregator>
     TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(serializer_parted_type, ParentAggregator, ToJSON,
                                                     Query<Model, Params...>,
@@ -49,10 +49,10 @@ public:
     };
 
     template<class Formatter, class Tracer>
-    void format_serialize_impl(Formatter& out, Tracer tracer) const
+    void format_serialize_request(Formatter& out, Tracer tracer) const
     {
         aggregator_serializer_type ser(out.get_shared_mediator_object());
-        base_t:: template format_serialize_impl(ser, tracer);
+        base_t:: template format_serialize_request(ser, tracer);
     }
 };
 using namespace json;
@@ -100,10 +100,10 @@ public:
     };
 
     template<class Formatter, class Tracer>
-    void format_serialize_impl(Formatter& out, Tracer tracer) const
+    void format_serialize_request(Formatter& out, Tracer tracer) const
     {
         aggregator_serializer_type ser(out.get_shared_mediator_object());
-        base_t:: template format_serialize_impl(ser, tracer);
+        base_t:: template format_serialize_request(ser, tracer);
     }
 };
 }

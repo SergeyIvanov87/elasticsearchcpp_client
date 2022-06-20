@@ -101,7 +101,7 @@ get_match_elem<elasticsearch::image::search::tag::geo_bbox,
 
 
 template<class Model>
-using record_t = std::pair<std::string, std::shared_ptr<Model>>;
+using record_t = std::pair<std::string, std::optional<Model>>;
 
 namespace helper
 {
@@ -117,32 +117,41 @@ extract_model_records(const std::shared_ptr<SearchRequest> &search_ptr, Tracer t
         throw std::runtime_error("invalid search request");
     }
 
-    std::shared_ptr<typename transaction::response> search_ans_ptr = search_ptr->get_response(tracer);
-    auto status = search_ans_ptr->template getValue<::model::Status>();
-    if (status->getValue() != 200)
+    std::optional<typename transaction::response> search_ans_ptr = search_ptr->get_response(tracer);
+    const auto &status = search_ans_ptr->template node<::model::Status>();
+    if (status.has_value() && status->value() != 200)
     {
-        auto fail_reason = search_ans_ptr->template getValue<elasticsearch::v7::search::Error>()->template getValue<::model::Reason>();
-        auto caused_reason = search_ans_ptr->template getValue<elasticsearch::v7::search::Error>()->template getValue<::model::CausedBy>()->template getValue<::model::Reason>();
-        throw std::runtime_error("unexpected search response, status: " + std::to_string(status->getValue()) + "\nError: " + fail_reason->getValue() +
-                                 ", details: " + caused_reason->getValue());
+        const auto &fail_reason = search_ans_ptr->template node<elasticsearch::v7::search::Error>()->template node<::model::Reason>();
+        const auto &caused = search_ans_ptr->template node<elasticsearch::v7::search::Error>()->template node<::model::CausedBy>();
+        std::string details;
+        if (caused.has_value())
+        {
+            const auto &caused_reason = caused->template node<::model::Reason>();
+            if (caused_reason.has_value())
+            {
+                details = caused_reason->value();
+            }
+        }
+        throw std::runtime_error("unexpected search response, status: " + std::to_string(status->value()) + "\nError: " + fail_reason->value() +
+                                 ", details: " + (details.empty() ? "<Unknown>" : details));
     }
 
-    auto hits = search_ans_ptr->template getValue<::model::HitsNode<data>>();
+    const auto &hits = search_ans_ptr->template node<::model::HitsNode<data>>();
     if (!hits)
     {
         throw std::runtime_error("unexpected search request answer: no `HintNode` detected");
     }
 
-    auto hits_array = hits->template getValue<::model::HitsArray<data>>()->getValue();
+    const auto &hits_array = hits->template node<::model::HitsArray<data>>()->value();
     std::vector<record_t<data>> ret;
     ret.reserve(hits_array.size());
     for (const auto &hit : hits_array)
     {
-        auto source_ptr = hit->template getValue<::model::_Source<data>>();
-        if (source_ptr && source_ptr->template getValue<data>())
+        const auto &source_ptr = hit->template node<::model::_Source<data>>();
+        if (source_ptr.has_value() && source_ptr->template node<data>())
         {
-            ret.emplace_back(hit->template getValue<::model::_Type>()->getValue() + "/" + hit->template getValue<::model::_Id>()->getValue(),
-                             source_ptr->template getValue<data>());
+            ret.emplace_back(hit->template node<::model::_Type>()->value() + "/" + hit->template node<::model::_Id>()->value(),
+                             source_ptr->template node<data>());
         }
     }
     return ret;
@@ -334,7 +343,7 @@ void request_image_index_mapping_delete(const dispatcher &d, Tracer)
 template<class Tracer>
 void request_rm_data(const dispatcher &d, std::ostream &out, const char *index, const char *doc_path_id, Tracer tracer)
 {
-    std::shared_ptr<elasticsearch::v7::delete_data::response> ans_ptr;
+    std::optional<elasticsearch::v7::delete_data::response> ans_ptr;
     if (!strcmp(index, schema_indices[0]))
     {
         ans_ptr = d.execute_request<elasticsearch::book::del::transaction>(
@@ -353,9 +362,9 @@ void request_rm_data(const dispatcher &d, std::ostream &out, const char *index, 
     {
         throw std::runtime_error(std::string("invalid index: ") + index);
     }
-    if (ans_ptr->getValue<model::Result>())
+    if (ans_ptr.has_value())
     {
-        out << ans_ptr->getValue<model::Result>()->getValue() << std::endl;
+        out << ans_ptr->node<model::Result>()->value() << std::endl;
     }
     else
     {
@@ -379,15 +388,15 @@ void request_put_data(const dispatcher &d, std::ostream &out,
 
         auto model_value = r.to_model(tracer);
 
-        bin::data_manipulation::inject_to_model<data, IMAGE_DATA_MODEL_ELEMENTS>(*model_value, override_model_params);
-        bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(*model_value, override_model_params);
+        bin::data_manipulation::inject_to_model<data, IMAGE_DATA_MODEL_ELEMENTS>(model_value.value(), override_model_params);
+        bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value.value(), override_model_params);
 
         // try to search duplicates
         if (!ignore_existing)
         {
             auto finder = [&d, &tracer](auto &search_duplicates_params)
             { return request_image_search_match(d, search_duplicates_params, {}, tracer);};
-            if (helper::find_duplicate_records<data, decltype(finder), IMAGE_DATA_MODEL_ELEMENTS>(*model_value, finder, out))
+            if (helper::find_duplicate_records<data, decltype(finder), IMAGE_DATA_MODEL_ELEMENTS>(model_value.value(), finder, out))
             {
                 return;
             }
@@ -399,8 +408,8 @@ void request_put_data(const dispatcher &d, std::ostream &out,
                             d.get_settings().curl_verbose, tracer);
         d.execute_request<elasticsearch::image::create::transaction>(
                             schema_indices[1],
-                            std::string(schema_indices[1]) + "/_doc/" + std::to_string(generator_ptr->get_unique_index().getValue()),
-                            *model_value,
+                            std::string(schema_indices[1]) + "/_doc/" + std::to_string(generator_ptr->get_unique_index().value()),
+                            model_value.value(),
                             d.get_settings().curl_verbose,
                             tracer);
     } catch (...) {
@@ -408,15 +417,15 @@ void request_put_data(const dispatcher &d, std::ostream &out,
             using namespace elasticsearch::book::model;
             elasticsearch::book::reader r(file_path);
             auto model_value = r.to_model(tracer);
-            bin::data_manipulation::inject_to_model<data, BOOK_DATA_MODEL_ELEMENTS>(*model_value, override_model_params);
-            bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(*model_value, override_model_params);
+            bin::data_manipulation::inject_to_model<data, BOOK_DATA_MODEL_ELEMENTS>(model_value.value(), override_model_params);
+            bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value.value(), override_model_params);
 
             // try to search duplicates
             if (!ignore_existing)
             {
                 auto finder = [&d, &tracer](auto &search_duplicates_params)
                 { return request_book_search_match(d, search_duplicates_params, {}, tracer);};
-                if (helper::find_duplicate_records<data, decltype(finder), BOOK_DATA_MODEL_ELEMENTS>(*model_value, finder, out))
+                if (helper::find_duplicate_records<data, decltype(finder), BOOK_DATA_MODEL_ELEMENTS>(model_value.value(), finder, out))
                 {
                     return;
                 }
@@ -429,8 +438,8 @@ void request_put_data(const dispatcher &d, std::ostream &out,
                                         d.get_settings().curl_verbose, tracer);
             d. execute_request<elasticsearch::book::create::transaction>(
                                 schema_indices[0],
-                                std::string(schema_indices[0]) + "/_doc/" +  std::to_string(generator_ptr->get_unique_index().getValue()),
-                                *model_value,
+                                std::string(schema_indices[0]) + "/_doc/" +  std::to_string(generator_ptr->get_unique_index().value()),
+                                model_value.value(),
                                 d.get_settings().curl_verbose,
                                 tracer);
         } catch (const std::exception& ex) {
@@ -453,12 +462,12 @@ void request_update_data(dispatcher &d,
 
         auto model_value = r.to_model(tracer);
 
-        bin::data_manipulation::inject_to_model<data, IMAGE_DATA_MODEL_ELEMENTS>(*model_value, override_model_params);
-        bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(*model_value, override_model_params);
+        bin::data_manipulation::inject_to_model<data, IMAGE_DATA_MODEL_ELEMENTS>(model_value.value(), override_model_params);
+        bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value.value(), override_model_params);
         d.execute_request<elasticsearch::image::create::transaction>(
                             schema_indices[1],
                             std::string(schema_indices[1]) + "/" + document_id,
-                            *model_value,
+                            model_value.value(),
                             d.get_settings().curl_verbose,
                             tracer);
     } catch (...) {
@@ -466,13 +475,13 @@ void request_update_data(dispatcher &d,
             using namespace elasticsearch::book::model;
             elasticsearch::book::reader r(file_path);
             auto model_value = r.to_model(tracer);
-            bin::data_manipulation::inject_to_model<data, BOOK_DATA_MODEL_ELEMENTS>(*model_value, override_model_params);
-            bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(*model_value, override_model_params);
+            bin::data_manipulation::inject_to_model<data, BOOK_DATA_MODEL_ELEMENTS>(model_value.value(), override_model_params);
+            bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value.value(), override_model_params);
 
             d.execute_request<elasticsearch::book::create::transaction>(
                                 schema_indices[0],
                                 std::string(schema_indices[0]) + "/" + document_id,
-                                *model_value,
+                                model_value.value(),
                                 d.get_settings().curl_verbose,
                                 tracer);
         } catch (const std::exception& ex) {
@@ -493,16 +502,16 @@ request_collect_model_data(dispatcher &d, const char *file_path, Tracer tracer)
         elasticsearch::image::reader r(file_path);
         auto model_value = r.to_model(tracer);
 
-        bin::data_manipulation::extract_from_model<data, IMAGE_DATA_MODEL_ELEMENTS>(*model_value, ret);
-        bin::data_manipulation::extract_from_model<data, COMMON_DATA_MODEL_ELEMENTS>(*model_value, ret);
+        bin::data_manipulation::extract_from_model<data, IMAGE_DATA_MODEL_ELEMENTS>(model_value.value(), ret);
+        bin::data_manipulation::extract_from_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value.value(), ret);
     } catch (...) {
         try {
             using namespace elasticsearch::book::model;
             elasticsearch::book::reader r(file_path);
 
             auto model_value = r.to_model(tracer);
-            bin::data_manipulation::extract_from_model<data, BOOK_DATA_MODEL_ELEMENTS>(*model_value, ret);
-            bin::data_manipulation::extract_from_model<data, COMMON_DATA_MODEL_ELEMENTS>(*model_value, ret);
+            bin::data_manipulation::extract_from_model<data, BOOK_DATA_MODEL_ELEMENTS>(model_value.value(), ret);
+            bin::data_manipulation::extract_from_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value.value(), ret);
         } catch (const std::exception& ex) {
             throw std::runtime_error(std::string("unsupported format by path: ") + file_path + ", error: " + ex.what());
         }

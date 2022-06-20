@@ -23,10 +23,10 @@ protected:
         transaction req(get_host(), transaction::Tag<StubLeafNode, StubLeafNodeSerializer> {});
         ASSERT_NO_THROW(req.execute(get_index(), false));
 
-        std::shared_ptr<response> ans_ptr;
+        std::optional<response> ans_ptr;
         ASSERT_NO_THROW(ans_ptr = req.get_response());
-        ASSERT_TRUE(ans_ptr->getValue<model::Ack>());
-        ASSERT_TRUE(ans_ptr->getValue<model::Ack>()->getValue());
+        ASSERT_TRUE(ans_ptr->node<model::Ack>());
+        ASSERT_TRUE(ans_ptr->value<model::Ack>().value());
     }
 
     void TearDown() override {
@@ -46,25 +46,25 @@ TEST_F(DataCreateGetFixture, request_create)
     put_json_data::transaction::Tag<StubLeafNode, StubLeafNodeSerializerMixin> t(data_to_send);
     ASSERT_NO_THROW(req.execute(get_index() + "/_doc/1/_create", t, curl_verbose(), tracer));
 
-    std::shared_ptr<put_json_data::response> ans_ptr;
+    std::optional<put_json_data::response> ans_ptr;
     ASSERT_NO_THROW(ans_ptr = req.get_response());
-    ASSERT_TRUE(ans_ptr->getValue<model::Result>());
-    ASSERT_EQ(ans_ptr->getValue<model::Result>()->getValue(), "created");
-    ASSERT_TRUE(ans_ptr->getValue<model::_Version>());
-    ASSERT_EQ(ans_ptr->getValue<model::_Version>()->getValue(), 1);
-    ASSERT_TRUE(ans_ptr->getValue<model::_Id>());
-    ASSERT_EQ(ans_ptr->getValue<model::_Id>()->getValue(), "1");
-    ASSERT_TRUE(ans_ptr->getValue<model::_Index>());
-    ASSERT_EQ(ans_ptr->getValue<model::_Index>()->getValue(), get_index());
-    ASSERT_TRUE(ans_ptr->getValue<model::_Type>());
-    ASSERT_EQ(ans_ptr->getValue<model::_Type>()->getValue(), "_doc");
+    ASSERT_TRUE(ans_ptr->node<model::Result>());
+    ASSERT_EQ(ans_ptr->value<model::Result>().value(), "created");
+    ASSERT_TRUE(ans_ptr->node<model::_Version>());
+    ASSERT_EQ(ans_ptr->value<model::_Version>().value(), 1);
+    ASSERT_TRUE(ans_ptr->node<model::_Id>());
+    ASSERT_EQ(ans_ptr->value<model::_Id>().value(), "1");
+    ASSERT_TRUE(ans_ptr->node<model::_Index>());
+    ASSERT_EQ(ans_ptr->value<model::_Index>().value(), get_index());
+    ASSERT_TRUE(ans_ptr->node<model::_Type>());
+    ASSERT_EQ(ans_ptr->value<model::_Type>().value(), "_doc");
 
     ASSERT_NO_THROW(req.execute(get_index() + "/_doc/1", t, curl_verbose(), tracer));
     ASSERT_NO_THROW(ans_ptr = req.get_response());
-    ASSERT_TRUE(ans_ptr->getValue<model::Result>());
-    ASSERT_EQ(ans_ptr->getValue<model::Result>()->getValue(), "updated");
-    ASSERT_TRUE(ans_ptr->getValue<model::_Version>());
-    ASSERT_EQ(ans_ptr->getValue<model::_Version>()->getValue(), 2);
+    ASSERT_TRUE(ans_ptr->node<model::Result>());
+    ASSERT_EQ(ans_ptr->value<model::Result>().value(), "updated");
+    ASSERT_TRUE(ans_ptr->node<model::_Version>());
+    ASSERT_EQ(ans_ptr->value<model::_Version>().value(), 2);
 }
 
 TEST_F(DataCreateGetFixture, request_create_n_get_dynamic_model)
@@ -77,27 +77,27 @@ TEST_F(DataCreateGetFixture, request_create_n_get_dynamic_model)
     put_json_data::transaction req(get_host());
     ASSERT_NO_THROW(req.execute(get_index() + "/_doc/1", t, curl_verbose(), tracer));
 
-    std::shared_ptr<put_json_data::response> ans_ptr;
+    std::optional<put_json_data::response> ans_ptr;
     ASSERT_NO_THROW(ans_ptr = req.get_response());
-    ASSERT_TRUE(ans_ptr->getValue<model::Result>());
-    ASSERT_EQ(ans_ptr->getValue<model::Result>()->getValue(), "created");
+    ASSERT_TRUE(ans_ptr->node<model::Result>());
+    ASSERT_EQ(ans_ptr->value<model::Result>().value(), "created");
 
     get_json_data::transaction get(get_host());
     ASSERT_NO_THROW(get.execute(get_index() + "/_doc/1", curl_verbose()));
 
-    std::shared_ptr<get_json_data::response<StubLeafNode>> resp_ptr;
+    std::optional<get_json_data::response<StubLeafNode>> resp_ptr;
     resp_ptr = get.get_response<StubLeafNode, StubLeafNodeDeserializer>(tracer);
-    ASSERT_TRUE(resp_ptr->getValue<model::_Id>());
-    ASSERT_TRUE(resp_ptr->getValue<model::_Index>());
-    ASSERT_TRUE(resp_ptr->getValue<model::_Type>());
-    ASSERT_TRUE(resp_ptr->getValue<model::_SeqNo>());
-    ASSERT_TRUE(resp_ptr->getValue<model::_PrimaryTerm>());
-    ASSERT_TRUE(resp_ptr->getValue<model::Found>());
-    ASSERT_EQ(resp_ptr->getValue<model::Found>()->getValue(), true);
-    ASSERT_TRUE(resp_ptr->getValue<model::_Version>());
-    ASSERT_EQ(resp_ptr->getValue<model::_Version>()->getValue(), 1);
-    ASSERT_TRUE(resp_ptr->getValue<model::_Source<StubLeafNode>>());
-    ASSERT_TRUE(resp_ptr->getValue<model::_Source<StubLeafNode>>()->getValue<StubLeafNode>());
-    ASSERT_EQ(resp_ptr->getValue<model::_Source<StubLeafNode>>()->getValue<StubLeafNode>()->getValue(), "data_to_send");
+    ASSERT_TRUE(resp_ptr->node<model::_Id>());
+    ASSERT_TRUE(resp_ptr->node<model::_Index>());
+    ASSERT_TRUE(resp_ptr->node<model::_Type>());
+    ASSERT_TRUE(resp_ptr->node<model::_SeqNo>());
+    ASSERT_TRUE(resp_ptr->node<model::_PrimaryTerm>());
+    ASSERT_TRUE(resp_ptr->node<model::Found>());
+    ASSERT_EQ(resp_ptr->value<model::Found>().value(), true);
+    ASSERT_TRUE(resp_ptr->node<model::_Version>());
+    ASSERT_EQ(resp_ptr->value<model::_Version>().value(), 1);
+    ASSERT_TRUE(resp_ptr->node<model::_Source<StubLeafNode>>());
+    ASSERT_TRUE(resp_ptr->node<model::_Source<StubLeafNode>>()->node<StubLeafNode>());
+    ASSERT_EQ(resp_ptr->node<model::_Source<StubLeafNode>>()->node<StubLeafNode>()->value(), "data_to_send");
 }
 }

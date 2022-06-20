@@ -24,10 +24,10 @@ struct ModelInjector
             if (auto it = data_storage.find(std::string(Element::class_name()));
                 it != data_storage.end())
             {
-                if (m.template getValue<Element>())
+                if (m.template node<Element>())
                 {
-                    *(m.template getValue<Element>()) = Element(typename Element::value_t (it->second),
-                                                                std::forward<AdditionalArgs>(args)...);
+                    m.template value<Element>() = Element(typename Element::value_t (it->second),
+                                                          std::forward<AdditionalArgs>(args)...);
                 }
                 else
                 {

@@ -21,10 +21,10 @@ struct ModelExtractor
     {
         if constexpr (ModelExtractorTraits<Element>::is_extractable())
         {
-            auto val = m.template getValue<Element>();
+            const auto &val = m.template node<Element>();
             if (val)
             {
-                data_storage.emplace(std::string(Element::class_name()), val->getValue());
+                data_storage.emplace(std::string(Element::class_name()), val->value());
             }
         }
     }

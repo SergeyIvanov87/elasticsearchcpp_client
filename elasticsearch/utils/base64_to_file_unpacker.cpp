@@ -78,7 +78,7 @@ unpacker::unpacker(const elasticsearch::common_model::BinaryBlob& blob,
 
 unpacker::unpacker(const elasticsearch::common_model::BinaryBlob& blob,
                    const elasticsearch::common_model::OriginalPath& restore_path) :
-    unpacker(blob, restore_path.getValue())
+    unpacker(blob, restore_path.value())
 {
 }
 

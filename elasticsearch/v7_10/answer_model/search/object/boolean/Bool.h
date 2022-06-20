@@ -17,7 +17,7 @@ public:
     using self_t = Boolean<Model, SubContexts...>;
     using base_t = txml::XMLNode<Boolean<Model, SubContexts...>,
                                  SubContexts...>;
-
+    using base_t::base_t;
     static constexpr std::string_view class_name()
     {
         return "bool";
@@ -28,13 +28,13 @@ public:
         return txml::TextReaderWrapper::NodeType::Element;
     }
 
-
+/* TODO
     Boolean(const Boolean &src) {
-        this->getValue() = src.getValue();
+        this->value() = src.value();
     }
 
     Boolean(Boolean &&src) {
-        this->getValue().swap(src.getValue());
+        this->value().swap(src.value());
     }
 
     template<class ...BooleanParamsTagsPack,
@@ -43,11 +43,11 @@ public:
                                                             std::is_same<std::decay_t<BooleanParamsTagsPack>, Boolean>...
                                                                       >
                                                         , int>>
-    Boolean(BooleanParamsTagsPack &&...args)
+    Boolean(BooleanParamsTagsPack &&...args)    //TODO sue default ctor
     {
-        (this->template set<std::decay_t<BooleanParamsTagsPack>>(std::make_shared<std::decay_t<BooleanParamsTagsPack>>(std::forward<BooleanParamsTagsPack>(args))),...);
+        (this->template emplace<std::decay_t<BooleanParamsTagsPack>>(std::forward<BooleanParamsTagsPack>(args)),...);
     }
-
+*/
     template<class Parent>
     TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(serializer_parted_type, Parent, ToJSON,
                                                Boolean<Model, SubContexts...>,
@@ -63,10 +63,10 @@ public:
     };
 
     template<class Formatter, class Tracer>
-    void format_serialize_impl(Formatter& out, Tracer tracer) const
+    void format_serialize_request(Formatter& out, Tracer tracer) const
     {
         aggregator_serializer_type ser(out.get_shared_mediator_object());
-        base_t:: template format_serialize_impl(ser, tracer);
+        base_t:: template format_serialize_request(ser, tracer);
     }
 };
 } // namespace search

@@ -44,7 +44,7 @@ reader::reader(const std::filesystem::path &file_path)
         throw std::runtime_error("Cannot parse EXIF data, easyexif error: " + std::to_string(res));
     }
 
-    image_data.reset(new ExifData);
+    image_data = std::make_optional<ExifData>();
     image_data->emplace<elasticsearch::image::model::element::Camera>(std::string(result.Make.c_str()));
     image_data->emplace<elasticsearch::image::model::element::CameraModel>(result.Model.c_str());
     image_data->emplace<elasticsearch::image::model::element::Resolution>(result.ImageWidth, result.ImageHeight);
@@ -71,17 +71,17 @@ reader::reader(const std::filesystem::path &file_path)
 
 reader::~reader() = default;
 
-std::shared_ptr<ExifData> reader::getImageModel() const
+std::optional<ExifData> reader::getImageModel() const
 {
     return image_data;
 }
 
-std::shared_ptr<elasticsearch::common_model::BinaryBlob> reader::getBlob() const
+std::optional<elasticsearch::common_model::BinaryBlob> reader::getBlob() const
 {
     return packer_impl->getBlob();
 }
 
-std::shared_ptr<elasticsearch::common_model::OriginalPath> reader::getPath() const
+std::optional<elasticsearch::common_model::OriginalPath> reader::getPath() const
 {
     return packer_impl->getPath();
 }
@@ -92,21 +92,21 @@ void reader::pack(const std::filesystem::path &path_to_pack)
 }
 
 template<class Tracer>
-std::shared_ptr<elasticsearch::image::model::data> reader::to_model_impl(Tracer tracer) const
+std::optional<elasticsearch::image::model::data> reader::to_model_impl(Tracer tracer) const
 {
     elasticsearch::image::model::jpg::to_model_data i2m;
     getImageModel()->format_serialize(i2m, tracer);
     // postproc
-    i2m.data_model->set(getBlob());
-    i2m.data_model->set(getPath());
+    i2m.data_model->insert(getBlob());
+    i2m.data_model->insert(getPath());
     return i2m.data_model;
 }
 
-std::shared_ptr<elasticsearch::image::model::data> reader::to_model(txml::EmptyTracer tracer) const
+std::optional<elasticsearch::image::model::data> reader::to_model(txml::EmptyTracer tracer) const
 {
     return to_model_impl(std::move(tracer));
 }
-std::shared_ptr<elasticsearch::image::model::data> reader::to_model(txml::StdoutTracer tracer) const
+std::optional<elasticsearch::image::model::data> reader::to_model(txml::StdoutTracer tracer) const
 {
     return to_model_impl(std::move(tracer));
 }

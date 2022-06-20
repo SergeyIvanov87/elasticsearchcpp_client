@@ -330,12 +330,12 @@ protected:
         using namespace elasticsearch::v7::index_mapping;
         transaction req(get_host(), transaction::Tag<StubLeafNode, StubLeafNodeSerializer> {});
         ASSERT_NO_THROW(req.execute(get_index(), false));
-        std::shared_ptr<response> ans_ptr;
+        std::optional<response> ans_ptr;
 
         ASSERT_NO_THROW(ans_ptr = req.get_response());
 
-        ASSERT_TRUE(ans_ptr->getValue<model::Ack>());
-        ASSERT_TRUE(ans_ptr->getValue<model::Ack>()->getValue());
+        ASSERT_TRUE(ans_ptr->node<model::Ack>());
+        ASSERT_TRUE(ans_ptr->node<model::Ack>()->value());
     }
 
     void TearDown() override {
@@ -350,19 +350,19 @@ TEST_F(SearchTagFixtureMatchAll, request_create_match_all)
     create_pit::transaction construct(get_host());
     ASSERT_NO_THROW(construct.execute(get_index(), std::chrono::seconds(10), curl_verbose()));
     model::PIT pit = construct.get_pit();
-    ASSERT_TRUE(pit.getValue<model::Id>());
+    ASSERT_TRUE(pit.node<model::Id>());
 
     txml::StdoutTracer tracer;
     search::transaction s(get_host());
     ASSERT_NO_THROW(s.execute("", 1000, curl_verbose(), tracer));
-    std::shared_ptr<search::response<StubLeafNode>> search_ans_ptr;
+    std::optional<search::response<StubLeafNode>> search_ans_ptr;
     ASSERT_NO_THROW(search_ans_ptr = s.get_response<StubLeafNode>(tracer));
 
     ASSERT_NO_THROW(s.execute(1000, pit, curl_verbose()));
     ASSERT_NO_THROW(search_ans_ptr = s.get_response<StubLeafNode>(tracer));
 
     delete_pit::transaction destroy(get_host());
-    ASSERT_NO_THROW(destroy.execute(*pit.getValue<model::Id>(), curl_verbose()));
+    ASSERT_NO_THROW(destroy.execute(pit.value<model::Id>(), curl_verbose()));
 
 }
 
@@ -376,12 +376,12 @@ protected:
         using namespace elasticsearch::v7::index_mapping;
         transaction req(get_host(), transaction::Tag<StubModel, StubModelSerializer> {});
         ASSERT_NO_THROW(req.execute(get_index(), false));
-        std::shared_ptr<response> ans_ptr;
+        std::optional<response> ans_ptr;
 
         ASSERT_NO_THROW(ans_ptr = req.get_response());
 
-        ASSERT_TRUE(ans_ptr->getValue<model::Ack>());
-        ASSERT_TRUE(ans_ptr->getValue<model::Ack>()->getValue());
+        ASSERT_TRUE(ans_ptr->node<model::Ack>());
+        ASSERT_TRUE(ans_ptr->node<model::Ack>()->value());
     }
 
     void TearDown() override {
@@ -396,7 +396,7 @@ TEST_F(SearchTagFixtureComplex, request_create_match_all)
     create_pit::transaction construct(get_host());
     ASSERT_NO_THROW(construct.execute(get_index(), std::chrono::seconds(10), curl_verbose()));
     model::PIT pit = construct.get_pit();
-    ASSERT_TRUE(pit.getValue<model::Id>());
+    ASSERT_TRUE(pit.node<model::Id>());
 
     txml::StdoutTracer tracer;
     using MustTag = model::search::Must<StubModel,
@@ -428,7 +428,7 @@ TEST_F(SearchTagFixtureComplex, request_create_match_all)
                               1000,
                               search::tag::create::query_tag<StubModel>(boolean_param),
                               curl_verbose(), tracer));
-    std::shared_ptr<search::response<StubLeafNode>> search_ans_ptr;
+    std::optional<search::response<StubLeafNode>> search_ans_ptr;
     ASSERT_NO_THROW(search_ans_ptr = s.get_response<StubLeafNode>(tracer));
 
     ASSERT_NO_THROW(s.execute(1000, pit,
@@ -437,6 +437,6 @@ TEST_F(SearchTagFixtureComplex, request_create_match_all)
     ASSERT_NO_THROW(search_ans_ptr = s.get_response<StubLeafNode>(tracer));
 
     delete_pit::transaction destroy(get_host());
-    ASSERT_NO_THROW(destroy.execute(*pit.getValue<model::Id>(), curl_verbose()));
+    ASSERT_NO_THROW(destroy.execute(pit.value<model::Id>(), curl_verbose()));
 }
 }

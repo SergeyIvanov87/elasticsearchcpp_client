@@ -30,9 +30,9 @@ public:
     ~TextElement() = default;
 
     template<class Tracer>
-    static  std::shared_ptr<TextElement> create_impl(/*std::string &name, */txml::TextReaderWrapper &reader, Tracer tracer)
+    static  std::optional<TextElement> create_impl(/*std::string &name, */txml::TextReaderWrapper &reader, Tracer tracer)
     {
-        std::shared_ptr<TextElement> ret;
+        std::optional<TextElement> ret;
         tracer.trace("start to create '", class_name(), "'");
         if (reader.has_value())
         {
@@ -42,8 +42,8 @@ public:
             {
                 ++it;
             }
-            ret.reset(new TextElement(std::string(it, tmp_value.end())));
-            tracer.trace("Value: '", ret->getValue(), "'");
+            ret = std::make_optional<TextElement>(std::string(it, tmp_value.end()));
+            tracer.trace("Value: '", ret->value(), "'");
         }
 
         return ret;

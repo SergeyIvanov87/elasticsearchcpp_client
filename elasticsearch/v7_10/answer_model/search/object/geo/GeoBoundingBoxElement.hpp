@@ -110,6 +110,7 @@ class ElementToQuery: public txml::XMLNode<ElementToQuery<Model, Element>,
 public:
     using base_t = txml::XMLNode<ElementToQuery<Model, Element>,
                                  BBTopLeft, BBBottomRight>;
+    using base_t::base_t;
     using element_t = Element;
 
     static constexpr std::string_view class_name()
@@ -120,12 +121,6 @@ public:
     static constexpr txml::TextReaderWrapper::NodeType class_node_type()
     {
         return txml::TextReaderWrapper::NodeType::Element;
-    }
-
-    ElementToQuery (const BBTopLeft &t_l, const BBBottomRight &b_r)
-    {
-        this->template emplace<BBTopLeft>(t_l);
-        this->template emplace<BBBottomRight>(b_r);
     }
 
     template<class Parent>

@@ -32,38 +32,38 @@ TEST_F(IMFixture, delete_failed)
     index_mapping_delete::transaction delete_index_mapping(get_host());
     ASSERT_NO_THROW(delete_index_mapping.execute(get_index(), curl_verbose()));
 
-    std::shared_ptr<index_mapping_delete::response> ans_ptr;
+    std::optional<index_mapping_delete::response> ans_ptr;
     txml::StdoutTracer tracer;
     ASSERT_NO_THROW(ans_ptr = delete_index_mapping.get_response(tracer));
 
-    ASSERT_FALSE(ans_ptr->getValue<model::Ack>());
+    ASSERT_FALSE(ans_ptr->node<model::Ack>());
 
     // Check Error
-    ASSERT_TRUE(ans_ptr->getValue<index_mapping_delete::Error>());
-    ASSERT_TRUE(ans_ptr->getValue<index_mapping_delete::Error>()->getValue<model::Index>());
-    ASSERT_EQ(ans_ptr->getValue<index_mapping_delete::Error>()->getValue<model::Index>()->getValue(), get_index());
-    ASSERT_TRUE(ans_ptr->getValue<index_mapping_delete::Error>()->getValue<model::ResourceId>());
-    ASSERT_EQ(ans_ptr->getValue<index_mapping_delete::Error>()->getValue<model::ResourceId>()->getValue(), get_index());
-    ASSERT_TRUE(ans_ptr->getValue<index_mapping_delete::Error>()->getValue<model::ResourceType>());
-    ASSERT_TRUE(ans_ptr->getValue<index_mapping_delete::Error>()->getValue<model::Type>());
-    ASSERT_TRUE(ans_ptr->getValue<index_mapping_delete::Error>()->getValue<model::Reason>());
-    ASSERT_TRUE(ans_ptr->getValue<index_mapping_delete::Error>()->getValue<model::IndexUUID>());
-    ASSERT_TRUE(ans_ptr->getValue<index_mapping_delete::Error>()->getValue<index_mapping_delete::RootCause>());
+    ASSERT_TRUE(ans_ptr->node<index_mapping_delete::Error>());
+    ASSERT_TRUE(ans_ptr->node<index_mapping_delete::Error>()->node<model::Index>());
+    ASSERT_EQ(ans_ptr->node<index_mapping_delete::Error>()->node<model::Index>()->value(), get_index());
+    ASSERT_TRUE(ans_ptr->node<index_mapping_delete::Error>()->node<model::ResourceId>());
+    ASSERT_EQ(ans_ptr->node<index_mapping_delete::Error>()->node<model::ResourceId>()->value(), get_index());
+    ASSERT_TRUE(ans_ptr->node<index_mapping_delete::Error>()->node<model::ResourceType>());
+    ASSERT_TRUE(ans_ptr->node<index_mapping_delete::Error>()->node<model::Type>());
+    ASSERT_TRUE(ans_ptr->node<index_mapping_delete::Error>()->node<model::Reason>());
+    ASSERT_TRUE(ans_ptr->node<index_mapping_delete::Error>()->node<model::IndexUUID>());
+    ASSERT_TRUE(ans_ptr->node<index_mapping_delete::Error>()->node<index_mapping_delete::RootCause>());
 
     // Check RC
-    std::shared_ptr<index_mapping_delete::RootCause> rc =
-                        ans_ptr->getValue<index_mapping_delete::Error>()->getValue<index_mapping_delete::RootCause>();
-    ASSERT_EQ(rc->getValue().size(), 1);
-    const std::vector<std::shared_ptr<typename index_mapping_delete::RootCause::element_t>> &rc_array = rc->getValue();
-    std::shared_ptr<typename index_mapping_delete::RootCause::element_t> rc_elem = *(rc_array.begin());
-    ASSERT_TRUE(rc_elem->getValue<model::Index>());
-    ASSERT_EQ(rc_elem->getValue<model::Index>()->getValue(), get_index());
-    ASSERT_TRUE(rc_elem->getValue<model::Reason>());
-    ASSERT_TRUE(rc_elem->getValue<model::IndexUUID>());
-    ASSERT_TRUE(rc_elem->getValue<model::Type>());
-    ASSERT_TRUE(rc_elem->getValue<model::ResourceId>());
-    ASSERT_EQ(rc_elem->getValue<model::ResourceId>()->getValue(), get_index());
-    ASSERT_TRUE(rc_elem->getValue<model::ResourceType>());
+    std::optional<index_mapping_delete::RootCause> rc =
+                        ans_ptr->node<index_mapping_delete::Error>()->node<index_mapping_delete::RootCause>();
+    ASSERT_EQ(rc->value().size(), 1);
+    const std::vector<std::optional<typename index_mapping_delete::RootCause::element_t>> &rc_array = rc->value();
+    std::optional<typename index_mapping_delete::RootCause::element_t> rc_elem = *(rc_array.begin());
+    ASSERT_TRUE(rc_elem->node<model::Index>());
+    ASSERT_EQ(rc_elem->node<model::Index>()->value(), get_index());
+    ASSERT_TRUE(rc_elem->node<model::Reason>());
+    ASSERT_TRUE(rc_elem->node<model::IndexUUID>());
+    ASSERT_TRUE(rc_elem->node<model::Type>());
+    ASSERT_TRUE(rc_elem->node<model::ResourceId>());
+    ASSERT_EQ(rc_elem->node<model::ResourceId>()->value(), get_index());
+    ASSERT_TRUE(rc_elem->node<model::ResourceType>());
 }
 
 TEST_F(IMFixture, request_with_duplicate)
@@ -72,48 +72,48 @@ TEST_F(IMFixture, request_with_duplicate)
     transaction req(get_host(), transaction::Tag<StubLeafNode, StubLeafNodeSerializer> {}, true);
     ASSERT_NO_THROW(req.execute(get_index(), curl_verbose()));
 
-    std::shared_ptr<response> ans_ptr;
+    std::optional<response> ans_ptr;
     txml::StdoutTracer tracer;
     ASSERT_NO_THROW(ans_ptr = req.get_response());
 
-    ASSERT_TRUE(ans_ptr->getValue<model::Ack>());
-    ASSERT_TRUE(ans_ptr->getValue<model::Ack>()->getValue());
+    ASSERT_TRUE(ans_ptr->node<model::Ack>());
+    ASSERT_TRUE(ans_ptr->node<model::Ack>()->value());
 
-    ASSERT_TRUE(ans_ptr->getValue<model::Index>());
-    ASSERT_EQ(ans_ptr->getValue<model::Index>()->getValue(), get_index());
+    ASSERT_TRUE(ans_ptr->node<model::Index>());
+    ASSERT_EQ(ans_ptr->node<model::Index>()->value(), get_index());
 
-    ASSERT_TRUE(ans_ptr->getValue<model::ShardsAck>());
+    ASSERT_TRUE(ans_ptr->node<model::ShardsAck>());
 
     // repeat it again to get bad response
     ASSERT_NO_THROW(req.execute(get_index(), curl_verbose()));
     ASSERT_NO_THROW(ans_ptr = req.get_response(tracer));
 
     // Check Ack
-    ASSERT_FALSE(ans_ptr->getValue<model::Ack>());
+    ASSERT_FALSE(ans_ptr->node<model::Ack>());
 
     // Check status
-    ASSERT_TRUE(ans_ptr->getValue<model::Status>());
-    ASSERT_EQ(ans_ptr->getValue<model::Status>()->getValue(), 400);
+    ASSERT_TRUE(ans_ptr->node<model::Status>());
+    ASSERT_EQ(ans_ptr->node<model::Status>()->value(), 400);
 
     // Check Error
-    ASSERT_TRUE(ans_ptr->getValue<Error>());
-    ASSERT_TRUE(ans_ptr->getValue<Error>()->getValue<model::Index>());
-    ASSERT_EQ(ans_ptr->getValue<Error>()->getValue<model::Index>()->getValue(), get_index());
-    ASSERT_TRUE(ans_ptr->getValue<Error>()->getValue<model::Type>());
-    ASSERT_TRUE(ans_ptr->getValue<Error>()->getValue<model::Reason>());
-    ASSERT_TRUE(ans_ptr->getValue<Error>()->getValue<model::IndexUUID>());
-    ASSERT_TRUE(ans_ptr->getValue<Error>()->getValue<RootCause>());
+    ASSERT_TRUE(ans_ptr->node<Error>());
+    ASSERT_TRUE(ans_ptr->node<Error>()->node<model::Index>());
+    ASSERT_EQ(ans_ptr->node<Error>()->node<model::Index>()->value(), get_index());
+    ASSERT_TRUE(ans_ptr->node<Error>()->node<model::Type>());
+    ASSERT_TRUE(ans_ptr->node<Error>()->node<model::Reason>());
+    ASSERT_TRUE(ans_ptr->node<Error>()->node<model::IndexUUID>());
+    ASSERT_TRUE(ans_ptr->node<Error>()->node<RootCause>());
 
     // Check RC
-    std::shared_ptr<RootCause> rc =
-                        ans_ptr->getValue<Error>()->getValue<RootCause>();
-    ASSERT_EQ(rc->getValue().size(), 1);
-    const std::vector<std::shared_ptr<typename RootCause::element_t>> &rc_array = rc->getValue();
-    std::shared_ptr<typename RootCause::element_t> rc_elem = *(rc_array.begin());
-    ASSERT_TRUE(rc_elem->getValue<model::Index>());
-    ASSERT_EQ(rc_elem->getValue<model::Index>()->getValue(), get_index());
-    ASSERT_TRUE(rc_elem->getValue<model::Reason>());
-    ASSERT_TRUE(rc_elem->getValue<model::IndexUUID>());
-    ASSERT_TRUE(rc_elem->getValue<model::Type>());
+    const std::optional<RootCause> &rc =
+                        ans_ptr->node<Error>()->node<RootCause>();
+    ASSERT_EQ(rc->value().size(), 1);
+    const std::vector<std::optional<typename RootCause::element_t>> &rc_array = rc->value();
+    std::optional<typename RootCause::element_t> rc_elem = *(rc_array.begin());
+    ASSERT_TRUE(rc_elem->node<model::Index>());
+    ASSERT_EQ(rc_elem->node<model::Index>()->value(), get_index());
+    ASSERT_TRUE(rc_elem->node<model::Reason>());
+    ASSERT_TRUE(rc_elem->node<model::IndexUUID>());
+    ASSERT_TRUE(rc_elem->node<model::Type>());
 }
 }

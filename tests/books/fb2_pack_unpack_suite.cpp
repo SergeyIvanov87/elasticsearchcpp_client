@@ -68,12 +68,12 @@ using PackUnpackFixture_25M = PackUnpackFixture<25*1024*1024>;
 TEST_F(PackUnpackFixture_25M, success)
 {
     fb2::packer p(file_name());
-    std::shared_ptr<elasticsearch::common_model::BinaryBlob> b_p = p.getBlob();
+    std::optional<elasticsearch::common_model::BinaryBlob> b_p = p.getBlob();
 
     auto encoded = b_p->getEncodedValue();
 
-    std::shared_ptr<elasticsearch::common_model::BinaryBlob> b_u =
-                        std::make_shared<elasticsearch::common_model::BinaryBlob>(std::move(encoded));
+    std::optional<elasticsearch::common_model::BinaryBlob> b_u =
+                        std::make_optional<elasticsearch::common_model::BinaryBlob>(std::move(encoded));
 
     std::string u_file_name {"PackUnpackFixture_success"};
     fb2::unpacker u(*b_u, u_file_name);

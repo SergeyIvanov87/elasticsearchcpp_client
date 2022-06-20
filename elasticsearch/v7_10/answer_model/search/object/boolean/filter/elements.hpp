@@ -19,6 +19,7 @@ class ElementToQuery: public txml::XMLNodeLeaf<ElementToQuery<Model, Element>,
 public:
     using base_t = txml::XMLNodeLeaf<ElementToQuery<Model, Element>,
                                      typename Element::value_t>;
+    using base_t::base_t;
     using element_t = Element;
 
     static constexpr std::string_view class_name()
@@ -29,11 +30,6 @@ public:
     static constexpr txml::TextReaderWrapper::NodeType class_node_type()
     {
         return txml::TextReaderWrapper::NodeType::Element;
-    }
-
-    ElementToQuery(const typename Element::value_t& value) :
-        base_t(value)
-    {
     }
 };
 
@@ -58,11 +54,10 @@ public:
     }
 
     Term(typename value_t::value_t &&v) {
-        this->template set (std::make_shared<ElementToQuery<Model, value_t>>(std::move(v)));
+        this->template emplace<ElementToQuery<Model, value_t>>(std::move(v));
     }
-
     Term(const typename value_t::value_t &v) {
-        this->template set (std::make_shared<ElementToQuery<Model, value_t>>(v));
+        this->template emplace<ElementToQuery<Model, value_t>>(v);
     }
 
     template<class Parent>
@@ -115,23 +110,13 @@ public:
         return txml::TextReaderWrapper::NodeType::Element;
     }
 
-
-    Filter(const Filter &src) {
-        this->getValue() = src.getValue();
-    }
-
-    Filter(Filter &&src) {
-        this->getValue().swap(src.getValue());
-    }
-
-
     template<class ...SpecificSubContexts, class =
              std::enable_if_t<details::enable_for_node_args<Filter, SpecificSubContexts...>()
                               && all_of_tag<FilterElementTag, SpecificSubContexts...>(), int>>
     Filter(SpecificSubContexts && ...args) {
-        auto elem = std::make_shared<element_t>();
+        auto elem = std::make_optional<element_t>();
         (elem->template emplace <SpecificSubContexts>(std::forward<SpecificSubContexts>(args)), ...);
-        this->getValue().push_back(elem);
+        this->value().push_back(elem);
     }
 
     template<class ...SpecificSubContexts, class =
@@ -140,24 +125,15 @@ public:
     {
         static_assert(all_of_tag<FilterElementTag, SpecificSubContexts...>(),
                       "Filter creation from std::optional assumes list of Node Element");
-        auto elem = std::make_shared<element_t>();
-        ( (args.has_value() ? elem->template emplace <SpecificSubContexts>(args.value()),true : false), ...);
-        this->getValue().push_back(elem);
-    }
+        auto elem = std::make_optional<element_t>();
 
-/*
-    template<class ...SpecificSubContexts,
-                        class = std::enable_if_t<
-                                                not std::disjunction_v<
-                                                            std::is_same<std::decay_t<SpecificSubContexts>, Filter>...
-                                                                      >
-                                                       , int>>
-    Filter(SpecificSubContexts && ...args) {
-        auto elem = std::make_shared<element_t>();
-        (elem->template emplace <SpecificSubContexts>(std::forward<SpecificSubContexts>(args)), ...);
-        this->getValue().push_back(elem);
+        size_t inserted_nodes = 0;
+        ( (args.has_value() ? elem->template emplace <SpecificSubContexts>(args.value()),inserted_nodes++,true : false), ...);
+        if (inserted_nodes != 0)
+        {
+            this->value().push_back(elem);
+        }
     }
-*/
 
 
     // Subcontext Array element constitute a lot of variadic subitem templates : Term, Terms, QuerySimpleString and something other
@@ -175,7 +151,7 @@ public:
         void serialize_impl(const filter::SubContextArrayElement<Model, SubContexts...> &val, Tracer tracer)
         {
             tracer.trace(__FUNCTION__, " - skip SubContextArrayElement by itself");
-            val.template format_serialize_elements(*this, tracer);
+            val.template make_format_serialize(*this, tracer);
         }
     };
 
@@ -189,11 +165,11 @@ public:
     };
 
     template<class Formatter, class Tracer>
-    void format_serialize_impl(Formatter& out, Tracer tracer) const
+    void format_serialize_request(Formatter& out, Tracer tracer) const
     {
         std::shared_ptr<std::stack<json::SerializerCore::json_core_t>> ext = out.get_shared_mediator_object();
         aggregator_serializer_type ser(ext);
-        base_t:: template format_serialize_impl(ser, tracer);
+        base_t:: template format_serialize_request(ser, tracer);
     }
 };
 } // namespace search

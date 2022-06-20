@@ -45,7 +45,7 @@ public:
         nlohmann::json cur_json_element = nlohmann::json::array();
         auto mediator = out.get_shared_mediator_object();
 
-        for (auto &el : base_t::getValue())
+        for (auto &el : base_t::value())
         {
             cur_json_element.push_back(el);
         }

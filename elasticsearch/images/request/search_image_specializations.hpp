@@ -35,9 +35,9 @@ public:
     {
     }
 
-    std::string getValue() const
+    std::string value() const
     {
-        return base_t::getValue().to_string();
+        return base_t::value().to_string();
     }
 };
 }

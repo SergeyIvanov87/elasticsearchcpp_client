@@ -29,16 +29,16 @@ reader::reader(const std::string& file_path)
 
 reader::~reader() = default;
 
-std::shared_ptr<fb2::ShortFictionBook> reader::getBook() const
+std::optional<fb2::ShortFictionBook> reader::getBook() const
 {
     return book_ptr;
 }
-std::shared_ptr<elasticsearch::common_model::BinaryBlob> reader::getBlob() const
+std::optional<elasticsearch::common_model::BinaryBlob> reader::getBlob() const
 {
     return packer_impl->getBlob();
 }
 
-std::shared_ptr<elasticsearch::common_model::OriginalPath> reader::getPath() const
+std::optional<elasticsearch::common_model::OriginalPath> reader::getPath() const
 {
     return packer_impl->getPath();
 }
@@ -48,21 +48,21 @@ void reader::pack(const std::filesystem::path &path_to_pack)
     packer_impl->pack(path_to_pack);
 }
 template<class Tracer>
-std::shared_ptr<elasticsearch::book::model::data> reader::to_model_impl(Tracer tracer) const
+std::optional<elasticsearch::book::model::data> reader::to_model_impl(Tracer tracer) const
 {
     elasticsearch::book::model::fb2::to_model_data i2m;
     getBook()->format_serialize(i2m, tracer);
     // postproc
-    i2m.data_model->set(getBlob());
-    i2m.data_model->set(getPath());
+    i2m.data_model->insert(getBlob());
+    i2m.data_model->insert(getPath());
     return i2m.data_model;
 }
 
-std::shared_ptr<elasticsearch::book::model::data> reader::to_model(txml::EmptyTracer tracer) const
+std::optional<elasticsearch::book::model::data> reader::to_model(txml::EmptyTracer tracer) const
 {
     return to_model_impl(std::move(tracer));
 }
-std::shared_ptr<elasticsearch::book::model::data> reader::to_model(txml::StdoutTracer tracer) const
+std::optional<elasticsearch::book::model::data> reader::to_model(txml::StdoutTracer tracer) const
 {
     return to_model_impl(std::move(tracer));
 }

@@ -21,9 +21,9 @@ struct ElementPrinter
     {
         if constexpr (ElementPrintableTraits<Element>::is_printable())
         {
-            if (m.template getValue<Element>())
+            if (m.template node<Element>())
             {
-                out << "\"" << m.template getValue<Element>()->getValue() << "\"," ;
+                out << "\"" << m.template node<Element>()->value() << "\"," ;
             }
             else
             {

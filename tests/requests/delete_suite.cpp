@@ -23,10 +23,10 @@ protected:
         transaction req(get_host(), transaction::Tag<StubLeafNode, StubLeafNodeSerializer> {});
         ASSERT_NO_THROW(req.execute(get_index(), false));
 
-        std::shared_ptr<response> ans_ptr;
+        std::optional<response> ans_ptr;
         ASSERT_NO_THROW(ans_ptr = req.get_response());
-        ASSERT_TRUE(ans_ptr->getValue<model::Ack>());
-        ASSERT_TRUE(ans_ptr->getValue<model::Ack>()->getValue());
+        ASSERT_TRUE(ans_ptr->node<model::Ack>());
+        ASSERT_TRUE(ans_ptr->value<model::Ack>().value());
     }
 
     void TearDown() override {
@@ -47,19 +47,19 @@ TEST_F(DataDeleteFixture, request_delete)
         put_json_data::transaction req(get_host());
         ASSERT_NO_THROW(req.execute(get_index() + "/_doc/1", t, curl_verbose(), tracer));
 
-        std::shared_ptr<put_json_data::response> ans_ptr;
+        std::optional<put_json_data::response> ans_ptr;
         ASSERT_NO_THROW(ans_ptr = req.get_response());
-        ASSERT_TRUE(ans_ptr->getValue<model::Result>());
-        ASSERT_EQ(ans_ptr->getValue<model::Result>()->getValue(), "created");
+        ASSERT_TRUE(ans_ptr->node<model::Result>());
+        ASSERT_EQ(ans_ptr->value<model::Result>().value(), "created");
     }
 
     //delete it
     delete_data::transaction del(get_host());
     ASSERT_NO_THROW(del.execute(get_index() + "/_doc/1", curl_verbose()));
-    std::shared_ptr<delete_data::response> ans_ptr;
+    std::optional<delete_data::response> ans_ptr;
     ASSERT_NO_THROW(ans_ptr = del.get_response());
-    ASSERT_TRUE(ans_ptr->getValue<model::Result>());
-    ASSERT_EQ(ans_ptr->getValue<model::Result>()->getValue(), "deleted");
+    ASSERT_TRUE(ans_ptr->node<model::Result>());
+    ASSERT_EQ(ans_ptr->value<model::Result>().value(), "deleted");
 }
 
 }

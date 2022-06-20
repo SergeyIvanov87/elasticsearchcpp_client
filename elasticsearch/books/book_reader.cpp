@@ -23,12 +23,12 @@ try {
     throw std::runtime_error("Unsupported book format by path: " + file_path);
 }
 
-std::shared_ptr<elasticsearch::common_model::BinaryBlob> reader::getBlob() const
+std::optional<elasticsearch::common_model::BinaryBlob> reader::getBlob() const
 {
     return impl->getBlob();
 }
 
-std::shared_ptr<elasticsearch::common_model::OriginalPath> reader::getPath() const
+std::optional<elasticsearch::common_model::OriginalPath> reader::getPath() const
 {
     return impl->getPath();
 }
@@ -38,11 +38,11 @@ void reader::pack(const std::filesystem::path &path_to_pack)
     impl->pack(path_to_pack);
 }
 
-std::shared_ptr<elasticsearch::book::model::data> reader::to_model(txml::EmptyTracer tracer) const
+std::optional<elasticsearch::book::model::data> reader::to_model(txml::EmptyTracer tracer) const
 {
     return std::static_pointer_cast<elasticsearch::book::packer_interface<txml::EmptyTracer>>(impl)->to_model(std::move(tracer));
 }
-std::shared_ptr<elasticsearch::book::model::data> reader::to_model(txml::StdoutTracer tracer) const
+std::optional<elasticsearch::book::model::data> reader::to_model(txml::StdoutTracer tracer) const
 {
     return std::static_pointer_cast<elasticsearch::book::packer_interface<txml::StdoutTracer>>(impl)->to_model(std::move(tracer));
 }

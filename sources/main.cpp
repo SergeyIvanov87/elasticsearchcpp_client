@@ -118,14 +118,14 @@ int main(int argc, char* argv[])
             elasticsearch::v7::create_pit::transaction create(host);
             create.execute(index, std::chrono::seconds(10), true);
             elasticsearch::v7::Id pit = create.get_pit();
-            std::cout << "PIT created: " << pit.getValue() << std::endl;
+            std::cout << "PIT created: " << pit.value() << std::endl;
 
             std::cout << "Delete PIT " << std::endl;
             elasticsearch::v7::delete_pit::transaction destroy(host);
             destroy.execute(pit, true);
             auto resp = destroy.get_response();
 
-            elasticsearch::v7::Id pit_bad(create.get_pit().getValue() + "BAD");
+            elasticsearch::v7::Id pit_bad(create.get_pit().value() + "BAD");
             destroy.get_receiver().clear();
             destroy.execute(pit_bad, true);
             auto bad_resp = destroy.get_response();
