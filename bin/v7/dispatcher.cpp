@@ -242,6 +242,23 @@ request_book_search_match(const dispatcher &d,
     return helper::extract_model_records<data>(search_ptr, tracer);
 }
 
+void request_book_search_param_info(const dispatcher &, std::ostream &out)
+{
+    using namespace elasticsearch::book::model;
+    out << "\"must\" params list:" <<  std::endl;
+    out << "\t" << element::Contributor::class_name() << std::endl;
+    out << "\t" << element::Creator::class_name() << std::endl;
+    out << "\t" << element::Identifier::class_name() << std::endl;
+    out << "\t" << element::Language::class_name() << std::endl;
+    out << "\t" << element::Title::class_name() << std::endl;
+    out << "\t" << elasticsearch::common_model::Description::class_name() << std::endl;
+    out << "\t" << elasticsearch::common_model::Format::class_name() << std::endl;
+    out << "\t" << elasticsearch::common_model::OriginalPath::class_name() << std::endl;
+    out << "\t" << elasticsearch::common_model::SourceName::class_name() << std::endl;
+    out << "\t" << elasticsearch::common_model::Tags::class_name() << "\t*\tLIST: Use ',' as separator" << std::endl;
+}
+
+
 template<class Tracer>
 std::vector<record_t<elasticsearch::image::model::data>>
 request_image_search_match(const dispatcher &d,
@@ -277,6 +294,13 @@ request_image_search_match(const dispatcher &d,
     }
     else
     {
+        auto r = tag::create::range_tag<elasticsearch::common_model::CreationDateTime,
+                                        element::DigitizeTime,
+                                        element::OriginalTime>(
+                {details::get_match_elem<std::string, elasticsearch::common_model::CreationDateTime>(match_params),
+                 details::get_match_elem<std::string, element::DigitizeTime>(match_params),
+                 details::get_match_elem<std::string, element::OriginalTime>(match_params)});
+
         auto mu = tag::create::must_tag(details::get_match_elem<element::Camera, std::string>(match_params),
                                         details::get_match_elem<element::CameraModel, std::string>(match_params),
                                         //tag::make(details::get_match_elem<element::Location, std::string>(match_params)),
@@ -288,20 +312,14 @@ request_image_search_match(const dispatcher &d,
                                         details::get_match_elem<elasticsearch::common_model::OriginalPath, std::string>(match_params),
                                         details::get_match_elem<elasticsearch::common_model::Preview, std::string>(match_params),
                                         details::get_match_elem<elasticsearch::common_model::SourceName, std::string>(match_params),
-                                        details::get_match_elem<elasticsearch::common_model::Tags, elasticsearch::common_model::Tags>(match_params, ","));
+                                        details::get_match_elem<elasticsearch::common_model::Tags, elasticsearch::common_model::Tags>(match_params, ","),
+                                        r);
 
         auto fi = tag::create::filter_tag(details::get_match_elem<tag::geo_bbox, tag::geo_bbox, char>(match_params, ','));
 
         auto boo = tag::create::boolean_tag(mu, fi);
 
-        auto r = tag::create::range_tag<elasticsearch::common_model::CreationDateTime,
-                                        element::DigitizeTime,
-                                        element::OriginalTime>(
-                {details::get_match_elem<std::string, elasticsearch::common_model::CreationDateTime>(match_params),
-                 details::get_match_elem<std::string, element::DigitizeTime>(match_params),
-                 details::get_match_elem<std::string, element::OriginalTime>(match_params)});
-
-        auto query = tag::create::query_tag(boo, r);
+        auto query = tag::create::query_tag(boo/*, r*/);
         search_ptr = d.execute_request<transaction>(schema_indices[1], schema_indices[1],
                                                     max_count, pit_interval,
                                                     query,
@@ -311,6 +329,34 @@ request_image_search_match(const dispatcher &d,
     }
     return helper::extract_model_records<data>(search_ptr, tracer);
 }
+
+void request_image_search_param_info(const dispatcher &, std::ostream &out)
+{
+    using namespace elasticsearch::image::model;
+    out << "\"must\" params list:" <<  std::endl;
+    out << "\t" << element::Camera::class_name() << std::endl;
+    out << "\t" << element::CameraModel::class_name() << std::endl;
+    out << "\t" << element::Title::class_name() << std::endl;
+    out << "\t" << elasticsearch::common_model::Description::class_name() << std::endl;
+    out << "\t" << elasticsearch::common_model::Format::class_name() << std::endl;
+    out << "\t" << elasticsearch::common_model::OriginalPath::class_name() << std::endl;
+    out << "\t" << elasticsearch::common_model::SourceName::class_name() << std::endl;
+    out << "\t" << elasticsearch::common_model::Tags::class_name() << "\t*\tLIST: use ',' as separator" << std::endl;
+
+    using namespace elasticsearch::image::search;
+    out << "\n\"filter\" params list:" <<  std::endl;
+    out << "\t" << tag::geo_bbox::class_name() << "\t*\tLIST of '4' floats with ',' as value separator:\n"
+            "\t\t\t\tX_top_left, Y_top_left, X_bottom_right, Y_botton_right:" << std::endl;
+
+    out << "\n\"range\" params list:" <<  std::endl;
+    out << "\t" << elasticsearch::common_model::CreationDateTime::class_name() << std::endl;
+    out << "\t" << element::DigitizeTime::class_name() << std::endl;
+    out << "\t" << element::OriginalTime::class_name() << std::endl;
+
+    out << "Example:\n"
+        << "./es_search image \"camera:rrr\" \"title:aaa\" \"geo_bounding_box:10,10,0,0\"" << std::endl;
+}
+
 
 template <class Tracer>
 void request_book_index_mapping(const dispatcher &d, Tracer)
@@ -682,6 +728,22 @@ void dispatcher::search_match(const char* model_name, const std::map<std::string
     else if (!strcmp(model_name, schema_indices[1]))
     {
         image_search_match(match_params, sort_params);
+    }
+    else
+    {
+        throw std::runtime_error(std::string("invalid model name: ") + model_name);
+    }
+}
+
+void dispatcher::es_info(const char* model_name, std::ostream &out) const
+{
+    if (!strcmp(model_name, schema_indices[0]))
+    {
+        bin::v7::details::request_book_search_param_info(*this, out);
+    }
+    else if (!strcmp(model_name, schema_indices[1]))
+    {
+        bin::v7::details::request_image_search_param_info(*this, out);
     }
     else
     {

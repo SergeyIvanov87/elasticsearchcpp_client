@@ -57,10 +57,14 @@ namespace create
     }
 
     template<class Model, class ...SpecificModelParam>
-    range<Model, SpecificModelParam...>
+    std::optional<range<Model, SpecificModelParam...>>
                 range_tag(const std::array<std::optional<std::string>, sizeof...(SpecificModelParam)> &range_in_str, char sep = ',')
     {
-        return range<Model, SpecificModelParam...> (range_in_str, sep);
+        using return_t = range<Model, SpecificModelParam...>;
+        using tuple_t = std::tuple<SpecificModelParam...>;
+        //bool non_empty = (range_in_str[elasticsearch::utils::tuple_element_index_v<SpecificModelParam, tuple_t>].has_value() || ... || false);
+        bool non_empty = elasticsearch::v7::search::tag::has_value::test(range_in_str[elasticsearch::utils::tuple_element_index_v<SpecificModelParam, tuple_t>]...);    //--->(range_in_str[elasticsearch::utils::tuple_element_index_v<SpecificModelParam, tuple_t>].has_value() || ... || false);
+        return non_empty ? std::make_optional<return_t>(range_in_str, sep) : std::optional<return_t>();
     }
 
     template<class Model, class ...SpecificModelParam,

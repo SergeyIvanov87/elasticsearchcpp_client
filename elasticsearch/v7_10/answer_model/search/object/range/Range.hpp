@@ -10,7 +10,7 @@ namespace search
 template<class Model, class ...Element>
 class Range : public txml::XMLNode<Range<Model, Element...>,
                                    range::element<Model, Element>...>,
-                public TagHolder<QueryElementTag>
+                public TagHolder<QueryElementTag, MustElementTag>
 {
     using tuple_t = std::tuple<range::element<Model, Element>...>;
 public:
@@ -66,7 +66,9 @@ public:
     Range(const std::array<std::optional<std::string>, N> &arr, char sep = ',')
     {
         static_assert(sizeof...(Element) == N, "optional string array must be the same size as elements in ranges");
-        (this->template emplace<range::element<Model, Element>>(arr[elasticsearch::utils::tuple_element_index_v<range::element<Model, Element>, tuple_t>], sep), ...);
+        ((arr[elasticsearch::utils::tuple_element_index_v<range::element<Model, Element>, tuple_t>].has_value() ?
+            (this->template emplace<range::element<Model, Element>>(arr[elasticsearch::utils::tuple_element_index_v<range::element<Model, Element>, tuple_t>], sep),true)
+            : (false)), ...);
     }
 
     template<class Parent>

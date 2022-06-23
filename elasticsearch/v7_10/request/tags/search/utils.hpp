@@ -39,6 +39,22 @@ struct table_mapper
 };
 } // namespace translation
 
+struct has_value
+{
+    template<class T>
+    bool operator()(const T&) { return  true; };
+
+    template<class T>
+    bool operator()(const std::optional<T> &) { return  true; };
+
+    template<class ... Args>
+    static bool test(const Args&... args)
+    {
+        return (has_value{}(args) || ... || false);
+    }
+};
+
+
 template<class T>
 struct decay_optional { using type = T; };
 template<class T>

@@ -73,7 +73,7 @@ namespace create
     template<class ...RangedElements>
     auto range_tag(const std::array<std::optional<std::string>, sizeof...(RangedElements)> &ranged_string, char sep = ',')
     {
-        return elasticsearch::v7::search::tag::range<elasticsearch::image::model::data, RangedElements...>(ranged_string, sep);
+        return elasticsearch::v7::search::tag::create::range_tag<elasticsearch::image::model::data, RangedElements...>(ranged_string, sep); //tag::range<elasticsearch::image::model::data, RangedElements...>(ranged_string, sep);
     }
 } // namespace create
 

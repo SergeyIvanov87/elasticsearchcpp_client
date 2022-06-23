@@ -88,6 +88,8 @@ public:
     void book_search_match(const std::map<std::string, std::string>& match_params, const std::map<std::string, std::string>& sort_params = {});
     void image_search_match(const std::map<std::string, std::string>& match_params, const std::map<std::string, std::string>& sort_params = {});
 
+    void es_info(const char* model_name, std::ostream &out) const;
+
     template<class SpecificRequest, class ...SpecificRequestArgs>
     request_ptr_t<SpecificRequest> execute_request(const name_t &schema, SpecificRequestArgs &&...args) const
     {

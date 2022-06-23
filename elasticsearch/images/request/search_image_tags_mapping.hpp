@@ -23,6 +23,19 @@ struct table<model::search::MustElementTag,
 };
 
 template<>
+struct table<model::search::MustElementTag,
+             elasticsearch::v7::search::tag::range<elasticsearch::image::model::data,
+                                                   elasticsearch::common_model::CreationDateTime,
+                                                   elasticsearch::image::model::element::DigitizeTime,
+                                                   elasticsearch::image::model::element::OriginalTime>> {
+    template<class Model>
+    using value_t = elasticsearch::v7::search::tag::range<Model, elasticsearch::common_model::CreationDateTime,
+                                                                 elasticsearch::image::model::element::DigitizeTime,
+                                                                 elasticsearch::image::model::element::OriginalTime>;
+};
+
+
+template<>
 struct table<model::search::FilterElementTag,
               elasticsearch::v7::search::tag::geo_bbox<elasticsearch::image::model::data,
                                                        elasticsearch::image::model::element::Location>> {
