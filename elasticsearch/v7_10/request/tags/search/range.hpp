@@ -62,8 +62,7 @@ namespace create
     {
         using return_t = range<Model, SpecificModelParam...>;
         using tuple_t = std::tuple<SpecificModelParam...>;
-        //bool non_empty = (range_in_str[elasticsearch::utils::tuple_element_index_v<SpecificModelParam, tuple_t>].has_value() || ... || false);
-        bool non_empty = elasticsearch::v7::search::tag::has_value::test(range_in_str[elasticsearch::utils::tuple_element_index_v<SpecificModelParam, tuple_t>]...);    //--->(range_in_str[elasticsearch::utils::tuple_element_index_v<SpecificModelParam, tuple_t>].has_value() || ... || false);
+        bool non_empty = elasticsearch::v7::search::tag::has_value::test(range_in_str[elasticsearch::utils::tuple_element_index_v<SpecificModelParam, tuple_t>]...);
         return non_empty ? std::make_optional<return_t>(range_in_str, sep) : std::optional<return_t>();
     }
 

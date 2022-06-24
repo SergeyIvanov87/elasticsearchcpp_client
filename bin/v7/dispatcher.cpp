@@ -234,7 +234,7 @@ request_book_search_match(const dispatcher &d,
         auto boo = tag::create::boolean_tag(mu);
         search_ptr = d.execute_request<transaction>(schema_indices[0], schema_indices[0],
                                                     max_count, pit_interval,
-                                                    tag::create::query_tag(boo),
+                                                    tag::create::query_tag(boo).value(),
                                                     tag::sort<element::Contributor> ({::model::Order("desc")}),
                                                     d.get_settings().curl_verbose,
                                                     tracer);
@@ -322,7 +322,7 @@ request_image_search_match(const dispatcher &d,
         auto query = tag::create::query_tag(boo/*, r*/);
         search_ptr = d.execute_request<transaction>(schema_indices[1], schema_indices[1],
                                                     max_count, pit_interval,
-                                                    query,
+                                                    query.value(),
                                                     tag::sort<element::Camera> ({::model::Order("desc")}),
                                                     d.get_settings().curl_verbose,
                                                     tracer);

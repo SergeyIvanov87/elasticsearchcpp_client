@@ -310,7 +310,7 @@ TEST_F(BookMultipleCreateSearchFixture_11, create_n_search_boolean_2_terms)
     search::transaction s(get_host());
 
     ASSERT_NO_THROW(s.execute(get_index(), 10, 10s,
-                              search::tag::create::query_tag(boo),
+                              search::tag::create::query_tag(boo).value(),
                               search::tag::sort<element::Contributor> ({::model::Order("desc")}),
                               curl_verbose(),
                               tracer));
@@ -356,7 +356,7 @@ TEST_F(BookMultipleCreateSearchFixture_11, create_n_search_query_simple_string)
     search::transaction s(get_host());
 
     ASSERT_NO_THROW(s.execute(get_index(), 10, 10s,
-                              search::tag::create::query_tag(qst),
+                              search::tag::create::query_tag(qst).value(),
                               search::tag::sort<element::Contributor> ({::model::Order("desc")}),
                               curl_verbose(),
                               tracer));

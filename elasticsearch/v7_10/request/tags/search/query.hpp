@@ -35,6 +35,17 @@ namespace create
         return query<Model, elasticsearch::v7::search::tag::mapped_tagged_element_t<Model, model::search::QueryElementTag, SpecificQueryParams>...> (
             elasticsearch::v7::search::tag::translation::table_mapper<Model, model::search::QueryElementTag>::template map(std::forward<SpecificQueryParams>(args))...);
     }
+
+    template<class Model, class ...SpecificQueryParams>
+    std::optional<query<Model, elasticsearch::v7::search::tag::mapped_tagged_element_t<Model, model::search::QueryElementTag, SpecificQueryParams>...>>
+    query_optional_tag(SpecificQueryParams &&...args)
+    {
+        static_assert(::model::search::all_of_tag<model::search::QueryElementTag,
+                      elasticsearch::v7::search::tag::mapped_tagged_element_t<Model, model::search::QueryElementTag, SpecificQueryParams>...>(),
+                      "Query assert must be constructed from QueryElementTag elements only");
+        return txml::GenericCreator::try_create<query<Model, elasticsearch::v7::search::tag::mapped_tagged_element_t<Model, model::search::QueryElementTag, SpecificQueryParams>...>> (
+            elasticsearch::v7::search::tag::translation::table_mapper<Model, model::search::QueryElementTag>::template map(std::forward<SpecificQueryParams>(args))...);
+    }
 } // namespace create
 } // namespace tag
 } // namespace search

@@ -32,6 +32,17 @@ namespace create
             elasticsearch::v7::search::tag::translation::table_mapper<Model, model::search::FilterElementTag>::template map(std::forward<SpecificModelParams>(args))...);
     }
 
+    template<class Model, class ...SpecificModelParams>
+    std::optional<filter<Model, elasticsearch::v7::search::tag::mapped_tagged_element_t<Model, model::search::FilterElementTag, SpecificModelParams>...>>
+    filter_optional_tag(SpecificModelParams &&...args)
+    {
+        static_assert(::model::search::all_of_tag<model::search::FilterElementTag,
+                      elasticsearch::v7::search::tag::mapped_tagged_element_t<Model, model::search::FilterElementTag, SpecificModelParams>...>(),
+                      "Filter assert must be constructed from FilterElementTag elements only");
+        return txml::GenericCreator::try_create<filter<Model, elasticsearch::v7::search::tag::mapped_tagged_element_t<Model, model::search::FilterElementTag, SpecificModelParams>...>> (
+            elasticsearch::v7::search::tag::translation::table_mapper<Model, model::search::FilterElementTag>::template map(std::forward<SpecificModelParams>(args))...);
+    }
+
 } // namespace create
 } // namespace tag
 } // namespace search

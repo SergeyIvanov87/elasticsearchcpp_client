@@ -44,6 +44,17 @@ namespace create
         return must<Model, elasticsearch::v7::search::tag::mapped_tagged_element_t<Model, model::search::MustElementTag, SpecificModelParams>...> (
             elasticsearch::v7::search::tag::translation::table_mapper<Model, model::search::MustElementTag>::template map(std::forward<SpecificModelParams>(args))...);
     }
+
+    template<class Model, class ...SpecificModelParams>
+    std::optional<must<Model, elasticsearch::v7::search::tag::mapped_tagged_element_t<Model, model::search::MustElementTag, SpecificModelParams>...>>
+    must_optional_tag(SpecificModelParams &&...args)
+    {
+        static_assert(::model::search::all_of_tag<model::search::MustElementTag,
+                      elasticsearch::v7::search::tag::mapped_tagged_element_t<Model, model::search::MustElementTag, SpecificModelParams>...>(),
+                      "Must assert must be constructed from MustElementTag elements only");
+        return txml::GenericCreator::try_create<must<Model, elasticsearch::v7::search::tag::mapped_tagged_element_t<Model, model::search::MustElementTag, SpecificModelParams>...>> (
+            elasticsearch::v7::search::tag::translation::table_mapper<Model, model::search::MustElementTag>::template map(std::forward<SpecificModelParams>(args))...);
+    }
 } // namespace create
 } // namespace tag
 } // namespace search

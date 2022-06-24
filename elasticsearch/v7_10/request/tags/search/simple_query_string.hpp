@@ -23,6 +23,19 @@ namespace create
     {
         return simple_query_string<Model, SpecificModelParams...> {query_string};
     }
+
+    template<class Model, class ...SpecificModelParams>
+    std::optional<simple_query_string<Model, SpecificModelParams...>> simple_query_string_optional_tag(const std::string &query_string)
+    {
+        return txml::GenericCreator::try_create<simple_query_string<Model, SpecificModelParams...>>(query_string);
+    }
+
+    template<class Model, class ...SpecificModelParams>
+    std::optional<simple_query_string<Model, SpecificModelParams...>> simple_query_string_optional_tag(const std::optional<std::string> &query_string)
+    {
+        return query_string.has_value() ? simple_query_string_optional_tag<Model, SpecificModelParams...>(query_string.value())
+                    : std::optional<simple_query_string<Model, SpecificModelParams...>>() ;
+    }
 } // namespace create
 } // namespace tag
 } // namespace search
