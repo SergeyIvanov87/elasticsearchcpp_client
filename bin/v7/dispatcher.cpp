@@ -217,6 +217,58 @@ request_book_search_match(const dispatcher &d,
     }
     else
     {
+        auto r = tag::create::range_tag<elasticsearch::common_model::CreationDateTime>(
+                {details::get_match_elem<std::string, elasticsearch::common_model::CreationDateTime>(match_params)});
+        // if MUST exist, then RANGE should be part of MUST
+        auto mu = tag::create::must_tag(details::get_match_elem<element::Contributor, std::string>(match_params),
+                                        details::get_match_elem<element::Creator, std::string>(match_params),
+                                        details::get_match_elem<element::Identifier, std::string>(match_params),
+                                        details::get_match_elem<element::Language, std::string>(match_params),
+                                        details::get_match_elem<element::Title, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::BinaryBlob, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::Description, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::Format, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::OriginalPath, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::Preview, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::SourceName, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::Tags, elasticsearch::common_model::Tags>(match_params, ","),
+                                        decltype(r) {});
+        if (mu)
+        {
+            // obtain RANGE into MUST
+            auto mu = tag::create::must_tag(details::get_match_elem<element::Contributor, std::string>(match_params),
+                                        details::get_match_elem<element::Creator, std::string>(match_params),
+                                        details::get_match_elem<element::Identifier, std::string>(match_params),
+                                        details::get_match_elem<element::Language, std::string>(match_params),
+                                        details::get_match_elem<element::Title, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::BinaryBlob, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::Description, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::Format, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::OriginalPath, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::Preview, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::SourceName, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::Tags, elasticsearch::common_model::Tags>(match_params, ","),
+                                        r);
+            auto boo = tag::create::boolean_tag(mu);
+            search_ptr = d.execute_request<transaction>(schema_indices[0], schema_indices[0],
+                                                    max_count, pit_interval,
+                                                    tag::create::query_tag(boo).value(),
+                                                    tag::sort<element::Contributor> ({::model::Order("desc")}),
+                                                    d.get_settings().curl_verbose,
+                                                    tracer);
+        }
+        else
+        {
+            // if no MUST tag presents then insert RANGE into QUERY by itsels
+            search_ptr = d.execute_request<transaction>(schema_indices[0], schema_indices[0],
+                                                    max_count, pit_interval,
+                                                    tag::create::query_tag(r).value(),
+                                                    tag::sort<element::Contributor> ({::model::Order("desc")}),
+                                                    d.get_settings().curl_verbose,
+                                                    tracer);
+        }
+        ////////////////////////////////
+        /*
         auto mu = tag::create::must_tag(details::get_match_elem<element::Contributor, std::string>(match_params),
                                         details::get_match_elem<element::Creator, std::string>(match_params),
                                         details::get_match_elem<element::Identifier, std::string>(match_params),
@@ -229,7 +281,7 @@ request_book_search_match(const dispatcher &d,
                                         details::get_match_elem<elasticsearch::common_model::OriginalPath, std::string>(match_params),
                                         details::get_match_elem<elasticsearch::common_model::Preview, std::string>(match_params),
                                         details::get_match_elem<elasticsearch::common_model::SourceName, std::string>(match_params),
-                                        /*std::optional<std::list<std::string>>{}*/
+                                        /*std::optional<std::list<std::string>>{}* /
                                         details::get_match_elem<elasticsearch::common_model::Tags, elasticsearch::common_model::Tags>(match_params, ","));
         auto boo = tag::create::boolean_tag(mu);
         search_ptr = d.execute_request<transaction>(schema_indices[0], schema_indices[0],
@@ -238,6 +290,7 @@ request_book_search_match(const dispatcher &d,
                                                     tag::sort<element::Contributor> ({::model::Order("desc")}),
                                                     d.get_settings().curl_verbose,
                                                     tracer);
+        */
     }
     return helper::extract_model_records<data>(search_ptr, tracer);
 }
@@ -256,6 +309,13 @@ void request_book_search_param_info(const dispatcher &, std::ostream &out)
     out << "\t" << elasticsearch::common_model::OriginalPath::class_name() << std::endl;
     out << "\t" << elasticsearch::common_model::SourceName::class_name() << std::endl;
     out << "\t" << elasticsearch::common_model::Tags::class_name() << "\t*\tLIST: Use ',' as separator" << std::endl;
+
+    out << "\n\"range\" params list:" <<  std::endl;
+    out << "\t" << elasticsearch::common_model::CreationDateTime::class_name()
+        << "\t*\t RANGE of '2' datetimes enclosed by intervals symbols \"(\" or \"[\" and \")\" or \"]\"" << std::endl;
+
+    out << "Example:\n"
+        << "./es_search book \"Language:es\" \"title:aaa\" \"creation_datetime:(2022-07-01,2022-08-08]\"" << std::endl;
 }
 
 
@@ -294,13 +354,14 @@ request_image_search_match(const dispatcher &d,
     }
     else
     {
+        auto fi = tag::create::filter_tag(details::get_match_elem<tag::geo_bbox, tag::geo_bbox, char>(match_params, ','));
         auto r = tag::create::range_tag<elasticsearch::common_model::CreationDateTime,
                                         element::DigitizeTime,
                                         element::OriginalTime>(
                 {details::get_match_elem<std::string, elasticsearch::common_model::CreationDateTime>(match_params),
                  details::get_match_elem<std::string, element::DigitizeTime>(match_params),
                  details::get_match_elem<std::string, element::OriginalTime>(match_params)});
-
+        // if MUST exist, then RANGE should be part of MUST
         auto mu = tag::create::must_tag(details::get_match_elem<element::Camera, std::string>(match_params),
                                         details::get_match_elem<element::CameraModel, std::string>(match_params),
                                         //tag::make(details::get_match_elem<element::Location, std::string>(match_params)),
@@ -313,19 +374,43 @@ request_image_search_match(const dispatcher &d,
                                         details::get_match_elem<elasticsearch::common_model::Preview, std::string>(match_params),
                                         details::get_match_elem<elasticsearch::common_model::SourceName, std::string>(match_params),
                                         details::get_match_elem<elasticsearch::common_model::Tags, elasticsearch::common_model::Tags>(match_params, ","),
+                                        decltype(r) {});
+        if (mu || fi)
+        {
+            // obtain RANGE into MUST
+            auto mu = tag::create::must_tag(details::get_match_elem<element::Camera, std::string>(match_params),
+                                        details::get_match_elem<element::CameraModel, std::string>(match_params),
+                                        //tag::make(details::get_match_elem<element::Location, std::string>(match_params)),
+                                        //tag::make(details::get_match_elem<element::Resolution, std::string>(match_params)),
+                                        details::get_match_elem<element::Title, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::BinaryBlob, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::Description, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::Format, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::OriginalPath, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::Preview, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::SourceName, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::Tags, elasticsearch::common_model::Tags>(match_params, ","),
                                         r);
-
-        auto fi = tag::create::filter_tag(details::get_match_elem<tag::geo_bbox, tag::geo_bbox, char>(match_params, ','));
-
-        auto boo = tag::create::boolean_tag(mu, fi);
-
-        auto query = tag::create::query_tag(boo/*, r*/);
-        search_ptr = d.execute_request<transaction>(schema_indices[1], schema_indices[1],
-                                                    max_count, pit_interval,
-                                                    query.value(),
-                                                    tag::sort<element::Camera> ({::model::Order("desc")}),
-                                                    d.get_settings().curl_verbose,
-                                                    tracer);
+            auto boo = tag::create::boolean_tag(mu, fi);
+            auto query = tag::create::query_tag(boo);
+            search_ptr = d.execute_request<transaction>(schema_indices[1], schema_indices[1],
+                                                        max_count, pit_interval,
+                                                        query.value(),
+                                                        tag::sort<element::Camera> ({::model::Order("desc")}),
+                                                        d.get_settings().curl_verbose,
+                                                        tracer);
+        }
+        else
+        {
+            // if no MUST tag presents then insert RANGE into QUERY by itsels
+            auto query = tag::create::query_tag(r);
+            search_ptr = d.execute_request<transaction>(schema_indices[1], schema_indices[1],
+                                                        max_count, pit_interval,
+                                                        query.value(),
+                                                        tag::sort<element::Camera> ({::model::Order("desc")}),
+                                                        d.get_settings().curl_verbose,
+                                                        tracer);
+        }
     }
     return helper::extract_model_records<data>(search_ptr, tracer);
 }
@@ -349,12 +434,15 @@ void request_image_search_param_info(const dispatcher &, std::ostream &out)
             "\t\t\t\tX_top_left, Y_top_left, X_bottom_right, Y_botton_right:" << std::endl;
 
     out << "\n\"range\" params list:" <<  std::endl;
-    out << "\t" << elasticsearch::common_model::CreationDateTime::class_name() << std::endl;
-    out << "\t" << element::DigitizeTime::class_name() << std::endl;
-    out << "\t" << element::OriginalTime::class_name() << std::endl;
+    out << "\t" << elasticsearch::common_model::CreationDateTime::class_name()
+        << "\t*\t RANGE of '2' datetimes enclosed by intervals symbols \"(\" or \"[\" and \")\" or \"]\"" << std::endl;
+    out << "\t" << element::DigitizeTime::class_name()
+        << "\t*\t RANGE of '2' datetimes enclosed by intervals symbols \"(\" or \"[\" and \")\" or \"]\"" << std::endl;
+    out << "\t" << element::OriginalTime::class_name()
+        << "\t*\t RANGE of '2' datetimes enclosed by intervals symbols \"(\" or \"[\" and \")\" or \"]\""<< std::endl;
 
     out << "Example:\n"
-        << "./es_search image \"camera:rrr\" \"title:aaa\" \"geo_bounding_box:10,10,0,0\"" << std::endl;
+        << "./es_search image \"camera:rrr\" \"title:aaa\" \"geo_bounding_box:10,10,0,0\" \"creation_datetime:(2022-07-01,2022-08-08]\"" << std::endl;
 }
 
 

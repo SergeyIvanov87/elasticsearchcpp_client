@@ -26,7 +26,7 @@ template<class ModelElement>
 struct table<model::search::MustElementTag,
              ModelElement> {
     template<class Model>
-    using value_t = ::model::search::must::Term<Model, ModelElement>;
+    using value_t = NonMappedType<Model, ModelElement>;//::model::search::must::Term<Model, ModelElement>;
 };
 }
 

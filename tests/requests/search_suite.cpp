@@ -79,6 +79,26 @@ TEST(NEW_MustQSSTag, serializer)
 
 }
 
+TEST(NEW_MustQSSTag_optional, construction)
+{
+    auto must_instance_from_opt = elasticsearch::v7::search::tag::create::must_tag<StubModel>(std::optional<StubLeafNode_bool>(true),
+                                                                                                  std::optional<StubLeafNode_int>(0),
+                                                                                                  std::optional<StubLeafNode_string>("aaaa"));
+    auto must_instance = elasticsearch::v7::search::tag::create::must_tag<StubModel>(StubLeafNode_bool(true),
+                                                                                         StubLeafNode_int(0),
+                                                                                         StubLeafNode_string("aaaa"));
+    static_assert(std::is_same_v<decltype(must_instance_from_opt), decltype(must_instance)>, "Must be the same");
+
+    auto must_instance_from_empty_opt = elasticsearch::v7::search::tag::create::must_optional_tag<StubModel>(std::optional<StubLeafNode_bool>(),
+                                                                                                  std::optional<StubLeafNode_int>(),
+                                                                                                  std::optional<StubLeafNode_string>());
+    ASSERT_FALSE(must_instance_from_empty_opt.has_value());
+
+    auto must_instance_from_one_nonempty_opt = elasticsearch::v7::search::tag::create::must_optional_tag<StubModel>(std::optional<StubLeafNode_bool>(),
+                                                                                                  std::optional<StubLeafNode_int>(0),
+                                                                                                  std::optional<StubLeafNode_string>());
+    ASSERT_TRUE(must_instance_from_one_nonempty_opt.has_value());
+}
 
 TEST(NEW_BooleanMustQSS, serializer)
 {

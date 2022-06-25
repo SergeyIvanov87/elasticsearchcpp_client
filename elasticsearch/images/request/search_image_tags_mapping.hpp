@@ -17,21 +17,26 @@ namespace translation
 {
 template<>
 struct table<model::search::MustElementTag,
-             elasticsearch::image::model::element::Title> {
+            elasticsearch::image::model::element::Camera>
+{
     template<class Model>
-    using value_t = elasticsearch::v7::search::tag::simple_query_string<Model, elasticsearch::image::model::element::Title>;
+    using value_t = ::model::search::must::Term<Model, elasticsearch::image::model::element::Camera>;
 };
 
 template<>
 struct table<model::search::MustElementTag,
-             elasticsearch::v7::search::tag::range<elasticsearch::image::model::data,
-                                                   elasticsearch::common_model::CreationDateTime,
-                                                   elasticsearch::image::model::element::DigitizeTime,
-                                                   elasticsearch::image::model::element::OriginalTime>> {
+            elasticsearch::image::model::element::CameraModel>
+{
     template<class Model>
-    using value_t = elasticsearch::v7::search::tag::range<Model, elasticsearch::common_model::CreationDateTime,
-                                                                 elasticsearch::image::model::element::DigitizeTime,
-                                                                 elasticsearch::image::model::element::OriginalTime>;
+    using value_t = ::model::search::must::Term<Model, elasticsearch::image::model::element::CameraModel>;
+};
+
+
+template<>
+struct table<model::search::RangeElementTag,
+             elasticsearch::image::model::element::DigitizeTime> {
+    template<class Model>
+    using value_t = elasticsearch::v7::search::tag::range<Model, elasticsearch::image::model::element::DigitizeTime>;
 };
 
 
@@ -44,6 +49,7 @@ struct table<model::search::FilterElementTag,
                                                              elasticsearch::image::model::element::Location>;
 };
 
+
 template<>
 struct table<model::search::RangeElementTag,
              elasticsearch::image::model::element::OriginalTime> {
@@ -51,14 +57,27 @@ struct table<model::search::RangeElementTag,
     using value_t = elasticsearch::v7::search::tag::range<Model, elasticsearch::image::model::element::OriginalTime>;
 };
 
+
 template<>
-struct table<model::search::RangeElementTag,
-             elasticsearch::image::model::element::DigitizeTime> {
+struct table<model::search::MustElementTag,
+             elasticsearch::image::model::element::Title> {
     template<class Model>
-    using value_t = elasticsearch::v7::search::tag::range<Model, elasticsearch::image::model::element::DigitizeTime>;
+    using value_t = elasticsearch::v7::search::tag::simple_query_string<Model, elasticsearch::image::model::element::Title>;
+};
+
+
+template<>
+struct table<model::search::MustElementTag,
+             elasticsearch::v7::search::tag::range<elasticsearch::image::model::data,
+                                                   elasticsearch::common_model::CreationDateTime,
+                                                   elasticsearch::image::model::element::DigitizeTime,
+                                                   elasticsearch::image::model::element::OriginalTime>> {
+    template<class Model>
+    using value_t = elasticsearch::v7::search::tag::range<Model, elasticsearch::common_model::CreationDateTime,
+                                                                 elasticsearch::image::model::element::DigitizeTime,
+                                                                 elasticsearch::image::model::element::OriginalTime>;
 };
 } // namespace translation
-
 } // namespace tag
 } // namespace search
 } // namespace v7

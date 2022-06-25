@@ -16,10 +16,17 @@ namespace translation
 {
 template<>
 struct table<model::search::MustElementTag,
-            ::elasticsearch::common_model::Tags>
+            ::elasticsearch::common_model::BinaryBlob>
 {
     template<class Model>
-    using value_t = ::model::search::must::Terms<Model, ::elasticsearch::common_model::Tags>;
+    using value_t = ::model::search::must::Term<Model, ::elasticsearch::common_model::BinaryBlob>;
+};
+
+template<>
+struct table<model::search::RangeElementTag,
+             ::elasticsearch::common_model::CreationDateTime> {
+    template<class Model>
+    using value_t = elasticsearch::v7::search::tag::range<Model, elasticsearch::common_model::CreationDateTime>;
 };
 
 template<>
@@ -31,10 +38,44 @@ struct table<model::search::MustElementTag,
 };
 
 template<>
-struct table<model::search::RangeElementTag,
-             ::elasticsearch::common_model::CreationDateTime> {
+struct table<model::search::MustElementTag,
+            ::elasticsearch::common_model::Format>
+{
     template<class Model>
-    using value_t = elasticsearch::v7::search::tag::range<Model, elasticsearch::common_model::CreationDateTime>;
+    using value_t = ::model::search::must::Term<Model, ::elasticsearch::common_model::Format>;
+};
+
+template<>
+struct table<model::search::MustElementTag,
+            ::elasticsearch::common_model::OriginalPath>
+{
+    template<class Model>
+    using value_t = ::model::search::must::Term<Model, ::elasticsearch::common_model::OriginalPath>;
+};
+
+template<>
+struct table<model::search::MustElementTag,
+            ::elasticsearch::common_model::Preview>
+{
+    template<class Model>
+    using value_t = ::model::search::must::Term<Model, ::elasticsearch::common_model::Preview>;
+};
+
+template<>
+struct table<model::search::MustElementTag,
+            ::elasticsearch::common_model::SourceName>
+{
+    template<class Model>
+    using value_t = ::model::search::must::Term<Model, ::elasticsearch::common_model::SourceName>;
+};
+
+
+template<>
+struct table<model::search::MustElementTag,
+            ::elasticsearch::common_model::Tags>
+{
+    template<class Model>
+    using value_t = ::model::search::must::Terms<Model, ::elasticsearch::common_model::Tags>;
 };
 } // namespace translation
 } // namespace tag

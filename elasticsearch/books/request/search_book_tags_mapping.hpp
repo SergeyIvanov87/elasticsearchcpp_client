@@ -16,14 +16,6 @@ namespace translation
 {
 template<>
 struct table<model::search::MustElementTag,
-             elasticsearch::book::model::element::Title>
-{
-    template<class Model>
-    using value_t = elasticsearch::v7::search::tag::simple_query_string<Model, elasticsearch::book::model::element::Title>;
-};
-
-template<>
-struct table<model::search::MustElementTag,
              elasticsearch::book::model::element::Contributor>
 {
     template<class Model>
@@ -36,6 +28,38 @@ struct table<model::search::MustElementTag,
 {
     template<class Model>
     using value_t = elasticsearch::v7::search::tag::simple_query_string<Model, elasticsearch::book::model::element::Creator>;
+};
+
+template<>
+struct table<model::search::MustElementTag,
+             elasticsearch::book::model::element::Identifier>
+{
+    template<class Model>
+    using value_t = ::model::search::must::Term<Model, elasticsearch::book::model::element::Identifier>;
+};
+
+ template<>
+struct table<model::search::MustElementTag,
+             elasticsearch::book::model::element::Language>
+{
+    template<class Model>
+    using value_t = ::model::search::must::Term<Model, elasticsearch::book::model::element::Language>;
+};
+
+template<>
+struct table<model::search::MustElementTag,
+             elasticsearch::book::model::element::Title>
+{
+    template<class Model>
+    using value_t = elasticsearch::v7::search::tag::simple_query_string<Model, elasticsearch::book::model::element::Title>;
+};
+
+template<>
+struct table<model::search::MustElementTag,
+             elasticsearch::v7::search::tag::range<elasticsearch::book::model::data,
+                                                   elasticsearch::common_model::CreationDateTime>> {
+    template<class Model>
+    using value_t = elasticsearch::v7::search::tag::range<Model, elasticsearch::common_model::CreationDateTime>;
 };
 } // namespace translation
 

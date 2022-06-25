@@ -20,13 +20,30 @@ struct table {
     using value_t = ModelElement;
 };
 
+template<class M, class E>
+struct NonMappedType
+{
+private:
+    NonMappedType(...) = delete;
+    NonMappedType() = delete;
+};
+
 template<class Model, class SearchTag>
 struct table_mapper
 {
-    template<class ModelElement>
+    template<class ModelElement, class = std::enable_if_t<!std::is_same_v<typename table<SearchTag, ModelElement>::value_t<Model>, NonMappedType<Model, ModelElement>>, int>>
     static auto map(const ModelElement &v)
     {
         return typename table<SearchTag, ModelElement>::value_t<Model>(v);
+    }
+
+    template<class ModelElement, std::enable_if_t<std::is_same_v<typename table<SearchTag, ModelElement>::value_t<Model>, NonMappedType<Model, ModelElement>>, char> = 0>
+    static auto map(const ModelElement &)
+    {
+        static_assert(!std::is_same_v<typename table<SearchTag, ModelElement>::value_t<Model>, NonMappedType<Model, ModelElement>>,
+                      "There are no defined mapping for requested type. "
+                      "Please implement 'tag::translation::table' specialization for type if you require it");
+        return NonMappedType<Model, ModelElement>{};
     }
 
     template<class ModelElement>

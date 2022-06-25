@@ -21,8 +21,19 @@ namespace create
     {
         return elasticsearch::v7::search::tag::create::must_optional_tag<elasticsearch::book::model::data>(std::forward<SpecificModelParams>(args)...);
     }
-} // namespace create
 
+    template<class ...RangedElements>
+    auto range_tag(const std::array<std::string, sizeof...(RangedElements)> &ranged_string, char sep = ',')
+    {
+        return elasticsearch::v7::search::tag::range<elasticsearch::book::model::data, RangedElements...>(ranged_string, sep);
+    }
+
+    template<class ...RangedElements>
+    auto range_tag(const std::array<std::optional<std::string>, sizeof...(RangedElements)> &ranged_string, char sep = ',')
+    {
+        return elasticsearch::v7::search::tag::create::range_tag<elasticsearch::book::model::data, RangedElements...>(ranged_string, sep);
+    }
+} // namespace create
 
 template<class ...SpecificQueryParams>
 using query = elasticsearch::v7::search::tag::query<elasticsearch::book::model::data, SpecificQueryParams...>;
