@@ -23,7 +23,7 @@ namespace create
     template<class ...SpecificModelParams>
     auto must_tag(SpecificModelParams &&...args)
     {
-        return elasticsearch::v7::search::tag::create::must_optional_tag<elasticsearch::image::model::data>(std::forward<SpecificModelParams>(args)...);
+        return elasticsearch::v7::search::tag::create::must_tag<elasticsearch::image::model::data>(std::forward<SpecificModelParams>(args)...);
     }
 } // namespace create
 
@@ -32,7 +32,7 @@ namespace create
     template<class ...SpecificModelParams>
     auto filter_tag(SpecificModelParams &&...args)
     {
-        return elasticsearch::v7::search::tag::create::filter_optional_tag<elasticsearch::image::model::data>(std::forward<SpecificModelParams>(args)...);
+        return elasticsearch::v7::search::tag::create::filter_tag<elasticsearch::image::model::data>(std::forward<SpecificModelParams>(args)...);
     }
 } // namespace create
 
@@ -45,20 +45,20 @@ namespace create
     template<class ...SpecificQueryParams>
     auto query_tag(SpecificQueryParams &&...args)
     {
-        return elasticsearch::v7::search::tag::create::query_optional_tag<elasticsearch::image::model::data>(std::forward<SpecificQueryParams>(args)...);
+        return elasticsearch::v7::search::tag::create::query_tag<elasticsearch::image::model::data>(std::forward<SpecificQueryParams>(args)...);
     }
 
     template<class ...SpecificBooleanParams>
     auto boolean_tag(SpecificBooleanParams &&...args)
     {
-        return elasticsearch::v7::search::tag::create::boolean_optional_tag<elasticsearch::image::model::data>(std::forward<SpecificBooleanParams>(args)...);
+        return elasticsearch::v7::search::tag::create::boolean_tag<elasticsearch::image::model::data>(std::forward<SpecificBooleanParams>(args)...);
     }
 
     template<class ...SpecificModelElements>
     auto simple_query_string_tag(const std::optional<std::string> &query_string)
     {
-        return elasticsearch::v7::search::tag::create::simple_query_string_optional_tag<elasticsearch::image::model::data,
-                                                                                        SpecificModelElements...>(query_string);
+        return elasticsearch::v7::search::tag::create::simple_query_string_tag<elasticsearch::image::model::data,
+                                                                               SpecificModelElements...>(query_string);
     }
 } // namespace create
 

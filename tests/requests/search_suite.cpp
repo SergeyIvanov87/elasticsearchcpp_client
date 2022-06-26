@@ -56,10 +56,10 @@ TEST(NEW_MustQSSTag, serializer)
 {
     auto must_instance_from_opt = elasticsearch::v7::search::tag::create::must_tag<StubModel>(std::optional<StubLeafNode_bool>(true),
                                                                                                   std::optional<StubLeafNode_int>(0),
-                                                                                                  std::optional<StubLeafNode_string>("aaaa"));
+                                                                                                  std::optional<StubLeafNode_string>("aaaa")).value();
     auto must_instance = elasticsearch::v7::search::tag::create::must_tag<StubModel>(StubLeafNode_bool(true),
                                                                                          StubLeafNode_int(0),
-                                                                                         StubLeafNode_string("aaaa"));
+                                                                                         StubLeafNode_string("aaaa")).value();
     static_assert(std::is_same_v<decltype(must_instance_from_opt), decltype(must_instance)>, "Must be the same");
     typename decltype(must_instance_from_opt)::aggregator_serializer_type ser_from_opt;
     typename decltype(must_instance)::aggregator_serializer_type ser;
@@ -83,18 +83,18 @@ TEST(NEW_MustQSSTag_optional, construction)
 {
     auto must_instance_from_opt = elasticsearch::v7::search::tag::create::must_tag<StubModel>(std::optional<StubLeafNode_bool>(true),
                                                                                                   std::optional<StubLeafNode_int>(0),
-                                                                                                  std::optional<StubLeafNode_string>("aaaa"));
+                                                                                                  std::optional<StubLeafNode_string>("aaaa")).value();
     auto must_instance = elasticsearch::v7::search::tag::create::must_tag<StubModel>(StubLeafNode_bool(true),
                                                                                          StubLeafNode_int(0),
-                                                                                         StubLeafNode_string("aaaa"));
+                                                                                         StubLeafNode_string("aaaa")).value();
     static_assert(std::is_same_v<decltype(must_instance_from_opt), decltype(must_instance)>, "Must be the same");
 
-    auto must_instance_from_empty_opt = elasticsearch::v7::search::tag::create::must_optional_tag<StubModel>(std::optional<StubLeafNode_bool>(),
+    auto must_instance_from_empty_opt = elasticsearch::v7::search::tag::create::must_tag<StubModel>(std::optional<StubLeafNode_bool>(),
                                                                                                   std::optional<StubLeafNode_int>(),
                                                                                                   std::optional<StubLeafNode_string>());
     ASSERT_FALSE(must_instance_from_empty_opt.has_value());
 
-    auto must_instance_from_one_nonempty_opt = elasticsearch::v7::search::tag::create::must_optional_tag<StubModel>(std::optional<StubLeafNode_bool>(),
+    auto must_instance_from_one_nonempty_opt = elasticsearch::v7::search::tag::create::must_tag<StubModel>(std::optional<StubLeafNode_bool>(),
                                                                                                   std::optional<StubLeafNode_int>(0),
                                                                                                   std::optional<StubLeafNode_string>());
     ASSERT_TRUE(must_instance_from_one_nonempty_opt.has_value());
@@ -446,13 +446,13 @@ TEST_F(SearchTagFixtureComplex, request_create_match_all)
     search::transaction s(get_host());
     ASSERT_NO_THROW(s.execute(/*get_index() + */"",
                               1000,
-                              search::tag::create::query_tag<StubModel>(boolean_param),
+                              search::tag::create::query_tag<StubModel>(boolean_param).value(),
                               curl_verbose(), tracer));
     std::optional<search::response<StubLeafNode>> search_ans_ptr;
     ASSERT_NO_THROW(search_ans_ptr = s.get_response<StubLeafNode>(tracer));
 
     ASSERT_NO_THROW(s.execute(1000, pit,
-                              search::tag::create::query_tag<StubModel>(boolean_param),
+                              search::tag::create::query_tag<StubModel>(boolean_param).value(),
                               curl_verbose()));
     ASSERT_NO_THROW(search_ans_ptr = s.get_response<StubLeafNode>(tracer));
 
