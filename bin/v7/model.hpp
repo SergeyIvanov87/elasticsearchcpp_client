@@ -24,9 +24,9 @@ struct ElementPrinter <elasticsearch::common_model::Tags>
     static std::ostream &print(std::ostream &out, const Model &m)
     {
         using Element = elasticsearch::common_model::Tags;
-        if (m.template node<Element>())
+        if (const auto &n = m.template node<Element>(); n)
         {
-            const auto &list = m.template node<Element>()->value();
+            const auto &list = n->value();
             out << "\"";
             std::copy(list.begin(), list.end(), std::ostream_iterator<std::string>(out, ","));
             out << "\",";
@@ -46,9 +46,9 @@ struct ElementPrinter <elasticsearch::image::model::element::Location>
     static std::ostream &print(std::ostream &out, const Model &m)
     {
         using Element = elasticsearch::image::model::element::Location;
-        if (m.template node<Element>())
+        if (const auto &n = m.template node<Element>(); n)
         {
-            out << "\"" << m.template node<Element>()->value().to_string() << "\",";
+            out << "\"" << n->value().to_string() << "\",";
         }
         else
         {
@@ -65,9 +65,9 @@ struct ElementPrinter <elasticsearch::image::model::element::Resolution>
     static std::ostream &print(std::ostream &out, const Model &m)
     {
         using Element = elasticsearch::image::model::element::Resolution;
-        if (m.template node<Element>())
+        if (const auto &n = m.template node<Element>(); n)
         {
-            out << "\"" << m.template node<Element>()->value().to_string() << "\",";
+            out << "\"" << n->value().to_string() << "\",";
         }
         else
         {
@@ -96,7 +96,7 @@ struct ModelInjector <elasticsearch::common_model::Tags>
         if (auto it = data_storage.find(std::string(Element::class_name()));
             it != data_storage.end())
         {
-            if (m.template node<Element>())
+            if (m.template has_value<Element>())
             {
                 m.template value<Element>() = Element(it->second, sep);
             }

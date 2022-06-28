@@ -129,7 +129,7 @@ class SubContextArrayElement : public txml::XMLNode<SubContextArrayElement<Model
 public:
     using base_t = txml::XMLNode<SubContextArrayElement<Model, SubContexts...>,
                                  SubContexts...>;
-
+    using base_t::base_t;
     static constexpr std::string_view class_name()
     {
         return "";

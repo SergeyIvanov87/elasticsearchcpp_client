@@ -45,11 +45,12 @@ const ::model::_Version &transaction::get_unique_index() const
     auto ans_ptr = get_response();
     if (ans_ptr->has_value<::model::Result>())
     {
-        auto &result_value = ans_ptr->value<::model::Result>().value();
+        const auto &result_value = ans_ptr->value<::model::Result>().value();
         if (result_value == "created" || result_value == "updated")
         {
             return ans_ptr->value<::model::_Version>();
         }
+        throw std::runtime_error("Cannot generate unique index, result: " + result_value);
     }
 
     throw std::runtime_error("Cannot generate unique index");
