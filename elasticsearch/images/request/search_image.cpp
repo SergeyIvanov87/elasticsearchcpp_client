@@ -20,15 +20,15 @@ const transaction::receiver& transaction::get_receiver() const
 }
 
 template<class Tracer>
-std::optional<transaction::response> transaction::get_response(Tracer tracer) const
+transaction::response transaction::get_response(Tracer tracer) const
 {
-    auto response_ptr = base_t::template get_response<model_t,
-                                                      elasticsearch::image::model::from_data,
-                                                      elasticsearch::common_model::from_data>(tracer);
-    return response_ptr;
+    auto res = base_t::template get_response<model_t,
+                                             elasticsearch::image::model::from_data,
+                                             elasticsearch::common_model::from_data>(tracer);
+    return res;
 }
-template std::optional<transaction::response> transaction::get_response(txml::StdoutTracer) const;
-template std::optional<transaction::response> transaction::get_response(txml::EmptyTracer) const;
+template transaction::response transaction::get_response(txml::StdoutTracer) const;
+template transaction::response transaction::get_response(txml::EmptyTracer) const;
 }// namespace search
 }// namespace image
 } // namespace elasticsearch

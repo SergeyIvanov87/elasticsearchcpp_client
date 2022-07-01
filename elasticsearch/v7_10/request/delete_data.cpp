@@ -54,7 +54,7 @@ const transaction::receiver& transaction::get_receiver() const
 }
 
 template<class Tracer>
-std::optional<response> transaction::get_response(Tracer tracer) const
+response transaction::get_response(Tracer tracer) const
 {
     //-S- todo hide in model based receiver
     std::string received_string = get_receiver().get();
@@ -63,8 +63,8 @@ std::optional<response> transaction::get_response(Tracer tracer) const
     return get_receiver().response(in, tracer);
 }
 
-template std::optional<response> transaction::get_response(txml::StdoutTracer) const;
-template std::optional<response> transaction::get_response(txml::EmptyTracer) const;
+template response transaction::get_response(txml::StdoutTracer) const;
+template response transaction::get_response(txml::EmptyTracer) const;
 } // namespace delete_data
 } // namespace v7
 } // namespace elasticsearch

@@ -41,7 +41,7 @@ const transaction::receiver& transaction::get_receiver() const
 }
 
 template<class Tracer>
-std::optional<response> transaction::get_response(Tracer tracer) const
+response transaction::get_response(Tracer tracer) const
 {
     std::string received_string = get_receiver().get();
     nlohmann::json json_data = nlohmann::json::parse(received_string);
@@ -50,10 +50,14 @@ std::optional<response> transaction::get_response(Tracer tracer) const
     std::optional<response> resp = response::format_deserialize(in, tracer);
     if (!resp)
     {
-        throw std::runtime_error(std::string("Cannot deserialize response: ") + response::class_name().data());
+        std::stringstream ss;
+        ss << "Cannot deserialize response: " << response::class_name()
+           << ". Parse trace: ";
+        tracer.dump(ss);
+        throw std::runtime_error(ss.str());
     }
 
-    return resp;
+    return resp.value();
 }
 
 transaction::transaction(const std::string& host, std::true_type) :
@@ -64,8 +68,8 @@ transaction::transaction(const std::string& host, std::true_type) :
     connection_ptr->add_adapter(response_receiver);
 }
 
-template std::optional<response> transaction::get_response(txml::StdoutTracer) const;
-template std::optional<response> transaction::get_response(txml::EmptyTracer) const;
+template response transaction::get_response(txml::StdoutTracer) const;
+template response transaction::get_response(txml::EmptyTracer) const;
 } // namespace put_json_data
 } // namespace v7
 } // namespace elasticsearch

@@ -54,10 +54,10 @@ protected:
         transaction req(get_host());
         ASSERT_NO_THROW(req.execute(get_index(), false));
 
-        std::optional<transaction::response> ans_ptr;
+        transaction::response ans_ptr;
         ASSERT_NO_THROW(ans_ptr = req.get_response());
-        ASSERT_TRUE(ans_ptr->node<model::Ack>());
-        ASSERT_EQ(ans_ptr->node<model::Ack>()->value(), true);
+        ASSERT_TRUE(ans_ptr.node<model::Ack>());
+        ASSERT_EQ(ans_ptr.node<model::Ack>()->value(), true);
     }
 
     void TearDown() override {
@@ -120,27 +120,27 @@ TEST_F(BookCreateSearchFixture, create_n_search)
     ASSERT_NO_THROW(req.execute_force_refresh(get_index() + "/_doc/" + document_id,
                                               data_model, curl_verbose()));
 
-    std::optional<create::transaction::response> ans_ptr;
+    create::transaction::response ans_ptr;
     ASSERT_NO_THROW(ans_ptr = req.get_response());
-    ASSERT_TRUE(ans_ptr->node<::model::Result>());
-    ASSERT_EQ(ans_ptr->node<::model::Result>()->value(), "created");
-    ASSERT_TRUE(ans_ptr->node<::model::_Version>());
-    ASSERT_EQ(ans_ptr->node<::model::_Version>()->value(), 1);
-    ASSERT_TRUE(ans_ptr->node<::model::_Id>());
-    ASSERT_EQ(ans_ptr->node<::model::_Id>()->value(), document_id);
-    ASSERT_TRUE(ans_ptr->node<::model::_Index>());
-    ASSERT_EQ(ans_ptr->node<::model::_Index>()->value(), get_index());
-    ASSERT_TRUE(ans_ptr->node<::model::_Type>());
-    ASSERT_EQ(ans_ptr->node<::model::_Type>()->value(), "_doc");
+    ASSERT_TRUE(ans_ptr.node<::model::Result>());
+    ASSERT_EQ(ans_ptr.node<::model::Result>()->value(), "created");
+    ASSERT_TRUE(ans_ptr.node<::model::_Version>());
+    ASSERT_EQ(ans_ptr.node<::model::_Version>()->value(), 1);
+    ASSERT_TRUE(ans_ptr.node<::model::_Id>());
+    ASSERT_EQ(ans_ptr.node<::model::_Id>()->value(), document_id);
+    ASSERT_TRUE(ans_ptr.node<::model::_Index>());
+    ASSERT_EQ(ans_ptr.node<::model::_Index>()->value(), get_index());
+    ASSERT_TRUE(ans_ptr.node<::model::_Type>());
+    ASSERT_EQ(ans_ptr.node<::model::_Type>()->value(), "_doc");
 
 
     txml::StdoutTracer tracer;
     search::transaction s(get_host());
     ASSERT_NO_THROW(s.execute(get_index(), 10, curl_verbose(), tracer));
-    std::optional<search::transaction::response> search_ans_ptr;
+    search::transaction::response search_ans_ptr;
     search_ans_ptr = s.get_response(tracer);
-    ASSERT_TRUE(search_ans_ptr->node<::model::HitsNode<elasticsearch::book::model::data>>());
-    const auto &hits = search_ans_ptr->node<::model::HitsNode<elasticsearch::book::model::data>>();
+    ASSERT_TRUE(search_ans_ptr.node<::model::HitsNode<elasticsearch::book::model::data>>());
+    const auto &hits = search_ans_ptr.node<::model::HitsNode<elasticsearch::book::model::data>>();
 
     ASSERT_TRUE(hits->node<::model::HitsArray<elasticsearch::book::model::data>>());
     const auto &hits_array = hits->node<::model::HitsArray<elasticsearch::book::model::data>>()->value();
@@ -186,10 +186,10 @@ protected:
         transaction req(get_host());
         ASSERT_NO_THROW(req.execute(get_index(), false));
 
-        std::optional<transaction::response> ans_ptr;
+        transaction::response ans_ptr;
         ASSERT_NO_THROW(ans_ptr = req.get_response());
-        ASSERT_TRUE(ans_ptr->node<::model::Ack>());
-        ASSERT_EQ(ans_ptr->node<::model::Ack>()->value(), true);
+        ASSERT_TRUE(ans_ptr.node<::model::Ack>());
+        ASSERT_EQ(ans_ptr.node<::model::Ack>()->value(), true);
 
         generate_elements();
     }
@@ -216,12 +216,12 @@ protected:
             ASSERT_NO_THROW(req.execute_force_refresh(get_index() + "/_doc/" + document_id,
                                                       data_model, curl_verbose()));
 
-            std::optional<create::transaction::response> create_ans_ptr;
+            create::transaction::response create_ans_ptr;
             ASSERT_NO_THROW(create_ans_ptr = req.get_response());
-            ASSERT_TRUE(create_ans_ptr->node<::model::Result>());
-            ASSERT_EQ(create_ans_ptr->node<::model::Result>()->value(), "created");
-            ASSERT_EQ(create_ans_ptr->node<::model::_Id>()->value(), document_id);
-            ASSERT_TRUE(create_ans_ptr->node<::model::_Index>());
+            ASSERT_TRUE(create_ans_ptr.node<::model::Result>());
+            ASSERT_EQ(create_ans_ptr.node<::model::Result>()->value(), "created");
+            ASSERT_EQ(create_ans_ptr.node<::model::_Id>()->value(), document_id);
+            ASSERT_TRUE(create_ans_ptr.node<::model::_Index>());
 
             // remember to validate
             generated_item_ids.insert(std::to_string(index));
@@ -244,10 +244,10 @@ TEST_F(BookMultipleCreateSearchFixture_10, create_n_search_pit)
     ASSERT_NO_THROW(s.execute(get_index(), 10, 10s,
                               search::tag::sort<element::Contributor>({::model::Order("desc")}),
                               curl_verbose(), tracer));
-    std::optional<search::transaction::response> search_ans_ptr;
+    search::transaction::response search_ans_ptr;
     search_ans_ptr = s.get_response(tracer);
-    ASSERT_TRUE(search_ans_ptr->node<::model::HitsNode<elasticsearch::book::model::data>>());
-    const auto &hits = search_ans_ptr->node<::model::HitsNode<elasticsearch::book::model::data>>();
+    ASSERT_TRUE(search_ans_ptr.node<::model::HitsNode<elasticsearch::book::model::data>>());
+    const auto &hits = search_ans_ptr.node<::model::HitsNode<elasticsearch::book::model::data>>();
 
     ASSERT_TRUE(hits->node<::model::HitsArray<elasticsearch::book::model::data>>());
     const auto &hits_array = hits->node<::model::HitsArray<elasticsearch::book::model::data>>()->value();
@@ -285,8 +285,8 @@ TEST_F(BookMultipleCreateSearchFixture_10, create_n_search_pit)
     // TODO use OLD PIT
     ASSERT_NO_THROW(s.execute("", 10, curl_verbose()));
     search_ans_ptr = s.get_response(tracer);
-    ASSERT_TRUE(search_ans_ptr->node<::model::HitsNode<elasticsearch::book::model::data>>());
-    hits = search_ans_ptr->node<::model::HitsNode<elasticsearch::book::model::data>>();
+    ASSERT_TRUE(search_ans_ptr.node<::model::HitsNode<elasticsearch::book::model::data>>());
+    hits = search_ans_ptr.node<::model::HitsNode<elasticsearch::book::model::data>>();
 
     ASSERT_TRUE(hits->node<::model::HitsArray<elasticsearch::book::model::data>>());
     hits_array = hits->node<::model::HitsArray<elasticsearch::book::model::data>>()->value();
@@ -314,10 +314,10 @@ TEST_F(BookMultipleCreateSearchFixture_11, create_n_search_boolean_2_terms)
                               search::tag::sort<element::Contributor> ({::model::Order("desc")}),
                               curl_verbose(),
                               tracer));
-    std::optional<search::transaction::response> search_ans_ptr;
+    search::transaction::response search_ans_ptr;
     search_ans_ptr = s.get_response(tracer);
-    ASSERT_TRUE(search_ans_ptr->node<::model::HitsNode<elasticsearch::book::model::data>>());
-    const auto &hits = search_ans_ptr->node<::model::HitsNode<elasticsearch::book::model::data>>();
+    ASSERT_TRUE(search_ans_ptr.node<::model::HitsNode<elasticsearch::book::model::data>>());
+    const auto &hits = search_ans_ptr.node<::model::HitsNode<elasticsearch::book::model::data>>();
 
     ASSERT_TRUE(hits->node<::model::HitsArray<elasticsearch::book::model::data>>());
     const auto &hits_array = hits->node<::model::HitsArray<elasticsearch::book::model::data>>()->value();
@@ -360,10 +360,10 @@ TEST_F(BookMultipleCreateSearchFixture_11, create_n_search_query_simple_string)
                               search::tag::sort<element::Contributor> ({::model::Order("desc")}),
                               curl_verbose(),
                               tracer));
-    std::optional<search::transaction::response> search_ans_ptr;
+    search::transaction::response search_ans_ptr;
     search_ans_ptr = s.get_response(tracer);
-    ASSERT_TRUE(search_ans_ptr->node<::model::HitsNode<elasticsearch::book::model::data>>());
-    const auto &hits = search_ans_ptr->node<::model::HitsNode<elasticsearch::book::model::data>>();
+    ASSERT_TRUE(search_ans_ptr.node<::model::HitsNode<elasticsearch::book::model::data>>());
+    const auto &hits = search_ans_ptr.node<::model::HitsNode<elasticsearch::book::model::data>>();
 
     ASSERT_TRUE(hits->node<::model::HitsArray<elasticsearch::book::model::data>>());
     const auto &hits_array = hits->node<::model::HitsArray<elasticsearch::book::model::data>>()->value();

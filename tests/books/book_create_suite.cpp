@@ -31,10 +31,10 @@ protected:
         transaction req(get_host());
         ASSERT_NO_THROW(req.execute(get_index(), false));
 
-        std::optional<transaction::response> ans_ptr;
+        transaction::response ans_ptr;
         ASSERT_NO_THROW(ans_ptr = req.get_response());
-        ASSERT_TRUE(ans_ptr->node<model::Ack>());
-        ASSERT_EQ(ans_ptr->node<model::Ack>()->value(), true);
+        ASSERT_TRUE(ans_ptr.node<model::Ack>());
+        ASSERT_EQ(ans_ptr.node<model::Ack>()->value(), true);
     }
 
     void TearDown() override {
@@ -69,18 +69,18 @@ TEST_F(BookCreateFixture, request_epub)
     ASSERT_NO_THROW(req.execute(get_index() + "/_doc/1", *b2m.data_model,
                                 curl_verbose(), std_tracer));
 
-    std::optional<create::transaction::response> ans_ptr;
+    create::transaction::response ans_ptr;
     ASSERT_NO_THROW(ans_ptr = req.get_response(std_tracer));
-    ASSERT_TRUE(ans_ptr->node<::model::Result>());
-    ASSERT_EQ(ans_ptr->node<::model::Result>()->value(), "created");
-    ASSERT_TRUE(ans_ptr->node<::model::_Version>());
-    ASSERT_EQ(ans_ptr->node<::model::_Version>()->value(), 1);
-    ASSERT_TRUE(ans_ptr->node<::model::_Id>());
-    ASSERT_EQ(ans_ptr->node<::model::_Id>()->value(), "1");
-    ASSERT_TRUE(ans_ptr->node<::model::_Index>());
-    ASSERT_EQ(ans_ptr->node<::model::_Index>()->value(), get_index());
-    ASSERT_TRUE(ans_ptr->node<::model::_Type>());
-    ASSERT_EQ(ans_ptr->node<::model::_Type>()->value(), "_doc");
+    ASSERT_TRUE(ans_ptr.node<::model::Result>());
+    ASSERT_EQ(ans_ptr.node<::model::Result>()->value(), "created");
+    ASSERT_TRUE(ans_ptr.node<::model::_Version>());
+    ASSERT_EQ(ans_ptr.node<::model::_Version>()->value(), 1);
+    ASSERT_TRUE(ans_ptr.node<::model::_Id>());
+    ASSERT_EQ(ans_ptr.node<::model::_Id>()->value(), "1");
+    ASSERT_TRUE(ans_ptr.node<::model::_Index>());
+    ASSERT_EQ(ans_ptr.node<::model::_Index>()->value(), get_index());
+    ASSERT_TRUE(ans_ptr.node<::model::_Type>());
+    ASSERT_EQ(ans_ptr.node<::model::_Type>()->value(), "_doc");
 
 
 
@@ -145,43 +145,43 @@ TEST_F(BookCreateFixture, request_fb2)
     ASSERT_NO_THROW(req.execute(get_index() + "/_doc/1", *b2m.data_model,
                                 curl_verbose(), std_tracer));
 
-    std::optional<create::transaction::response> ans_ptr;
+    create::transaction::response ans_ptr;
     ASSERT_NO_THROW(ans_ptr = req.get_response(std_tracer));
-    ASSERT_TRUE(ans_ptr->node<::model::Result>());
-    ASSERT_EQ(ans_ptr->node<::model::Result>()->value(), "created");
-    ASSERT_TRUE(ans_ptr->node<::model::_Version>());
-    ASSERT_EQ(ans_ptr->node<::model::_Version>()->value(), 1);
-    ASSERT_TRUE(ans_ptr->node<::model::_Id>());
-    ASSERT_EQ(ans_ptr->node<::model::_Id>()->value(), "1");
-    ASSERT_TRUE(ans_ptr->node<::model::_Index>());
-    ASSERT_EQ(ans_ptr->node<::model::_Index>()->value(), get_index());
-    ASSERT_TRUE(ans_ptr->node<::model::_Type>());
-    ASSERT_EQ(ans_ptr->node<::model::_Type>()->value(), "_doc");
+    ASSERT_TRUE(ans_ptr.node<::model::Result>());
+    ASSERT_EQ(ans_ptr.node<::model::Result>()->value(), "created");
+    ASSERT_TRUE(ans_ptr.node<::model::_Version>());
+    ASSERT_EQ(ans_ptr.node<::model::_Version>()->value(), 1);
+    ASSERT_TRUE(ans_ptr.node<::model::_Id>());
+    ASSERT_EQ(ans_ptr.node<::model::_Id>()->value(), "1");
+    ASSERT_TRUE(ans_ptr.node<::model::_Index>());
+    ASSERT_EQ(ans_ptr.node<::model::_Index>()->value(), get_index());
+    ASSERT_TRUE(ans_ptr.node<::model::_Type>());
+    ASSERT_EQ(ans_ptr.node<::model::_Type>()->value(), "_doc");
 
 
 
     get::transaction get_book(get_host());
     ASSERT_NO_THROW(get_book.execute(get_index() + "/_doc/1", curl_verbose()));
-    std::optional<get::transaction::response> return_model;
+    get::transaction::response return_model;
     ASSERT_NO_THROW(return_model = get_book.get_response(std_tracer));
 
 
-    ASSERT_EQ(return_model->node<elasticsearch::common_model::OriginalPath>()->value(),
+    ASSERT_EQ(return_model.node<elasticsearch::common_model::OriginalPath>()->value(),
               b2m.data_model->node<elasticsearch::common_model::OriginalPath>()->value());
-    ASSERT_EQ(return_model->node<elasticsearch::common_model::BinaryBlob>()->value(),
+    ASSERT_EQ(return_model.node<elasticsearch::common_model::BinaryBlob>()->value(),
               b2m.data_model->node<elasticsearch::common_model::BinaryBlob>()->value());
-    ASSERT_EQ(return_model->node<elasticsearch::common_model::Format>()->value(),
+    ASSERT_EQ(return_model.node<elasticsearch::common_model::Format>()->value(),
               b2m.data_model->node<elasticsearch::common_model::Format>()->value());
 
-    ASSERT_EQ(return_model->node<elasticsearch::book::model::element::Contributor>()->value(),
+    ASSERT_EQ(return_model.node<elasticsearch::book::model::element::Contributor>()->value(),
               publish_info->node<fb2::Publisher>()->value());
-    ASSERT_EQ(return_model->node<elasticsearch::book::model::element::Creator>()->value(),
+    ASSERT_EQ(return_model.node<elasticsearch::book::model::element::Creator>()->value(),
              author_str);
-    ASSERT_EQ(return_model->node<elasticsearch::book::model::element::Identifier>()->value(),
+    ASSERT_EQ(return_model.node<elasticsearch::book::model::element::Identifier>()->value(),
              publish_info->node<fb2::ISBN>()->value());
-    ASSERT_EQ(return_model->node<elasticsearch::book::model::element::Language>()->value(),
+    ASSERT_EQ(return_model.node<elasticsearch::book::model::element::Language>()->value(),
              title_info->node<fb2::Language>()->value());
-    ASSERT_EQ(return_model->node<elasticsearch::book::model::element::Title>()->value(),
+    ASSERT_EQ(return_model.node<elasticsearch::book::model::element::Title>()->value(),
              title_info->node<fb2::BookTitle>()->value());
 }
 }

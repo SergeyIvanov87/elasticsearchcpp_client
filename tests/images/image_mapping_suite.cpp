@@ -32,13 +32,13 @@ TEST_F(IMFixture, request)
     transaction req(get_host(), tracer);
     ASSERT_NO_THROW(req.execute(get_index(), curl_verbose()));
 
-    std::optional<transaction::response> ans_ptr;
+    transaction::response ans_ptr;
     ASSERT_NO_THROW(ans_ptr = req.get_response());
 
-    ASSERT_TRUE(ans_ptr->node<model::Ack>());
-    ASSERT_EQ(ans_ptr->node<model::Ack>()->value(), true);
-    ASSERT_TRUE(ans_ptr->node<model::Index>());
-    ASSERT_EQ(ans_ptr->node<model::Index>()->value(), get_index());
-    ASSERT_TRUE(ans_ptr->node<model::ShardsAck>());
+    ASSERT_TRUE(ans_ptr.node<model::Ack>());
+    ASSERT_EQ(ans_ptr.node<model::Ack>()->value(), true);
+    ASSERT_TRUE(ans_ptr.node<model::Index>());
+    ASSERT_EQ(ans_ptr.node<model::Index>()->value(), get_index());
+    ASSERT_TRUE(ans_ptr.node<model::ShardsAck>());
 }
 }

@@ -35,7 +35,7 @@ const transaction::receiver& transaction::get_receiver() const
 }
 
 template<class Tracer>
-std::optional<response> transaction::get_response(Tracer tracer) const
+response transaction::get_response(Tracer tracer) const
 {
     // TODO move it out to ModelBasedSStrem receiver!!!
     std::string received_string = get_receiver().get();
@@ -44,8 +44,8 @@ std::optional<response> transaction::get_response(Tracer tracer) const
     return get_receiver().response(in, tracer);
 }
 
-template std::optional<response> transaction::get_response(txml::StdoutTracer) const;
-template std::optional<response> transaction::get_response(txml::EmptyTracer) const;
+template response transaction::get_response(txml::StdoutTracer) const;
+template response transaction::get_response(txml::EmptyTracer) const;
 } // namespace index_mapping_delete
 } // namespace v7
 } // namespace elasticsearch

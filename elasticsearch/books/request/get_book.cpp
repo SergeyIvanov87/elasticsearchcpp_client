@@ -16,7 +16,7 @@ transaction::transaction(const std::string& host):
 transaction::~transaction() = default;
 
 template<class Tracer>
-std::optional<transaction::response> transaction::get_response(Tracer tracer) const
+transaction::response transaction::get_response(Tracer tracer) const
 {
     auto response_ptr = impl_t::template get_response<response,
                                                       elasticsearch::book::model::from_data,
@@ -25,8 +25,8 @@ std::optional<transaction::response> transaction::get_response(Tracer tracer) co
     return source_ptr.template value<response>();
 }
 
-template std::optional<transaction::response> transaction::get_response(txml::StdoutTracer) const;
-template std::optional<transaction::response> transaction::get_response(txml::EmptyTracer) const;
+template transaction::response transaction::get_response(txml::StdoutTracer) const;
+template transaction::response transaction::get_response(txml::EmptyTracer) const;
 } // namespace get
 } // namespace book
 } // namespace elasticsearch

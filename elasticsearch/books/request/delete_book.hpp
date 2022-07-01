@@ -20,7 +20,7 @@ public:
     ~transaction();
 
     template<class Tracer = txml::EmptyTracer>
-    std::optional<response> get_response(Tracer tracer = Tracer()) const;
+    response get_response(Tracer tracer = Tracer()) const;
 };
 } // namespace del
 } // namespace book

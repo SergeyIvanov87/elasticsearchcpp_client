@@ -28,10 +28,10 @@ protected:
         transaction req(get_host());
         ASSERT_NO_THROW(req.execute(get_index(), false));
 
-        std::optional<transaction::response> ans_ptr;
+        transaction::response ans_ptr;
         ASSERT_NO_THROW(ans_ptr = req.get_response());
-        ASSERT_TRUE(ans_ptr->node<model::Ack>());
-        ASSERT_EQ(ans_ptr->node<model::Ack>()->value(), true);
+        ASSERT_TRUE(ans_ptr.node<model::Ack>());
+        ASSERT_EQ(ans_ptr.node<model::Ack>()->value(), true);
     }
 
     void TearDown() override {
@@ -70,42 +70,42 @@ TEST_F(ImageCreateFixture, request_jpg)
     ASSERT_NO_THROW(req.execute(get_index() + "/_doc/1", *i2m.data_model,
                                 curl_verbose(), std_tracer));
 
-    std::optional<create::transaction::response> ans_ptr;
+    create::transaction::response ans_ptr;
     ASSERT_NO_THROW(ans_ptr = req.get_response(std_tracer));
-    ASSERT_TRUE(ans_ptr->node<::model::Result>());
-    ASSERT_EQ(ans_ptr->node<::model::Result>()->value(), "created");
-    ASSERT_TRUE(ans_ptr->node<::model::_Version>());
-    ASSERT_EQ(ans_ptr->node<::model::_Version>()->value(), 1);
-    ASSERT_TRUE(ans_ptr->node<::model::_Id>());
-    ASSERT_EQ(ans_ptr->node<::model::_Id>()->value(), "1");
-    ASSERT_TRUE(ans_ptr->node<::model::_Index>());
-    ASSERT_EQ(ans_ptr->node<::model::_Index>()->value(), get_index());
-    ASSERT_TRUE(ans_ptr->node<::model::_Type>());
-    ASSERT_EQ(ans_ptr->node<::model::_Type>()->value(), "_doc");
+    ASSERT_TRUE(ans_ptr.node<::model::Result>());
+    ASSERT_EQ(ans_ptr.node<::model::Result>()->value(), "created");
+    ASSERT_TRUE(ans_ptr.node<::model::_Version>());
+    ASSERT_EQ(ans_ptr.node<::model::_Version>()->value(), 1);
+    ASSERT_TRUE(ans_ptr.node<::model::_Id>());
+    ASSERT_EQ(ans_ptr.node<::model::_Id>()->value(), "1");
+    ASSERT_TRUE(ans_ptr.node<::model::_Index>());
+    ASSERT_EQ(ans_ptr.node<::model::_Index>()->value(), get_index());
+    ASSERT_TRUE(ans_ptr.node<::model::_Type>());
+    ASSERT_EQ(ans_ptr.node<::model::_Type>()->value(), "_doc");
 
 
 
     get::transaction get_image(get_host());
     ASSERT_NO_THROW(get_image.execute(get_index() + "/_doc/1", curl_verbose()));
-    std::optional<get::transaction::response> return_model;
+    get::transaction::response return_model;
     ASSERT_NO_THROW(return_model = get_image.get_response(std_tracer));
 
 
-    ASSERT_EQ(return_model->node<elasticsearch::common_model::OriginalPath>()->value(),
+    ASSERT_EQ(return_model.node<elasticsearch::common_model::OriginalPath>()->value(),
               i2m.data_model->node<elasticsearch::common_model::OriginalPath>()->value());
-    ASSERT_EQ(return_model->node<elasticsearch::common_model::BinaryBlob>()->value(),
+    ASSERT_EQ(return_model.node<elasticsearch::common_model::BinaryBlob>()->value(),
               i2m.data_model->node<elasticsearch::common_model::BinaryBlob>()->value());
-    ASSERT_EQ(return_model->node<elasticsearch::common_model::Format>()->value(),
+    ASSERT_EQ(return_model.node<elasticsearch::common_model::Format>()->value(),
               i2m.data_model->node<elasticsearch::common_model::Format>()->value());
 
-    ASSERT_EQ(return_model->node<elasticsearch::image::model::element::Camera>()->value(),
+    ASSERT_EQ(return_model.node<elasticsearch::image::model::element::Camera>()->value(),
               jpg_package.node<elasticsearch::image::model::element::Camera>()->value());
-    ASSERT_EQ(return_model->node<elasticsearch::image::model::element::CameraModel>()->value(),
+    ASSERT_EQ(return_model.node<elasticsearch::image::model::element::CameraModel>()->value(),
               jpg_package.node<elasticsearch::image::model::element::CameraModel>()->value());
-    ASSERT_EQ(return_model->node<elasticsearch::image::model::element::Resolution>()->value().to_string(),
+    ASSERT_EQ(return_model.node<elasticsearch::image::model::element::Resolution>()->value().to_string(),
               jpg_package.node<elasticsearch::image::model::element::Resolution>()->value().to_string());
 
-    ASSERT_EQ(return_model->node<elasticsearch::common_model::Description>()->value(),
+    ASSERT_EQ(return_model.node<elasticsearch::common_model::Description>()->value(),
               jpg_package.node<JPG::Description>()->value());
 }
 }
