@@ -28,26 +28,6 @@ public:
         return txml::TextReaderWrapper::NodeType::Element;
     }
 
-/* TODO
-    Boolean(const Boolean &src) {
-        this->value() = src.value();
-    }
-
-    Boolean(Boolean &&src) {
-        this->value().swap(src.value());
-    }
-
-    template<class ...BooleanParamsTagsPack,
-                        class = std::enable_if_t<
-                                                not std::disjunction_v<
-                                                            std::is_same<std::decay_t<BooleanParamsTagsPack>, Boolean>...
-                                                                      >
-                                                        , int>>
-    Boolean(BooleanParamsTagsPack &&...args)    //TODO sue default ctor
-    {
-        (this->template emplace<std::decay_t<BooleanParamsTagsPack>>(std::forward<BooleanParamsTagsPack>(args)),...);
-    }
-*/
     template<class Parent>
     TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(serializer_parted_type, Parent, ToJSON,
                                                Boolean<Model, SubContexts...>,

@@ -28,17 +28,6 @@ public:
         return txml::TextReaderWrapper::NodeType::Element;
     }
 
-/*
-    GeoBoundingBox(const GeoBoundingBox &src)
-    {
-        this->value() = src.value();
-    }
-
-    GeoBoundingBox(GeoBoundingBox &&src)
-    {
-        this->value().swap(src.value());
-    }
-*/
     GeoBoundingBox(const element_t &bounding_box_value)
     {
         this->template emplace<element_t>(bounding_box_value);

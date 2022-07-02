@@ -172,7 +172,7 @@ public:
     Must(SpecificSubContexts && ...args) {
         auto elem = std::make_optional<element_t>();
         (elem->template emplace <SpecificSubContexts>(std::forward<SpecificSubContexts>(args)), ...);
-        this->value().push_back(elem);
+        this->value().push_back(std::move(elem));
     }
 
     template<class ...SpecificSubContexts, class =
@@ -186,7 +186,7 @@ public:
         ( (args.has_value() ? elem->template emplace <SpecificSubContexts>(args.value()),inserted_nodes++,true : false), ...);
         if (inserted_nodes != 0)
         {
-            this->value().push_back(elem);
+            this->value().push_back(std::move(elem));
         }
     }
 

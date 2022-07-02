@@ -38,7 +38,7 @@ transaction::response transaction::get_response(Tracer tracer) const
     {
         std::stringstream ss;
         ss << "Cannot deserialize response: " << response::class_name()
-           << ". Parse trace: ";
+           << ". Parse trace:\n";
         tracer.dump(ss);
         throw std::runtime_error(ss.str());
     }

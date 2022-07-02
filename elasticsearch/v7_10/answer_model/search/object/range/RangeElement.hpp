@@ -86,6 +86,15 @@ struct LT : public txml::XMLNodeLeaf<LT<T>, T>,
     }
 };
 
+/*
+ * We use Comparators 'Cmp' as  standalone classes, which wraps
+ * compare policy and comparable type: int, string and so on
+ * So comparable type may be the same for different ModelElements. In this case entire 'Range'
+ * node would consisit from the same comparator type and it then impossible to separate
+ * comparator for either Model Element_1  and Model Element_2 (for example) both with string type.
+ * So additional abstraction was added `CmpWrap` which contains type of ModelElement information which makes
+ * it unique and allow constructo entire 'Range' element from unique types
+ * */
 template<template<class> class Cmp, class ModelElement>
 struct CmpWrap : txml::XMLNode<CmpWrap<Cmp, ModelElement>,
                                Cmp<typename ModelElement::value_t>>

@@ -117,12 +117,12 @@ extract_model_records(const std::shared_ptr<SearchRequest> &search_ptr, Tracer t
         throw std::runtime_error("invalid search request");
     }
 
-    std::optional<typename transaction::response> search_ans_ptr = search_ptr->get_response(tracer);
-    const auto &status = search_ans_ptr->template node<::model::Status>();
+    auto&& search_ans_ptr = search_ptr->get_response(tracer);
+    const auto &status = search_ans_ptr.template node<::model::Status>();
     if (status.has_value() && status->value() != 200)
     {
-        const auto &fail_reason = search_ans_ptr->template node<elasticsearch::v7::search::Error>()->template node<::model::Reason>();
-        const auto &caused = search_ans_ptr->template node<elasticsearch::v7::search::Error>()->template node<::model::CausedBy>();
+        const auto &fail_reason = search_ans_ptr.template node<elasticsearch::v7::search::Error>()->template node<::model::Reason>();
+        const auto &caused = search_ans_ptr.template node<elasticsearch::v7::search::Error>()->template node<::model::CausedBy>();
         std::string details;
         if (caused.has_value())
         {
@@ -136,7 +136,7 @@ extract_model_records(const std::shared_ptr<SearchRequest> &search_ptr, Tracer t
                                  ", details: " + (details.empty() ? "<Unknown>" : details));
     }
 
-    const auto &hits = search_ans_ptr->template node<::model::HitsNode<data>>();
+    const auto &hits = search_ans_ptr.template node<::model::HitsNode<data>>();
     if (!hits)
     {
         throw std::runtime_error("unexpected search request answer: no `HintNode` detected");

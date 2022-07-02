@@ -32,7 +32,7 @@ public:
     const receiver& get_receiver() const;
 
     template<class ResponseModel, template<typename> class ...ResponseDeserializer, class Tracer = txml::EmptyTracer>
-    std::optional<response<ResponseModel>> get_response(Tracer tracer = Tracer{}) const
+    response<ResponseModel> get_response(Tracer tracer = Tracer{}) const
     {
         std::string received_string = get_receiver().get();
         nlohmann::json json_data = nlohmann::json::parse(received_string);
@@ -43,7 +43,7 @@ public:
             throw std::runtime_error(std::string("Cannot deserialize response: ") + ResponseModel::class_name().data());
         }
 
-        return resp_ptr;
+        return resp_ptr.value();
     }
 
 private:

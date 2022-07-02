@@ -235,7 +235,7 @@ public:
         {
             std::stringstream ss;
             ss << "Cannot deserialize response: " << ResponseModel::class_name()
-               << ". Parsing trace: ";
+               << ". Parsing trace:\n";
             tracer.dump(ss);
             throw std::runtime_error(ss.str());
         }

@@ -28,33 +28,6 @@ public:
         return txml::TextReaderWrapper::NodeType::Element;
     }
 
-/*
-    Range(const Range &src)
-    {
-        this->value() = src.value();
-    }
-
-    Range(Range &&src)
-    {
-        this->value().swap(src.value());
-    }
-
-    template<class ...SpecificElement>
-    Range(const range::element<Model, SpecificElement> & ...args) {
-        (this->template emplace<range::element<Model, SpecificElement>>(args), ...);
-    }
-
-    template<class ...SpecificElement>
-    Range(range::element<Model, SpecificElement>&& ...args) {
-        (this->template emplace<range::element<Model, SpecificElement>>(std::move(args)), ...);
-    }
-
-    template<class ...SpecificElement>
-    Range(const std::optional<range::element<Model, SpecificElement>> & ...args)
-    {
-        ((args.has_value() ? this->template emplace<range::element<Model, SpecificElement>>(args),true : false), ...);
-    }
-*/
     template<size_t N>
     Range(const std::array<std::string, N> &arr, char sep = ',')
     {

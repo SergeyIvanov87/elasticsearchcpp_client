@@ -22,10 +22,9 @@ const transaction::receiver& transaction::get_receiver() const
 template<class Tracer>
 transaction::response transaction::get_response(Tracer tracer) const
 {
-    auto res = base_t::template get_response<model_t,
-                                             elasticsearch::book::model::from_data,
-                                             elasticsearch::common_model::from_data>(tracer);
-    return res;
+    return base_t::template get_response<model_t,
+                                         elasticsearch::book::model::from_data,
+                                         elasticsearch::common_model::from_data>(tracer);
 }
 template transaction::response transaction::get_response(txml::StdoutTracer) const;
 template transaction::response transaction::get_response(txml::EmptyTracer) const;

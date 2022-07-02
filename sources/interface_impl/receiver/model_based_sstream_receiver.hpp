@@ -18,7 +18,7 @@ Response response(Deserializer &in, Tracer tracer = Tracer{}) const
     {
         std::stringstream ss;
         ss << "Cannot deserialize response: " << Response::class_name()
-           << ". Parse trace: ";
+           << ". Parse trace:\n";
         tracer.dump(ss);
         throw std::runtime_error(ss.str());
     }

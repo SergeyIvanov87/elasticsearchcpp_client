@@ -26,13 +26,7 @@ public:
     {
         return txml::TextReaderWrapper::NodeType::Element;
     }
-/*
-    template<class ...SpecificParams>
-    Query(SpecificParams &&...args)
-    {
-        (this->template emplace<std::decay_t<SpecificParams>>(std::forward<SpecificParams>(args)),...);
-    }
-*/
+
     template<class ParentAggregator>
     TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(serializer_parted_type, ParentAggregator, ToJSON,
                                                     Query<Model, Params...>,
