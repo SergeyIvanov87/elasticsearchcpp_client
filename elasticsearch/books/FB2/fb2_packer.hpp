@@ -14,7 +14,7 @@ public:
     const elasticsearch::common_model::OriginalPath& getPath() const override;
     void pack(const std::filesystem::path &path_to_pack) override;
 private:
-    elasticsearch::common_model::OriginalPath original_data_path;
+    std::unique_ptr<elasticsearch::common_model::OriginalPath> original_data_path;
     std::unique_ptr<elasticsearch::common_model::BinaryBlob> data_ptr;
 };
 }

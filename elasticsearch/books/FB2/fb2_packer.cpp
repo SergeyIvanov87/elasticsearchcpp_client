@@ -20,8 +20,7 @@
 
 namespace fb2
 {
-packer::packer(const std::string& file_path) :
-    original_data_path(std::filesystem::absolute(file_path))
+packer::packer(const std::string& file_path)
 {
     packer::pack(file_path);
 }
@@ -91,6 +90,7 @@ void packer::pack(const std::filesystem::path &path_to_pack)
                                  std::to_string(errno) + " (" + strerror(errno) + ")");
     }
     data_ptr = std::make_unique<elasticsearch::common_model::BinaryBlob>(std::move(file_data));
+    original_data_path.reset(new elasticsearch::common_model::OriginalPath(std::filesystem::absolute(path_to_pack)));
 }
 
 const elasticsearch::common_model::BinaryBlob& packer::getBlob() const
@@ -100,6 +100,6 @@ const elasticsearch::common_model::BinaryBlob& packer::getBlob() const
 
 const elasticsearch::common_model::OriginalPath& packer::getPath() const
 {
-    return original_data_path;
+    return *original_data_path;
 }
 }

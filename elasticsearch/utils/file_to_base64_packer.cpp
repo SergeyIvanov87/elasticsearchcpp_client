@@ -21,8 +21,6 @@ packer::packer(const std::filesystem::path &file_path)
 
 void packer::pack(const std::filesystem::path &path_to_pack)
 {
-    original_data_path.reset(new elasticsearch::common_model::OriginalPath(std::filesystem::absolute(path_to_pack)));
-
     std::unique_ptr<FILE, decltype(&fclose)> packed_file (fopen(path_to_pack.c_str(), "rb"), fclose);
     if (!packed_file)
     {
@@ -45,6 +43,7 @@ void packer::pack(const std::filesystem::path &path_to_pack)
         }
     } while(bytes_read != 0 or errno == EINTR);
     data_blob = std::make_unique<elasticsearch::common_model::BinaryBlob>(std::move(file_data));
+    original_data_path.reset(new elasticsearch::common_model::OriginalPath(std::filesystem::absolute(path_to_pack)));
 }
 
 const elasticsearch::common_model::BinaryBlob &packer::getBlob() const
