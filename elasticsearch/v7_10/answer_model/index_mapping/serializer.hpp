@@ -15,7 +15,7 @@ using namespace json;
 
 template<class SpecificModel, class Parent>
 TXML_PREPARE_SCHEMA_SERIALIZER_DISPATCHABLE_CLASS(RequestToJSON, Parent,
-                                                 SchemaToJSON,
+                                                  SchemaToJSON,
                                                             request<SpecificModel>,
                                                             ::model::Mappings<SpecificModel>,
                                                             ::model::Properties<SpecificModel>)
@@ -27,7 +27,7 @@ TXML_PREPARE_SCHEMA_SERIALIZER_DISPATCHABLE_CLASS(RequestToJSON, Parent,
     {
         tracer.trace(__FUNCTION__, " - skipe request by itself");
 
-        request<SpecificModel>::template schema_serialize_elements(
+        request<SpecificModel>::template make_schema_serialize(
                 *this, tracer);
     }
 };
@@ -36,20 +36,24 @@ TXML_PREPARE_SCHEMA_SERIALIZER_DISPATCHABLE_CLASS(RequestToJSON, Parent,
 
 
 template<class SpecificModel, template<typename> class ...SpecificModelSerializer>
-struct RequestSerializer : public txml::SerializerSchemaDispatcher<RequestToJSON<SpecificModel,
+struct RequestSerializer : public txml::SerializerSchemaDispatcher<json::SerializerCore,
+                                                                   RequestToJSON<SpecificModel,
                                                                                  RequestSerializer<SpecificModel,
                                                                                                    SpecificModelSerializer...>>,
                                                                    SpecificModelSerializer<RequestSerializer<SpecificModel,
                                                                                                              SpecificModelSerializer...>>...>
 {
-    using base_t = txml::SerializerSchemaDispatcher<RequestToJSON<SpecificModel,
+    using base_t = txml::SerializerSchemaDispatcher<json::SerializerCore,
+                                                    RequestToJSON<SpecificModel,
                                                                   RequestSerializer<SpecificModel,
                                                                                     SpecificModelSerializer...>>,
-                                    SpecificModelSerializer<RequestSerializer<SpecificModel,
+                                                    SpecificModelSerializer<RequestSerializer<SpecificModel,
                                                                               SpecificModelSerializer...>>...>;
+    static constexpr const char* name() { return "RequestSerializer"; }
     using json = nlohmann::json;
     RequestSerializer(std::shared_ptr<std::stack<json>> shared_object_stack =
                                      std::shared_ptr<std::stack<json>>(new std::stack<json>)) :
+        SerializerCore(shared_object_stack),
         base_t(shared_object_stack)
     {
     }

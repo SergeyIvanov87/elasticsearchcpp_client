@@ -26,7 +26,7 @@ TXML_DECLARE_SERIALIZER_CLASS(CommonSubrequestToJSON, ToJSON,
     {
         tracer.trace(__FUNCTION__, " - skipe common_subrequest by itself");
 
-        val.template format_serialize_elements(*this, tracer);
+        val.template make_format_serialize(*this, tracer);
     }
 };
 
@@ -56,14 +56,14 @@ struct SortSubrequestToJSON : public ToJSON<SortSubrequestToJSON<Model, Specific
     {
         tracer.trace(__FUNCTION__, " - skipe sort_subrequest by itself");
 
-        val.template format_serialize_elements(*this, tracer);
+        val.template make_format_serialize(*this, tracer);
     }
 
     template<class Tracer>
     void serialize_impl(const ::model::SortArrayElement<Model, SpecificSortParams...> &val, Tracer tracer)
     {
         tracer.trace(__FUNCTION__, " - skipe SortArrayElement by itself");
-        val.template format_serialize_elements(*this, tracer);
+        val.template make_format_serialize(*this, tracer);
     }
 };
 

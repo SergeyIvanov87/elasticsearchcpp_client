@@ -17,7 +17,8 @@ template <class Tracer>
 struct packer_interface : virtual public elasticsearch::packer_interface
 {
     virtual ~packer_interface() = default;
-    virtual std::shared_ptr<elasticsearch::image::model::data> to_model(Tracer tracer = Tracer()) const = 0;
+    virtual elasticsearch::image::model::data to_model(Tracer tracer = Tracer()) const = 0;
+
     virtual nlohmann::json to_json(Tracer tracer = Tracer()) const = 0;
 };
 

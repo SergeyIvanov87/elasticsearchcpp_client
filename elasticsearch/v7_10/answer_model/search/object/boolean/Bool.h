@@ -17,7 +17,7 @@ public:
     using self_t = Boolean<Model, SubContexts...>;
     using base_t = txml::XMLNode<Boolean<Model, SubContexts...>,
                                  SubContexts...>;
-
+    using base_t::base_t;
     static constexpr std::string_view class_name()
     {
         return "bool";
@@ -26,26 +26,6 @@ public:
     static constexpr txml::TextReaderWrapper::NodeType class_node_type()
     {
         return txml::TextReaderWrapper::NodeType::Element;
-    }
-
-
-    Boolean(const Boolean &src) {
-        this->getValue() = src.getValue();
-    }
-
-    Boolean(Boolean &&src) {
-        this->getValue().swap(src.getValue());
-    }
-
-    template<class ...BooleanParamsTagsPack,
-                        class = std::enable_if_t<
-                                                not std::disjunction_v<
-                                                            std::is_same<std::decay_t<BooleanParamsTagsPack>, Boolean>...
-                                                                      >
-                                                        , int>>
-    Boolean(BooleanParamsTagsPack &&...args)
-    {
-        (this->template set<std::decay_t<BooleanParamsTagsPack>>(std::make_shared<std::decay_t<BooleanParamsTagsPack>>(std::forward<BooleanParamsTagsPack>(args))),...);
     }
 
     template<class Parent>
@@ -63,10 +43,10 @@ public:
     };
 
     template<class Formatter, class Tracer>
-    void format_serialize_impl(Formatter& out, Tracer tracer) const
+    void format_serialize_request(Formatter& out, Tracer tracer) const
     {
         aggregator_serializer_type ser(out.get_shared_mediator_object());
-        base_t:: template format_serialize_impl(ser, tracer);
+        base_t:: template format_serialize_request(ser, tracer);
     }
 };
 } // namespace search

@@ -8,7 +8,7 @@
 #include "tests/common/Serializers.hpp"
 
 
-#include "tests/common/Nodes.hpp"
+#include "tests/common/NodesSearchTagMapping.hpp"
 #include <gtest/gtest.h>
 
 //
@@ -50,6 +50,54 @@ TEST(NEW_MustQSS, serializer)
     must_instance.template format_serialize(ser, tracer);
     ser. template finalize(node_0, tracer);
     ASSERT_EQ(node_0.dump(), R"({"must":[{"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"aaaa"}},{"terms":{"test_stub_model.test_stub_leaf_string":"my_string_0"}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]})");
+}
+
+TEST(NEW_MustQSSTag, serializer)
+{
+    auto must_instance_from_opt = elasticsearch::v7::search::tag::create::must_tag<StubModel>(std::optional<StubLeafNode_bool>(true),
+                                                                                                  std::optional<StubLeafNode_int>(0),
+                                                                                                  std::optional<StubLeafNode_string>("aaaa")).value();
+    auto must_instance = elasticsearch::v7::search::tag::create::must_tag<StubModel>(StubLeafNode_bool(true),
+                                                                                         StubLeafNode_int(0),
+                                                                                         StubLeafNode_string("aaaa")).value();
+    static_assert(std::is_same_v<decltype(must_instance_from_opt), decltype(must_instance)>, "Must be the same");
+    typename decltype(must_instance_from_opt)::aggregator_serializer_type ser_from_opt;
+    typename decltype(must_instance)::aggregator_serializer_type ser;
+
+    txml::StdoutTracer tracer;
+    nlohmann::json node_from_opt = nlohmann::json::object();
+    nlohmann::json node = nlohmann::json::object();
+
+    must_instance_from_opt.template format_serialize(ser_from_opt, tracer);
+    must_instance.template format_serialize(ser, tracer);
+    ser_from_opt. template finalize(node_from_opt, tracer);
+    ser. template finalize(node, tracer);
+
+    static const std::string expected(R"({"must":[{"simple_query_string":{"fields":["test_stub_model.test_stub_leaf_string"],"query":"aaaa"}},{"term":{"test_stub_model.test_stub_leaf_int":0}},{"term":{"test_stub_model.test_stub_leaf_bool":true}}]})");
+    ASSERT_EQ(node_from_opt.dump(), expected);
+    ASSERT_EQ(node.dump(), expected);
+
+}
+
+TEST(NEW_MustQSSTag_optional, construction)
+{
+    auto must_instance_from_opt = elasticsearch::v7::search::tag::create::must_tag<StubModel>(std::optional<StubLeafNode_bool>(true),
+                                                                                                  std::optional<StubLeafNode_int>(0),
+                                                                                                  std::optional<StubLeafNode_string>("aaaa")).value();
+    auto must_instance = elasticsearch::v7::search::tag::create::must_tag<StubModel>(StubLeafNode_bool(true),
+                                                                                         StubLeafNode_int(0),
+                                                                                         StubLeafNode_string("aaaa")).value();
+    static_assert(std::is_same_v<decltype(must_instance_from_opt), decltype(must_instance)>, "Must be the same");
+
+    auto must_instance_from_empty_opt = elasticsearch::v7::search::tag::create::must_tag<StubModel>(std::optional<StubLeafNode_bool>(),
+                                                                                                  std::optional<StubLeafNode_int>(),
+                                                                                                  std::optional<StubLeafNode_string>());
+    ASSERT_FALSE(must_instance_from_empty_opt.has_value());
+
+    auto must_instance_from_one_nonempty_opt = elasticsearch::v7::search::tag::create::must_tag<StubModel>(std::optional<StubLeafNode_bool>(),
+                                                                                                  std::optional<StubLeafNode_int>(0),
+                                                                                                  std::optional<StubLeafNode_string>());
+    ASSERT_TRUE(must_instance_from_one_nonempty_opt.has_value());
 }
 
 TEST(NEW_BooleanMustQSS, serializer)
@@ -179,6 +227,27 @@ TEST(GeoBB, init)
 }
 
 
+TEST(Range, init_multi)
+{
+    using namespace elasticsearch::v7;
+
+    auto range_instance =
+    search::tag::create::range_tag(
+                search::tag::create::range_element_tag<StubModel, StubLeafNode_int,
+                                                       model::search::range::GTE,
+                                                       model::search::range::LTE>(10, 100),
+                search::tag::create::range_element_tag<StubModel, StubLeafNode_string,
+                                                       model::search::range::GTE,
+                                                       model::search::range::LTE>(std::string("10"), std::string("100")));
+
+    typename decltype(range_instance)::aggregator_serializer_type ser;
+    nlohmann::json node = nlohmann::json::object();
+    txml::StdoutTracer tracer;
+    range_instance.template format_serialize(ser, tracer);
+    ser. template finalize(node, tracer);
+    ASSERT_EQ(node.dump(), R"({"range":{"test_stub_model.test_stub_leaf_int":{"gte":10,"lte":100},"test_stub_model.test_stub_leaf_string":{"gte":"10","lte":"100"}}})");
+}
+
 TEST(NEW_BooleanMustQSSGeoBBFilter, init)
 {
     using MustTag = model::search::Must<StubModel,
@@ -258,8 +327,8 @@ TEST(BooleanMustQSSGeoBBFilterRange, init)
     QSSTag sqt_param("acdc");
 
     using RangeTag = model::search::Range<StubModel, StubLeafNode_int>;
-    RangeTag range_instance(model::search::range::GTE<int>(10),
-                            model::search::range::LTE<int>(100));
+    RangeTag range_instance(model::search::range::element<StubModel, StubLeafNode_int>::template make<model::search::range::GTE,
+                                                                                                      model::search::range::LTE>(10, 100));
 
     using QueryTag = model::search::Query<StubModel, BooleanTag, QSSTag, RangeTag>;
     QueryTag q_instance(bool_instance, sqt_param, range_instance);
@@ -281,12 +350,12 @@ protected:
         using namespace elasticsearch::v7::index_mapping;
         transaction req(get_host(), transaction::Tag<StubLeafNode, StubLeafNodeSerializer> {});
         ASSERT_NO_THROW(req.execute(get_index(), false));
-        std::shared_ptr<response> ans_ptr;
+        std::optional<response> ans_ptr;
 
         ASSERT_NO_THROW(ans_ptr = req.get_response());
 
-        ASSERT_TRUE(ans_ptr->getValue<model::Ack>());
-        ASSERT_TRUE(ans_ptr->getValue<model::Ack>()->getValue());
+        ASSERT_TRUE(ans_ptr->node<model::Ack>());
+        ASSERT_TRUE(ans_ptr->node<model::Ack>()->value());
     }
 
     void TearDown() override {
@@ -301,19 +370,19 @@ TEST_F(SearchTagFixtureMatchAll, request_create_match_all)
     create_pit::transaction construct(get_host());
     ASSERT_NO_THROW(construct.execute(get_index(), std::chrono::seconds(10), curl_verbose()));
     model::PIT pit = construct.get_pit();
-    ASSERT_TRUE(pit.getValue<model::Id>());
+    ASSERT_TRUE(pit.node<model::Id>());
 
     txml::StdoutTracer tracer;
     search::transaction s(get_host());
     ASSERT_NO_THROW(s.execute("", 1000, curl_verbose(), tracer));
-    std::shared_ptr<search::response<StubLeafNode>> search_ans_ptr;
+    std::optional<search::response<StubLeafNode>> search_ans_ptr;
     ASSERT_NO_THROW(search_ans_ptr = s.get_response<StubLeafNode>(tracer));
 
     ASSERT_NO_THROW(s.execute(1000, pit, curl_verbose()));
     ASSERT_NO_THROW(search_ans_ptr = s.get_response<StubLeafNode>(tracer));
 
     delete_pit::transaction destroy(get_host());
-    ASSERT_NO_THROW(destroy.execute(*pit.getValue<model::Id>(), curl_verbose()));
+    ASSERT_NO_THROW(destroy.execute(pit.value<model::Id>(), curl_verbose()));
 
 }
 
@@ -327,12 +396,12 @@ protected:
         using namespace elasticsearch::v7::index_mapping;
         transaction req(get_host(), transaction::Tag<StubModel, StubModelSerializer> {});
         ASSERT_NO_THROW(req.execute(get_index(), false));
-        std::shared_ptr<response> ans_ptr;
+        std::optional<response> ans_ptr;
 
         ASSERT_NO_THROW(ans_ptr = req.get_response());
 
-        ASSERT_TRUE(ans_ptr->getValue<model::Ack>());
-        ASSERT_TRUE(ans_ptr->getValue<model::Ack>()->getValue());
+        ASSERT_TRUE(ans_ptr->node<model::Ack>());
+        ASSERT_TRUE(ans_ptr->node<model::Ack>()->value());
     }
 
     void TearDown() override {
@@ -347,7 +416,7 @@ TEST_F(SearchTagFixtureComplex, request_create_match_all)
     create_pit::transaction construct(get_host());
     ASSERT_NO_THROW(construct.execute(get_index(), std::chrono::seconds(10), curl_verbose()));
     model::PIT pit = construct.get_pit();
-    ASSERT_TRUE(pit.getValue<model::Id>());
+    ASSERT_TRUE(pit.node<model::Id>());
 
     txml::StdoutTracer tracer;
     using MustTag = model::search::Must<StubModel,
@@ -377,17 +446,17 @@ TEST_F(SearchTagFixtureComplex, request_create_match_all)
     search::transaction s(get_host());
     ASSERT_NO_THROW(s.execute(/*get_index() + */"",
                               1000,
-                              search::tag::create::query_tag<StubModel>(boolean_param),
+                              search::tag::create::query_tag<StubModel>(boolean_param).value(),
                               curl_verbose(), tracer));
-    std::shared_ptr<search::response<StubLeafNode>> search_ans_ptr;
+    std::optional<search::response<StubLeafNode>> search_ans_ptr;
     ASSERT_NO_THROW(search_ans_ptr = s.get_response<StubLeafNode>(tracer));
 
     ASSERT_NO_THROW(s.execute(1000, pit,
-                              search::tag::create::query_tag<StubModel>(boolean_param),
+                              search::tag::create::query_tag<StubModel>(boolean_param).value(),
                               curl_verbose()));
     ASSERT_NO_THROW(search_ans_ptr = s.get_response<StubLeafNode>(tracer));
 
     delete_pit::transaction destroy(get_host());
-    ASSERT_NO_THROW(destroy.execute(*pit.getValue<model::Id>(), curl_verbose()));
+    ASSERT_NO_THROW(destroy.execute(pit.value<model::Id>(), curl_verbose()));
 }
 }

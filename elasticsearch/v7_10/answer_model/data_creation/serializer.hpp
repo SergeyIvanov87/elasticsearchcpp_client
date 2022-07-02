@@ -26,6 +26,7 @@ struct RequestSerializer : public txml::SerializerVirtualDispatcher<SerializerCo
     using base_t = txml::SerializerVirtualDispatcher<SerializerCore, SpecificModelSerializer<RequestSerializer<SpecificModel,
                                                                               SpecificModelSerializer...>>...>;
 //    using json = nlohmann::json;
+    static constexpr const char* name() { return "RequestSerializer"; }
     RequestSerializer(std::shared_ptr<std::stack<json::SerializerCore::json_core_t>> external_iterators_stack =
                             std::shared_ptr<std::stack<json::SerializerCore::json_core_t>>(new std::stack<json::SerializerCore::json_core_t>)) :
         base_t(external_iterators_stack)

@@ -29,7 +29,7 @@ TXML_DECLARE_DESERIALIZER_CLASS(ResponseFromJSON, FromJSON, response,
     TXML_DESERIALIZER_OBJECT
 
     template<class Tracer>
-    std::shared_ptr<response> deserialize_impl(txml::details::SchemaDTag<response>, Tracer tracer)
+    std::optional<response> deserialize_impl(txml::details::SchemaDTag<response>, Tracer tracer)
     {
         auto& [begin_it, end_it] = get_shared_mediator_object()->top();
 
@@ -40,11 +40,11 @@ TXML_DECLARE_DESERIALIZER_CLASS(ResponseFromJSON, FromJSON, response,
     }
 
     template<class Tracer>
-    std::shared_ptr<typename RootCause::element_t> deserialize_impl(txml::details::SchemaDTag< typename RootCause::element_t>, Tracer tracer)
+    std::optional<typename RootCause::element_t> deserialize_impl(txml::details::SchemaDTag< typename RootCause::element_t>, Tracer tracer)
     {
         auto mediator = get_shared_mediator_object();
         auto& [begin_it, end_it] = mediator->top();
-        if (!check_array_node_param< typename RootCause::element_t>(begin_it, end_it, json::value_t::object, tracer))
+        if (!check_array_node_param< typename RootCause::element_t>(begin_it, end_it, in_stream_core_t::value_t::object, tracer))
         {
             return {};
         }

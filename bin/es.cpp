@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string.h>
 
 #include "elasticsearch/books/request/book_index_mapping.hpp"
 #include "elasticsearch/books/data_model/model.hpp"
@@ -10,7 +11,10 @@
 #include "bin/v7/dispatcher.hpp"
 #include "bin/utils/parse_string.hpp"
 
-std::map<std::string, std::string> parse_params(const char *multiline_string, char key_value_sep = ':')
+char param_key_value_separator = ':';
+char param_list_item_separator = '\n';
+
+std::map<std::string, std::string> parse_params(const char *multiline_string, char key_value_sep = param_key_value_separator)
 {
     std::map<std::string, std::string> ret;
     const char *pStr = multiline_string;//strchr(multiline_string, '\n');
@@ -21,7 +25,28 @@ std::map<std::string, std::string> parse_params(const char *multiline_string, ch
         {
             ret.emplace(name, value);
         }
-        pStr = strchr(pStr + 1, '\n');
+        pStr = strchr(pStr + 1, param_list_item_separator);
+    }
+    return ret;
+}
+
+std::map<std::string, std::string> parse_params_list(char **multiline_string, size_t multiline_amount, char key_value_sep = param_key_value_separator)
+{
+    if(multiline_amount == 1)
+    {
+        return parse_params(*multiline_string, key_value_sep);
+    }
+    std::map<std::string, std::string> ret;
+    size_t index = 0;
+    while(index < multiline_amount)
+    {
+        const char *pStr = multiline_string[index];
+        auto [name, value] = bin::utils::parse_key_value(pStr, key_value_sep);
+        if (!name.empty() && !value.empty())
+        {
+            ret.emplace(name, value);
+        }
+        ++index;
     }
     return ret;
 }
@@ -83,7 +108,7 @@ int main(int argc, char* argv[])
         }
         else
         {
-            d.put_data(argv[1], parse_params(argv[2]));
+            d.put_data(argv[1], parse_params_list(argv + 2, argc - 2));
         }
     }
     else if(binary_name.find("es_rm") != std::string::npos)
@@ -94,6 +119,50 @@ int main(int argc, char* argv[])
             return -1;
         }
         d.rm_data(argv[1], argv[2]);
+    }
+    else if (binary_name.find("es_info") != std::string::npos)
+    {
+        using namespace bin::v7;
+        if (argc == 1)
+        {
+            std::cout << "Available schemas:" << std::endl;
+            for (const char **s = schema_indices; *s; s++)
+            {
+                std::cout << *s << std ::endl;
+            }
+            return 0;
+        }
+        if (argc >= 2)
+        {
+            const char *found_schema = nullptr;
+            size_t argv_len = strlen(argv[1]);
+            for (const char **s = schema_indices; *s; s++)
+            {
+                size_t s_len = strlen(*s);
+                if (argv_len == s_len && !strncmp(argv[1], *s, s_len))
+                {
+                    found_schema = *s;
+                    break;
+                }
+            }
+            if (!found_schema)
+            {
+                std::cout << "Unexpected schema: " << argv[1] << ". Check on list of available schemas:" <<std::endl;
+                for (const char **s = schema_indices; *s; s++)
+                {
+                    std::cout << *s << std ::endl;
+                }
+                return -1;
+            }
+            d.es_info(found_schema, std::cout);
+            std::cout << "\n!!! Separators for:\n"
+                      << "\tparams in list: " << param_key_value_separator << "\n"
+                      << "\tparams key/value: \\n" << std::endl
+                      << "Example:\n"
+                      << "\"param_key_1:param_value_1" << param_list_item_separator
+                      << "\"param_key_2:param_value_2" << param_list_item_separator << "\"" << std::endl;
+            return 0;
+        }
     }
     else if(binary_name.find("es_search") != std::string::npos)
     {
@@ -108,11 +177,12 @@ int main(int argc, char* argv[])
         }
         else if (argc == 3)
         {
-            d.search_match(argv[1], parse_params(argv[2]));
+            d.search_match(argv[1], parse_params_list(argv + 2, argc - 2));
         }
         else
         {
-            d.search_match(argv[1], parse_params(argv[2]), parse_params(argv[3]));
+            //d.search_match(argv[1], parse_params(argv[2]), parse_params(argv[3])); TODO no sort at now
+            d.search_match(argv[1], parse_params_list(argv + 2, argc - 2));
         }
     }
     else if (binary_name.find("es_test") != std::string::npos)

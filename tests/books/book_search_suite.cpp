@@ -54,10 +54,10 @@ protected:
         transaction req(get_host());
         ASSERT_NO_THROW(req.execute(get_index(), false));
 
-        std::shared_ptr<transaction::response> ans_ptr;
+        transaction::response ans_ptr;
         ASSERT_NO_THROW(ans_ptr = req.get_response());
-        ASSERT_TRUE(ans_ptr->getValue<model::Ack>());
-        ASSERT_EQ(ans_ptr->getValue<model::Ack>()->getValue(), true);
+        ASSERT_TRUE(ans_ptr.node<model::Ack>());
+        ASSERT_EQ(ans_ptr.node<model::Ack>()->value(), true);
     }
 
     void TearDown() override {
@@ -88,23 +88,23 @@ elasticsearch::book::model::data get_test_book_model_by_index(size_t index) {
 bool test_data_equal(const elasticsearch::book::model::data &lhs, const elasticsearch::book::model::data &rhs)
 {
     bool ret = false;
-    ret = (lhs.getValue<elasticsearch::common_model::OriginalPath>()->getValue() ==
-           rhs.getValue<elasticsearch::common_model::OriginalPath>()->getValue());
-    ret &= (lhs.getValue<elasticsearch::common_model::BinaryBlob>()->getValue() ==
-            rhs.getValue<elasticsearch::common_model::BinaryBlob>()->getValue());
-    ret &= (lhs.getValue<elasticsearch::common_model::Format>()->getValue() ==
-            rhs.getValue<elasticsearch::common_model::Format>()->getValue());
+    ret = (lhs.node<elasticsearch::common_model::OriginalPath>()->value() ==
+           rhs.node<elasticsearch::common_model::OriginalPath>()->value());
+    ret &= (lhs.node<elasticsearch::common_model::BinaryBlob>()->value() ==
+            rhs.node<elasticsearch::common_model::BinaryBlob>()->value());
+    ret &= (lhs.node<elasticsearch::common_model::Format>()->value() ==
+            rhs.node<elasticsearch::common_model::Format>()->value());
 
-    ret &= (lhs.getValue<elasticsearch::book::model::element::Contributor>()->getValue() ==
-            rhs.getValue<elasticsearch::book::model::element::Contributor>()->getValue());
-    ret &= (lhs.getValue<elasticsearch::book::model::element::Creator>()->getValue() ==
-            rhs.getValue<elasticsearch::book::model::element::Creator>()->getValue());
-    ret &= (lhs.getValue<elasticsearch::book::model::element::Identifier>()->getValue() ==
-            rhs.getValue<elasticsearch::book::model::element::Identifier>()->getValue());
-    ret &= (lhs.getValue<elasticsearch::book::model::element::Language>()->getValue() ==
-            rhs.getValue<elasticsearch::book::model::element::Language>()->getValue());
-    ret &= (lhs.getValue<elasticsearch::book::model::element::Title>()->getValue() ==
-            rhs.getValue<elasticsearch::book::model::element::Title>()->getValue());
+    ret &= (lhs.node<elasticsearch::book::model::element::Contributor>()->value() ==
+            rhs.node<elasticsearch::book::model::element::Contributor>()->value());
+    ret &= (lhs.node<elasticsearch::book::model::element::Creator>()->value() ==
+            rhs.node<elasticsearch::book::model::element::Creator>()->value());
+    ret &= (lhs.node<elasticsearch::book::model::element::Identifier>()->value() ==
+            rhs.node<elasticsearch::book::model::element::Identifier>()->value());
+    ret &= (lhs.node<elasticsearch::book::model::element::Language>()->value() ==
+            rhs.node<elasticsearch::book::model::element::Language>()->value());
+    ret &= (lhs.node<elasticsearch::book::model::element::Title>()->value() ==
+            rhs.node<elasticsearch::book::model::element::Title>()->value());
     return ret;
 }
 
@@ -120,44 +120,44 @@ TEST_F(BookCreateSearchFixture, create_n_search)
     ASSERT_NO_THROW(req.execute_force_refresh(get_index() + "/_doc/" + document_id,
                                               data_model, curl_verbose()));
 
-    std::shared_ptr<create::transaction::response> ans_ptr;
+    create::transaction::response ans_ptr;
     ASSERT_NO_THROW(ans_ptr = req.get_response());
-    ASSERT_TRUE(ans_ptr->getValue<::model::Result>());
-    ASSERT_EQ(ans_ptr->getValue<::model::Result>()->getValue(), "created");
-    ASSERT_TRUE(ans_ptr->getValue<::model::_Version>());
-    ASSERT_EQ(ans_ptr->getValue<::model::_Version>()->getValue(), 1);
-    ASSERT_TRUE(ans_ptr->getValue<::model::_Id>());
-    ASSERT_EQ(ans_ptr->getValue<::model::_Id>()->getValue(), document_id);
-    ASSERT_TRUE(ans_ptr->getValue<::model::_Index>());
-    ASSERT_EQ(ans_ptr->getValue<::model::_Index>()->getValue(), get_index());
-    ASSERT_TRUE(ans_ptr->getValue<::model::_Type>());
-    ASSERT_EQ(ans_ptr->getValue<::model::_Type>()->getValue(), "_doc");
+    ASSERT_TRUE(ans_ptr.node<::model::Result>());
+    ASSERT_EQ(ans_ptr.node<::model::Result>()->value(), "created");
+    ASSERT_TRUE(ans_ptr.node<::model::_Version>());
+    ASSERT_EQ(ans_ptr.node<::model::_Version>()->value(), 1);
+    ASSERT_TRUE(ans_ptr.node<::model::_Id>());
+    ASSERT_EQ(ans_ptr.node<::model::_Id>()->value(), document_id);
+    ASSERT_TRUE(ans_ptr.node<::model::_Index>());
+    ASSERT_EQ(ans_ptr.node<::model::_Index>()->value(), get_index());
+    ASSERT_TRUE(ans_ptr.node<::model::_Type>());
+    ASSERT_EQ(ans_ptr.node<::model::_Type>()->value(), "_doc");
 
 
     txml::StdoutTracer tracer;
     search::transaction s(get_host());
     ASSERT_NO_THROW(s.execute(get_index(), 10, curl_verbose(), tracer));
-    std::shared_ptr<search::transaction::response> search_ans_ptr;
+    search::transaction::response search_ans_ptr;
     search_ans_ptr = s.get_response(tracer);
-    ASSERT_TRUE(search_ans_ptr->getValue<::model::HitsNode<elasticsearch::book::model::data>>());
-    auto hits = search_ans_ptr->getValue<::model::HitsNode<elasticsearch::book::model::data>>();
+    ASSERT_TRUE(search_ans_ptr.node<::model::HitsNode<elasticsearch::book::model::data>>());
+    const auto &hits = search_ans_ptr.node<::model::HitsNode<elasticsearch::book::model::data>>();
 
-    ASSERT_TRUE(hits->getValue<::model::HitsArray<elasticsearch::book::model::data>>());
-    auto hits_array = hits->getValue<::model::HitsArray<elasticsearch::book::model::data>>()->getValue();
+    ASSERT_TRUE(hits->node<::model::HitsArray<elasticsearch::book::model::data>>());
+    const auto &hits_array = hits->node<::model::HitsArray<elasticsearch::book::model::data>>()->value();
     ASSERT_FALSE(hits_array.empty());
 
     bool found = false;
     for (const auto &hit : hits_array)
     {
-        std::cout << hit->getValue<::model::_Index>()->getValue() << std::endl;
-        std::cout << hit->getValue<::model::_Id>()->getValue() << std::endl;
-        std::cout << hit->getValue<::model::_Score>()->getValue() << std::endl;
-        std::cout << hit->getValue<::model::_Type>()->getValue() << std::endl;
-        auto source_ptr = hit->getValue<::model::_Source<elasticsearch::book::model::data>>();
+        std::cout << hit->node<::model::_Index>()->value() << std::endl;
+        std::cout << hit->node<::model::_Id>()->value() << std::endl;
+        std::cout << hit->node<::model::_Score>()->value() << std::endl;
+        std::cout << hit->node<::model::_Type>()->value() << std::endl;
+        auto source_ptr = hit->node<::model::_Source<elasticsearch::book::model::data>>();
         if (source_ptr)
         {
-            auto found_model_ptr = source_ptr->getValue<elasticsearch::book::model::data>();
-            if (found_model_ptr && document_id ==  hit->getValue<::model::_Id>()->getValue())
+            const auto &found_model_ptr = source_ptr->node<elasticsearch::book::model::data>();
+            if (found_model_ptr && document_id ==  hit->node<::model::_Id>()->value())
             {
                 found |= test_data_equal(*found_model_ptr, data_model);
             }
@@ -186,10 +186,10 @@ protected:
         transaction req(get_host());
         ASSERT_NO_THROW(req.execute(get_index(), false));
 
-        std::shared_ptr<transaction::response> ans_ptr;
+        transaction::response ans_ptr;
         ASSERT_NO_THROW(ans_ptr = req.get_response());
-        ASSERT_TRUE(ans_ptr->getValue<::model::Ack>());
-        ASSERT_EQ(ans_ptr->getValue<::model::Ack>()->getValue(), true);
+        ASSERT_TRUE(ans_ptr.node<::model::Ack>());
+        ASSERT_EQ(ans_ptr.node<::model::Ack>()->value(), true);
 
         generate_elements();
     }
@@ -216,12 +216,12 @@ protected:
             ASSERT_NO_THROW(req.execute_force_refresh(get_index() + "/_doc/" + document_id,
                                                       data_model, curl_verbose()));
 
-            std::shared_ptr<create::transaction::response> create_ans_ptr;
+            create::transaction::response create_ans_ptr;
             ASSERT_NO_THROW(create_ans_ptr = req.get_response());
-            ASSERT_TRUE(create_ans_ptr->getValue<::model::Result>());
-            ASSERT_EQ(create_ans_ptr->getValue<::model::Result>()->getValue(), "created");
-            ASSERT_EQ(create_ans_ptr->getValue<::model::_Id>()->getValue(), document_id);
-            ASSERT_TRUE(create_ans_ptr->getValue<::model::_Index>());
+            ASSERT_TRUE(create_ans_ptr.node<::model::Result>());
+            ASSERT_EQ(create_ans_ptr.node<::model::Result>()->value(), "created");
+            ASSERT_EQ(create_ans_ptr.node<::model::_Id>()->value(), document_id);
+            ASSERT_TRUE(create_ans_ptr.node<::model::_Index>());
 
             // remember to validate
             generated_item_ids.insert(std::to_string(index));
@@ -244,29 +244,29 @@ TEST_F(BookMultipleCreateSearchFixture_10, create_n_search_pit)
     ASSERT_NO_THROW(s.execute(get_index(), 10, 10s,
                               search::tag::sort<element::Contributor>({::model::Order("desc")}),
                               curl_verbose(), tracer));
-    std::shared_ptr<search::transaction::response> search_ans_ptr;
+    search::transaction::response search_ans_ptr;
     search_ans_ptr = s.get_response(tracer);
-    ASSERT_TRUE(search_ans_ptr->getValue<::model::HitsNode<elasticsearch::book::model::data>>());
-    auto hits = search_ans_ptr->getValue<::model::HitsNode<elasticsearch::book::model::data>>();
+    ASSERT_TRUE(search_ans_ptr.node<::model::HitsNode<elasticsearch::book::model::data>>());
+    const auto &hits = search_ans_ptr.node<::model::HitsNode<elasticsearch::book::model::data>>();
 
-    ASSERT_TRUE(hits->getValue<::model::HitsArray<elasticsearch::book::model::data>>());
-    auto hits_array = hits->getValue<::model::HitsArray<elasticsearch::book::model::data>>()->getValue();
+    ASSERT_TRUE(hits->node<::model::HitsArray<elasticsearch::book::model::data>>());
+    const auto &hits_array = hits->node<::model::HitsArray<elasticsearch::book::model::data>>()->value();
     ASSERT_FALSE(hits_array.empty());
 
     //std::this_thread::sleep_for(30s);
     bool found = false;
     for (const auto &hit : hits_array)
     {
-        std::cout << hit->getValue<::model::_Index>()->getValue() << std::endl;
-        std::cout << hit->getValue<::model::_Id>()->getValue() << std::endl;
-        std::cout << hit->getValue<::model::_Type>()->getValue() << std::endl;
-        auto source_ptr = hit->getValue<::model::_Source<elasticsearch::book::model::data>>();
+        std::cout << hit->node<::model::_Index>()->value() << std::endl;
+        std::cout << hit->node<::model::_Id>()->value() << std::endl;
+        std::cout << hit->node<::model::_Type>()->value() << std::endl;
+        const auto &source_ptr = hit->node<::model::_Source<elasticsearch::book::model::data>>();
         if (source_ptr)
         {
-            auto found_model_ptr = source_ptr->getValue<elasticsearch::book::model::data>();
+            const auto &found_model_ptr = source_ptr->node<elasticsearch::book::model::data>();
             if (found_model_ptr)
             {
-                const std::string &id = hit->getValue<::model::_Id>()->getValue();
+                const std::string &id = hit->node<::model::_Id>()->value();
                 if (auto inserted_it = inserted_items.find(id); inserted_it != inserted_items.end())
                 {
                     auto expected_model = get_test_book_model_by_index(id);
@@ -285,11 +285,11 @@ TEST_F(BookMultipleCreateSearchFixture_10, create_n_search_pit)
     // TODO use OLD PIT
     ASSERT_NO_THROW(s.execute("", 10, curl_verbose()));
     search_ans_ptr = s.get_response(tracer);
-    ASSERT_TRUE(search_ans_ptr->getValue<::model::HitsNode<elasticsearch::book::model::data>>());
-    hits = search_ans_ptr->getValue<::model::HitsNode<elasticsearch::book::model::data>>();
+    ASSERT_TRUE(search_ans_ptr.node<::model::HitsNode<elasticsearch::book::model::data>>());
+    hits = search_ans_ptr.node<::model::HitsNode<elasticsearch::book::model::data>>();
 
-    ASSERT_TRUE(hits->getValue<::model::HitsArray<elasticsearch::book::model::data>>());
-    hits_array = hits->getValue<::model::HitsArray<elasticsearch::book::model::data>>()->getValue();
+    ASSERT_TRUE(hits->node<::model::HitsArray<elasticsearch::book::model::data>>());
+    hits_array = hits->node<::model::HitsArray<elasticsearch::book::model::data>>()->value();
     ASSERT_TRUE(hits_array.empty());
     */
 }
@@ -304,38 +304,38 @@ TEST_F(BookMultipleCreateSearchFixture_11, create_n_search_boolean_2_terms)
 
     txml::StdoutTracer tracer;
 
-    auto mu = search::tag::create::must_tag(search::tag::make<element::Creator>(std::string("creator_search10")),
-                                            search::tag::make<element::Language>(std::string("language_search10")));
+    auto mu = search::tag::create::must_tag(element::Creator("creator_search10"),
+                                            element::Language("language_search10"));
     auto boo = search::tag::create::boolean_tag(mu);
     search::transaction s(get_host());
 
     ASSERT_NO_THROW(s.execute(get_index(), 10, 10s,
-                              search::tag::create::query_tag(boo),
+                              search::tag::create::query_tag(boo).value(),
                               search::tag::sort<element::Contributor> ({::model::Order("desc")}),
                               curl_verbose(),
                               tracer));
-    std::shared_ptr<search::transaction::response> search_ans_ptr;
+    search::transaction::response search_ans_ptr;
     search_ans_ptr = s.get_response(tracer);
-    ASSERT_TRUE(search_ans_ptr->getValue<::model::HitsNode<elasticsearch::book::model::data>>());
-    auto hits = search_ans_ptr->getValue<::model::HitsNode<elasticsearch::book::model::data>>();
+    ASSERT_TRUE(search_ans_ptr.node<::model::HitsNode<elasticsearch::book::model::data>>());
+    const auto &hits = search_ans_ptr.node<::model::HitsNode<elasticsearch::book::model::data>>();
 
-    ASSERT_TRUE(hits->getValue<::model::HitsArray<elasticsearch::book::model::data>>());
-    auto hits_array = hits->getValue<::model::HitsArray<elasticsearch::book::model::data>>()->getValue();
+    ASSERT_TRUE(hits->node<::model::HitsArray<elasticsearch::book::model::data>>());
+    const auto &hits_array = hits->node<::model::HitsArray<elasticsearch::book::model::data>>()->value();
     ASSERT_FALSE(hits_array.empty());
 
     bool found = false;
     for (const auto &hit : hits_array)
     {
-        std::cout << hit->getValue<::model::_Index>()->getValue() << std::endl;
-        std::cout << hit->getValue<::model::_Id>()->getValue() << std::endl;
-        std::cout << hit->getValue<::model::_Type>()->getValue() << std::endl;
-        auto source_ptr = hit->getValue<::model::_Source<elasticsearch::book::model::data>>();
+        std::cout << hit->node<::model::_Index>()->value() << std::endl;
+        std::cout << hit->node<::model::_Id>()->value() << std::endl;
+        std::cout << hit->node<::model::_Type>()->value() << std::endl;
+        const auto &source_ptr = hit->node<::model::_Source<elasticsearch::book::model::data>>();
         if (source_ptr)
         {
-            auto found_model_ptr = source_ptr->getValue<elasticsearch::book::model::data>();
+            const auto &found_model_ptr = source_ptr->node<elasticsearch::book::model::data>();
             if (found_model_ptr)
             {
-                ASSERT_EQ(hit->getValue<::model::_Id>()->getValue(), "10");
+                ASSERT_EQ(hit->node<::model::_Id>()->value(), "10");
                 found = true;
             }
         }
@@ -356,33 +356,33 @@ TEST_F(BookMultipleCreateSearchFixture_11, create_n_search_query_simple_string)
     search::transaction s(get_host());
 
     ASSERT_NO_THROW(s.execute(get_index(), 10, 10s,
-                              search::tag::create::query_tag(qst),
+                              search::tag::create::query_tag(qst).value(),
                               search::tag::sort<element::Contributor> ({::model::Order("desc")}),
                               curl_verbose(),
                               tracer));
-    std::shared_ptr<search::transaction::response> search_ans_ptr;
+    search::transaction::response search_ans_ptr;
     search_ans_ptr = s.get_response(tracer);
-    ASSERT_TRUE(search_ans_ptr->getValue<::model::HitsNode<elasticsearch::book::model::data>>());
-    auto hits = search_ans_ptr->getValue<::model::HitsNode<elasticsearch::book::model::data>>();
+    ASSERT_TRUE(search_ans_ptr.node<::model::HitsNode<elasticsearch::book::model::data>>());
+    const auto &hits = search_ans_ptr.node<::model::HitsNode<elasticsearch::book::model::data>>();
 
-    ASSERT_TRUE(hits->getValue<::model::HitsArray<elasticsearch::book::model::data>>());
-    auto hits_array = hits->getValue<::model::HitsArray<elasticsearch::book::model::data>>()->getValue();
+    ASSERT_TRUE(hits->node<::model::HitsArray<elasticsearch::book::model::data>>());
+    const auto &hits_array = hits->node<::model::HitsArray<elasticsearch::book::model::data>>()->value();
     ASSERT_FALSE(hits_array.empty());
 
     size_t found = 0;
     for (const auto &hit : hits_array)
     {
-        std::cout << hit->getValue<::model::_Index>()->getValue() << std::endl;
-        std::cout << hit->getValue<::model::_Id>()->getValue() << std::endl;
-        std::cout << hit->getValue<::model::_Type>()->getValue() << std::endl;
-        auto source_ptr = hit->getValue<::model::_Source<elasticsearch::book::model::data>>();
+        std::cout << hit->node<::model::_Index>()->value() << std::endl;
+        std::cout << hit->node<::model::_Id>()->value() << std::endl;
+        std::cout << hit->node<::model::_Type>()->value() << std::endl;
+        const auto &source_ptr = hit->node<::model::_Source<elasticsearch::book::model::data>>();
         if (source_ptr)
         {
-            auto found_model_ptr = source_ptr->getValue<elasticsearch::book::model::data>();
+            const auto &found_model_ptr = source_ptr->node<elasticsearch::book::model::data>();
             if (found_model_ptr)
             {
-                if(hit->getValue<::model::_Id>()->getValue() =="1" ||
-                  hit->getValue<::model::_Id>()->getValue() =="10")
+                if(hit->node<::model::_Id>()->value() =="1" ||
+                  hit->node<::model::_Id>()->value() =="10")
                 {
                     found++;
                 }

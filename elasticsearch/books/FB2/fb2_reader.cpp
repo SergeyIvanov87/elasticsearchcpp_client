@@ -17,11 +17,12 @@ reader::reader(const std::string& file_path)
         throw std::runtime_error(std::string("Cannot read file content: ") + file_path);
     }
 
-    book_ptr = txml::XMLCreator::try_create<ShortFictionBook>(xml_reader);
-    if (!book_ptr)
+    auto&& boo = txml::XMLCreator::try_create<ShortFictionBook>(xml_reader);
+    if (!boo)
     {
         throw std::runtime_error("Cannot restore FB2 book from file: " + file_path);
     }
+    book_ptr = std::move(boo.value());
 
     // prepare binary
     packer_impl.reset(new packer(file_path));
@@ -29,16 +30,16 @@ reader::reader(const std::string& file_path)
 
 reader::~reader() = default;
 
-std::shared_ptr<fb2::ShortFictionBook> reader::getBook() const
+const fb2::ShortFictionBook& reader::getBook() const
 {
     return book_ptr;
 }
-std::shared_ptr<elasticsearch::common_model::BinaryBlob> reader::getBlob() const
+const elasticsearch::common_model::BinaryBlob& reader::getBlob() const
 {
     return packer_impl->getBlob();
 }
 
-std::shared_ptr<elasticsearch::common_model::OriginalPath> reader::getPath() const
+const elasticsearch::common_model::OriginalPath& reader::getPath() const
 {
     return packer_impl->getPath();
 }
@@ -48,21 +49,21 @@ void reader::pack(const std::filesystem::path &path_to_pack)
     packer_impl->pack(path_to_pack);
 }
 template<class Tracer>
-std::shared_ptr<elasticsearch::book::model::data> reader::to_model_impl(Tracer tracer) const
+elasticsearch::book::model::data reader::to_model_impl(Tracer tracer) const
 {
     elasticsearch::book::model::fb2::to_model_data i2m;
-    getBook()->format_serialize(i2m, tracer);
+    getBook().format_serialize(i2m, tracer);
     // postproc
-    i2m.data_model->set(getBlob());
-    i2m.data_model->set(getPath());
-    return i2m.data_model;
+    i2m.data_model->insert(getBlob());
+    i2m.data_model->insert(getPath());
+    return i2m.data_model.value();
 }
 
-std::shared_ptr<elasticsearch::book::model::data> reader::to_model(txml::EmptyTracer tracer) const
+elasticsearch::book::model::data reader::to_model(txml::EmptyTracer tracer) const
 {
     return to_model_impl(std::move(tracer));
 }
-std::shared_ptr<elasticsearch::book::model::data> reader::to_model(txml::StdoutTracer tracer) const
+elasticsearch::book::model::data reader::to_model(txml::StdoutTracer tracer) const
 {
     return to_model_impl(std::move(tracer));
 }
@@ -75,7 +76,7 @@ nlohmann::json reader::to_json_impl(Tracer tracer) const
                                                         elasticsearch::book::to_data,
                                                         elasticsearch::common_model::to_data> serializer;
 
-    model_value->template format_serialize(serializer, tracer);
+    model_value.template format_serialize(serializer, tracer);
     return serializer.finalize(tracer);
 }
 

@@ -21,14 +21,14 @@ struct sort
     {
         using sorted_array_type = ::model::SortArray<Model, SortParams...>;
         using sorted_array_value_type = ::model::SortArrayElement<Model, SortParams...>;
-        auto elem = std::make_shared<sorted_array_value_type>();
+        auto elem = std::make_optional<sorted_array_value_type>();
 
         // helper
-        auto append = [order_it = orders.begin()](auto sorted_param) mutable{
+        auto append = [order_it = orders.begin()](auto &sorted_param) mutable{
             sorted_param->template emplace<::model::Order>(*order_it);
         };
 
-        (append(elem->template emplace<::model::SortRecord<Model, SortParams>>()), ...);
+        (append(elem->template emplace<::model::SortRecord<Model, SortParams>>().first.get()), ...);
         sorted_array_type array({elem});
         instance.template emplace<sorted_array_type>(std::move(array));
     }

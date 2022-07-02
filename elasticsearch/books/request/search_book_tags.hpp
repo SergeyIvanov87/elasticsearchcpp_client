@@ -3,6 +3,7 @@
 
 #include "elasticsearch/books/data_model/model.hpp"
 #include "elasticsearch/common_model/search_common_tags.hpp"
+#include "elasticsearch/books/request/search_book_tags_mapping.hpp"
 
 namespace elasticsearch
 {
@@ -13,81 +14,6 @@ namespace search
 namespace tag
 {
 using namespace elasticsearch::book::search;
-
-template<class ModelElement>
-using mterm = ::model::search::must::Term<elasticsearch::book::model::data, ModelElement>;
-template<class ModelElement>
-using mterms = ::model::search::must::Terms<elasticsearch::book::model::data, ModelElement>;
-
-template<class ModelElement>
-using fterm = ::model::search::filter::Term<elasticsearch::book::model::data, ModelElement>;
-
-
-template <class T>
-inline auto make(const std::optional<T> &arg)
-{
-    return elasticsearch::common_model::search::tag::make<elasticsearch::book::model::data>(arg);
-}
-template <class T>
-inline auto make(std::optional<T> &&arg)
-{
-    return elasticsearch::common_model::search::tag::make<elasticsearch::book::model::data>(std::move(arg));
-}
-
-inline auto make(const std::optional<elasticsearch::book::model::element::Contributor> &arg)
-{
-    return arg.has_value() ?
-            std::optional<elasticsearch::v7::search::tag::simple_query_string<elasticsearch::book::model::data,
-                          elasticsearch::book::model::element::Contributor>>(
-                                elasticsearch::v7::search::tag::create::simple_query_string_tag<elasticsearch::book::model::data,
-                                                                                                elasticsearch::book::model::element::Contributor>(arg.value().getValue())) :
-            std::optional<elasticsearch::v7::search::tag::simple_query_string<elasticsearch::book::model::data,
-                          elasticsearch::book::model::element::Contributor>>();
-}
-
-inline auto make(std::optional<elasticsearch::book::model::element::Contributor> &&arg)
-{
-    return make(arg);
-}
-
-inline auto make(const std::optional<elasticsearch::book::model::element::Creator> &arg)
-{
-    return arg.has_value() ?
-            std::optional<elasticsearch::v7::search::tag::simple_query_string<elasticsearch::book::model::data,
-                          elasticsearch::book::model::element::Creator>>(
-                                elasticsearch::v7::search::tag::create::simple_query_string_tag<elasticsearch::book::model::data,
-                                                                                                elasticsearch::book::model::element::Creator>(arg.value().getValue())) :
-            std::optional<elasticsearch::v7::search::tag::simple_query_string<elasticsearch::book::model::data,
-                          elasticsearch::book::model::element::Creator>>();
-}
-
-inline auto make(std::optional<elasticsearch::book::model::element::Creator> &&arg)
-{
-    return make(arg);
-}
-
-inline auto make(const std::optional<elasticsearch::book::model::element::Title> &arg)
-{
-    return arg.has_value() ?
-            std::optional<elasticsearch::v7::search::tag::simple_query_string<elasticsearch::book::model::data,
-                          elasticsearch::book::model::element::Title>>(
-                                elasticsearch::v7::search::tag::create::simple_query_string_tag<elasticsearch::book::model::data,
-                                                                                                elasticsearch::book::model::element::Title>(arg.value().getValue())) :
-            std::optional<elasticsearch::v7::search::tag::simple_query_string<elasticsearch::book::model::data,
-                          elasticsearch::book::model::element::Title>>();
-}
-
-inline auto make(std::optional<elasticsearch::book::model::element::Title> &&arg)
-{
-    return make(arg);
-}
-
-template <class T, class ...Args>
-inline auto make(Args &&...args)
-{
-    return make(std::optional<T>(std::forward<Args>(args)...));
-}
-
 namespace create
 {
     template<class ...SpecificModelParams>
@@ -95,8 +21,19 @@ namespace create
     {
         return elasticsearch::v7::search::tag::create::must_tag<elasticsearch::book::model::data>(std::forward<SpecificModelParams>(args)...);
     }
-} // namespace create
 
+    template<class ...RangedElements>
+    auto range_tag(const std::array<std::string, sizeof...(RangedElements)> &ranged_string, char sep = ',')
+    {
+        return elasticsearch::v7::search::tag::range<elasticsearch::book::model::data, RangedElements...>(ranged_string, sep);
+    }
+
+    template<class ...RangedElements>
+    auto range_tag(const std::array<std::optional<std::string>, sizeof...(RangedElements)> &ranged_string, char sep = ',')
+    {
+        return elasticsearch::v7::search::tag::create::range_tag<elasticsearch::book::model::data, RangedElements...>(ranged_string, sep);
+    }
+} // namespace create
 
 template<class ...SpecificQueryParams>
 using query = elasticsearch::v7::search::tag::query<elasticsearch::book::model::data, SpecificQueryParams...>;
@@ -116,7 +53,7 @@ namespace create
     }
 
     template<class ...SpecificModelElements>
-    auto simple_query_string_tag(const std::string &query_string)
+    auto simple_query_string_tag(const std::optional<std::string> &query_string)
     {
         return elasticsearch::v7::search::tag::create::simple_query_string_tag<elasticsearch::book::model::data,
                                                                                SpecificModelElements...>(query_string);

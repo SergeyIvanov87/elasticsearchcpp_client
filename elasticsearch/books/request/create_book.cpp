@@ -49,7 +49,7 @@ const transaction::receiver& transaction::get_receiver() const
 }
 
 template<class Tracer>
-std::shared_ptr<transaction::response> transaction::get_response(Tracer tracer) const
+transaction::response transaction::get_response(Tracer tracer) const
 {
     return generic_transaction_ptr->get_response(tracer);
 }
@@ -72,8 +72,8 @@ template void transaction::execute(const std::string& index_name,
                                    bool curl_verbose,
                                    txml::EmptyTracer);
 
-template std::shared_ptr<transaction::response> transaction::get_response(txml::StdoutTracer) const;
-template std::shared_ptr<transaction::response> transaction::get_response(txml::EmptyTracer) const;
+template transaction::response transaction::get_response(txml::StdoutTracer) const;
+template transaction::response transaction::get_response(txml::EmptyTracer) const;
 }// namespace create
 }// namespace book
 } // namespace elasticsearch

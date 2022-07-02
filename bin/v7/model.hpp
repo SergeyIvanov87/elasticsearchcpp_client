@@ -24,9 +24,9 @@ struct ElementPrinter <elasticsearch::common_model::Tags>
     static std::ostream &print(std::ostream &out, const Model &m)
     {
         using Element = elasticsearch::common_model::Tags;
-        if (m.template getValue<Element>())
+        if (const auto &n = m.template node<Element>(); n)
         {
-            const auto &list = m.template getValue<Element>()->getValue();
+            const auto &list = n->value();
             out << "\"";
             std::copy(list.begin(), list.end(), std::ostream_iterator<std::string>(out, ","));
             out << "\",";
@@ -46,9 +46,9 @@ struct ElementPrinter <elasticsearch::image::model::element::Location>
     static std::ostream &print(std::ostream &out, const Model &m)
     {
         using Element = elasticsearch::image::model::element::Location;
-        if (m.template getValue<Element>())
+        if (const auto &n = m.template node<Element>(); n)
         {
-            out << "\"" << m.template getValue<Element>()->getValue().to_string() << "\",";
+            out << "\"" << n->value().to_string() << "\",";
         }
         else
         {
@@ -65,9 +65,9 @@ struct ElementPrinter <elasticsearch::image::model::element::Resolution>
     static std::ostream &print(std::ostream &out, const Model &m)
     {
         using Element = elasticsearch::image::model::element::Resolution;
-        if (m.template getValue<Element>())
+        if (const auto &n = m.template node<Element>(); n)
         {
-            out << "\"" << m.template getValue<Element>()->getValue().to_string() << "\",";
+            out << "\"" << n->value().to_string() << "\",";
         }
         else
         {
@@ -96,9 +96,9 @@ struct ModelInjector <elasticsearch::common_model::Tags>
         if (auto it = data_storage.find(std::string(Element::class_name()));
             it != data_storage.end())
         {
-            if (m.template getValue<Element>())
+            if (m.template has_value<Element>())
             {
-                *(m.template getValue<Element>()) = Element(it->second, sep);
+                m.template value<Element>() = Element(it->second, sep);
             }
             else
             {
@@ -127,10 +127,10 @@ struct ModelExtractor <elasticsearch::common_model::Tags>
             std::copy(list.begin(), list.end(), std::ostream_iterator<std::string>(ss, ","));
             return ss.str();
         };
-        auto val = m.template getValue<Element>();
+        const auto &val = m.template node<Element>();
         if (val)
         {
-            data_storage.emplace(std::string(Element::class_name()), conv(val->getValue()));
+            data_storage.emplace(std::string(Element::class_name()), conv(val->value()));
         }
     }
 };
@@ -143,10 +143,10 @@ struct ModelExtractor <elasticsearch::image::model::element::Location>
     static void extract(const Model &m, std::map<std::string, std::string> &data_storage)
     {
         using Element = elasticsearch::image::model::element::Location;
-        auto val = m.template getValue<Element>();
+        const auto &val = m.template node<Element>();
         if (val)
         {
-            data_storage.emplace(std::string(Element::class_name()), val->getValue().to_string());
+            data_storage.emplace(std::string(Element::class_name()), val->value().to_string());
         }
     }
 };
@@ -158,10 +158,10 @@ struct ModelExtractor <elasticsearch::image::model::element::Resolution>
     static void extract(const Model &m, std::map<std::string, std::string> &data_storage)
     {
         using Element = elasticsearch::image::model::element::Resolution;
-        auto val = m.template getValue<Element>();
+        const auto &val = m.template node<Element>();
         if (val)
         {
-            data_storage.emplace(std::string(Element::class_name()), val->getValue().to_string());
+            data_storage.emplace(std::string(Element::class_name()), val->value().to_string());
         }
     }
 };

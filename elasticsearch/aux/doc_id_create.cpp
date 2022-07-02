@@ -43,13 +43,14 @@ void transaction::execute(const std::string& index_name,
 const ::model::_Version &transaction::get_unique_index() const
 {
     auto ans_ptr = get_response();
-    if (ans_ptr->getValue<::model::Result>())
+    if (ans_ptr.has_value<::model::Result>())
     {
-        auto &result_value = ans_ptr->getValue<::model::Result>()->getValue();
+        const auto &result_value = ans_ptr.value<::model::Result>().value();
         if (result_value == "created" || result_value == "updated")
         {
-            return *ans_ptr->getValue<::model::_Version>();
+            return ans_ptr.value<::model::_Version>();
         }
+        throw std::runtime_error("Cannot generate unique index, result: " + result_value);
     }
 
     throw std::runtime_error("Cannot generate unique index");
@@ -61,7 +62,7 @@ const transaction::receiver& transaction::get_receiver() const
 }
 
 template<class Tracer>
-std::shared_ptr<transaction::response> transaction::get_response(Tracer tracer) const
+transaction::response transaction::get_response(Tracer tracer) const
 {
     return generic_transaction_ptr->get_response(tracer);
 }
@@ -80,8 +81,8 @@ template void transaction::execute(const std::string& index_name,
                                    bool curl_verbose,
                                    txml::EmptyTracer);
 
-template std::shared_ptr<transaction::response> transaction::get_response(txml::StdoutTracer) const;
-template std::shared_ptr<transaction::response> transaction::get_response(txml::EmptyTracer) const;
+template transaction::response transaction::get_response(txml::StdoutTracer) const;
+template transaction::response transaction::get_response(txml::EmptyTracer) const;
 }// namespace create_doc_id
 }// namespace aux
 } // namespace elasticsearch

@@ -20,7 +20,7 @@ TXML_PREPARE_DESERIALIZER_DISPATCHABLE_CLASS(from_data, ParentAggregator, FromJS
     using json = nlohmann::json;
 
     template<class Tracer>
-    std::shared_ptr<elasticsearch::image::model::element::Resolution>
+    std::optional<elasticsearch::image::model::element::Resolution>
     deserialize_impl(txml::details::SchemaDTag<elasticsearch::image::model::element::Resolution>, Tracer tracer)
     {
         using Type = elasticsearch::image::model::element::Resolution;
@@ -34,11 +34,11 @@ TXML_PREPARE_DESERIALIZER_DISPATCHABLE_CLASS(from_data, ParentAggregator, FromJS
             return {};
         }
 
-        return std::make_shared<Type>((begin_it++).value().template get<std::string>());
+        return std::make_optional<Type>((begin_it++).value().template get<std::string>());
     }
 
     template<class Tracer>
-    std::shared_ptr<elasticsearch::image::model::element::Location>
+    std::optional<elasticsearch::image::model::element::Location>
     deserialize_impl(txml::details::SchemaDTag<elasticsearch::image::model::element::Location>, Tracer tracer)
     {
         using Type = elasticsearch::image::model::element::Location;
@@ -52,7 +52,7 @@ TXML_PREPARE_DESERIALIZER_DISPATCHABLE_CLASS(from_data, ParentAggregator, FromJS
             return {};
         }
 
-        return std::make_shared<Type>((begin_it++).value().template get<std::string>());
+        return std::make_optional<Type>((begin_it++).value().template get<std::string>());
     }
 };
 } // namespace model

@@ -12,7 +12,7 @@ class Message : public txml::XMLNodeLeaf<Message, std::string>
 {
 public:
     using base_t = txml::XMLNodeLeaf<Message, std::string>;
-
+    using base_t::base_t;
     static constexpr std::string_view class_name()
     {
         return "message";
@@ -22,8 +22,6 @@ public:
     {
         return txml::TextReaderWrapper::NodeType::Element;
     }
-
-    Message(std::string&& str) : base_t(std::move(str)) {}
 };
 }
 #endif // ANSWER_MODEL_SEARCH_OBJECT_FULL_TEXT_MESSAGE_H

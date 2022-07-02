@@ -92,7 +92,7 @@ public:
     const receiver& get_receiver() const;
 
     template<class Tracer = txml::EmptyTracer>
-    std::shared_ptr<response> get_response(Tracer tracer = Tracer{}) const;
+    response get_response(Tracer tracer = Tracer{}) const;
 
 private:
     void execute_impl(const std::string& index_name, bool curl_verbose = false);

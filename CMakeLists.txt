@@ -112,6 +112,7 @@ list (APPEND ELASTICSEARCH_CLIENT_SRC
                         elasticsearch/v7_10/request/base/base_request.cpp
                         elasticsearch/v7_10/answer_model/object/utils.cpp
                         elasticsearch/utils/base64.cpp
+                        elasticsearch/utils/strings.cpp
                         elasticsearch/utils/file_to_base64_packer.cpp
                         elasticsearch/utils/base64_to_file_unpacker.cpp
 

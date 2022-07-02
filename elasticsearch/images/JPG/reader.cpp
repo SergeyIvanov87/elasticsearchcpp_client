@@ -44,10 +44,9 @@ reader::reader(const std::filesystem::path &file_path)
         throw std::runtime_error("Cannot parse EXIF data, easyexif error: " + std::to_string(res));
     }
 
-    image_data.reset(new ExifData);
-    image_data->emplace<elasticsearch::image::model::element::Camera>(std::string(result.Make.c_str()));
-    image_data->emplace<elasticsearch::image::model::element::CameraModel>(result.Model.c_str());
-    image_data->emplace<elasticsearch::image::model::element::Resolution>(result.ImageWidth, result.ImageHeight);
+    image_data.emplace<elasticsearch::image::model::element::Camera>(std::string(result.Make.c_str()));
+    image_data.emplace<elasticsearch::image::model::element::CameraModel>(result.Model.c_str());
+    image_data.emplace<elasticsearch::image::model::element::Resolution>(result.ImageWidth, result.ImageHeight);
 
     // easyexif::EXIFInfo returns space-filled string in case of empty description
     // check on "empty": if each symbol is space in string then skip it
@@ -57,13 +56,13 @@ reader::reader(const std::filesystem::path &file_path)
     fixed_description.erase(it, fixed_description.end());
     if (!fixed_description.empty())
     {
-        image_data->emplace<Description>(result.ImageDescription.c_str());
+        image_data.emplace<Description>(result.ImageDescription.c_str());
     }
-    image_data->emplace<elasticsearch::image::model::element::OriginalTime>(result.DateTimeOriginal.c_str());
-    image_data->emplace<elasticsearch::image::model::element::DigitizeTime>(result.DateTimeDigitized.c_str());
-    image_data->emplace<elasticsearch::image::model::element::Location>(result.GeoLocation.Latitude,
-                                                                        result.GeoLocation.Longitude,
-                                                                        result.GeoLocation.Altitude);
+    image_data.emplace<elasticsearch::image::model::element::OriginalTime>(result.DateTimeOriginal.c_str());
+    image_data.emplace<elasticsearch::image::model::element::DigitizeTime>(result.DateTimeDigitized.c_str());
+    image_data.emplace<elasticsearch::image::model::element::Location>(result.GeoLocation.Latitude,
+                                                                       result.GeoLocation.Longitude,
+                                                                       result.GeoLocation.Altitude);
 
     // prepare binary
     packer_impl.reset(new elasticsearch::utils::packer(file_path));
@@ -71,17 +70,17 @@ reader::reader(const std::filesystem::path &file_path)
 
 reader::~reader() = default;
 
-std::shared_ptr<ExifData> reader::getImageModel() const
+const ExifData& reader::getImageModel() const
 {
     return image_data;
 }
 
-std::shared_ptr<elasticsearch::common_model::BinaryBlob> reader::getBlob() const
+const elasticsearch::common_model::BinaryBlob& reader::getBlob() const
 {
     return packer_impl->getBlob();
 }
 
-std::shared_ptr<elasticsearch::common_model::OriginalPath> reader::getPath() const
+const elasticsearch::common_model::OriginalPath& reader::getPath() const
 {
     return packer_impl->getPath();
 }
@@ -92,21 +91,21 @@ void reader::pack(const std::filesystem::path &path_to_pack)
 }
 
 template<class Tracer>
-std::shared_ptr<elasticsearch::image::model::data> reader::to_model_impl(Tracer tracer) const
+elasticsearch::image::model::data reader::to_model_impl(Tracer tracer) const
 {
     elasticsearch::image::model::jpg::to_model_data i2m;
-    getImageModel()->format_serialize(i2m, tracer);
+    getImageModel().format_serialize(i2m, tracer);
     // postproc
-    i2m.data_model->set(getBlob());
-    i2m.data_model->set(getPath());
-    return i2m.data_model;
+    i2m.data_model->insert(getBlob());
+    i2m.data_model->insert(getPath());
+    return i2m.data_model.value();
 }
 
-std::shared_ptr<elasticsearch::image::model::data> reader::to_model(txml::EmptyTracer tracer) const
+elasticsearch::image::model::data reader::to_model(txml::EmptyTracer tracer) const
 {
     return to_model_impl(std::move(tracer));
 }
-std::shared_ptr<elasticsearch::image::model::data> reader::to_model(txml::StdoutTracer tracer) const
+elasticsearch::image::model::data reader::to_model(txml::StdoutTracer tracer) const
 {
     return to_model_impl(std::move(tracer));
 }
@@ -121,7 +120,7 @@ nlohmann::json reader::to_json_impl(Tracer tracer) const
                                                         elasticsearch::image::to_data,
                                                         elasticsearch::common_model::to_data> serializer;
 
-    model_value->template format_serialize(serializer, tracer);
+    model_value.template format_serialize(serializer, tracer);
     return serializer.finalize(tracer);
 }
 

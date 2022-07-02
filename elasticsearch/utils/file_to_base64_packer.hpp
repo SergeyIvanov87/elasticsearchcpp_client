@@ -12,12 +12,13 @@ class packer: public elasticsearch::packer_interface
 public:
     packer(const std::filesystem::path &path_to_pack);
 
-    std::shared_ptr<elasticsearch::common_model::BinaryBlob> getBlob() const override;
-    std::shared_ptr<elasticsearch::common_model::OriginalPath> getPath() const override;
+    const elasticsearch::common_model::BinaryBlob& getBlob() const override;
+    const elasticsearch::common_model::OriginalPath& getPath() const override;
+
     void pack(const std::filesystem::path &path_to_pack) override;
 private:
-    std::shared_ptr<elasticsearch::common_model::OriginalPath> original_data_path;
-    std::shared_ptr<elasticsearch::common_model::BinaryBlob> data_ptr;
+    std::unique_ptr<elasticsearch::common_model::OriginalPath> original_data_path;
+    std::unique_ptr<elasticsearch::common_model::BinaryBlob> data_blob;
 };
 }
 }

@@ -15,27 +15,6 @@ namespace v7
 namespace details
 {
 template <class Element, class ElementValue, class ...Args>
-std::optional<ElementValue> get_match_param(const std::map<std::string, std::string> &data_storage, Args&& ...args)
-{
-    if (auto it = data_storage.find(std::string(Element::class_name())); it != data_storage.end())
-    {
-        return ElementValue{it->second, std::forward<Args>(args)...};
-    }
-    return {};
-}
-
-std::optional<std::list<std::string>>
-get_match_tag_param(const std::map<std::string, std::string> &data_storage, const std::string &sep)
-{
-    if (auto it = data_storage.find(std::string(elasticsearch::common_model::Tags::class_name())); it != data_storage.end())
-    {
-        elasticsearch::common_model::Tags t{it->second, sep};
-        return t.getValue();
-    }
-    return {};
-}
-
-template <class Element, class ElementValue, class ...Args>
 std::optional<Element> get_match_elem(const std::map<std::string, std::string> &data_storage, Args&& ...args)
 {
     if (auto it = data_storage.find(std::string(Element::class_name())); it != data_storage.end())
@@ -45,6 +24,41 @@ std::optional<Element> get_match_elem(const std::map<std::string, std::string> &
     return {};
 }
 
+template<>
+std::optional<std::string>
+get_match_elem<std::string,
+               elasticsearch::common_model::CreationDateTime>(const std::map<std::string, std::string> &data_storage)
+{
+    if (auto it = data_storage.find(std::string(elasticsearch::common_model::CreationDateTime::class_name())); it != data_storage.end())
+    {
+        return std::optional<std::string>(it->second);
+    }
+    return {};
+}
+
+template<>
+std::optional<std::string>
+get_match_elem<std::string,
+               elasticsearch::image::model::element::DigitizeTime>(const std::map<std::string, std::string> &data_storage)
+{
+    if (auto it = data_storage.find(std::string(elasticsearch::image::model::element::DigitizeTime::class_name())); it != data_storage.end())
+    {
+        return std::optional<std::string>(it->second);
+    }
+    return {};
+}
+
+template<>
+std::optional<std::string>
+get_match_elem<std::string,
+               elasticsearch::image::model::element::OriginalTime>(const std::map<std::string, std::string> &data_storage)
+{
+    if (auto it = data_storage.find(std::string(elasticsearch::image::model::element::OriginalTime::class_name())); it != data_storage.end())
+    {
+        return std::optional<std::string>(it->second);
+    }
+    return {};
+}
 
 template <>
 std::optional<elasticsearch::image::search::tag::geo_bbox>
@@ -59,7 +73,7 @@ get_match_elem<elasticsearch::image::search::tag::geo_bbox,
         const char *pEnd = pStart;
         while (*pStart && values.size() != float_num)
         {
-            const char *pEnd = bin::utils::get_next_char_if(pStart, [sep]( const char* sym) { return (*sym == sep);});
+            const char *pEnd = elasticsearch::utils::get_next_char_if(pStart, [sep]( const char* sym) { return (*sym == sep);});
             try
             {
                 values.push_back(stof(std::string(pStart, pEnd - pStart)));
@@ -87,7 +101,7 @@ get_match_elem<elasticsearch::image::search::tag::geo_bbox,
 
 
 template<class Model>
-using record_t = std::pair<std::string, std::shared_ptr<Model>>;
+using record_t = std::pair<std::string, std::optional<Model>>;
 
 namespace helper
 {
@@ -103,32 +117,41 @@ extract_model_records(const std::shared_ptr<SearchRequest> &search_ptr, Tracer t
         throw std::runtime_error("invalid search request");
     }
 
-    std::shared_ptr<typename transaction::response> search_ans_ptr = search_ptr->get_response(tracer);
-    auto status = search_ans_ptr->template getValue<::model::Status>();
-    if (status->getValue() != 200)
+    auto&& search_ans_ptr = search_ptr->get_response(tracer);
+    const auto &status = search_ans_ptr.template node<::model::Status>();
+    if (status.has_value() && status->value() != 200)
     {
-        auto fail_reason = search_ans_ptr->template getValue<elasticsearch::v7::search::Error>()->template getValue<::model::Reason>();
-        auto caused_reason = search_ans_ptr->template getValue<elasticsearch::v7::search::Error>()->template getValue<::model::CausedBy>()->template getValue<::model::Reason>();
-        throw std::runtime_error("unexpected search response, status: " + std::to_string(status->getValue()) + "\nError: " + fail_reason->getValue() +
-                                 ", details: " + caused_reason->getValue());
+        const auto &fail_reason = search_ans_ptr.template node<elasticsearch::v7::search::Error>()->template node<::model::Reason>();
+        const auto &caused = search_ans_ptr.template node<elasticsearch::v7::search::Error>()->template node<::model::CausedBy>();
+        std::string details;
+        if (caused.has_value())
+        {
+            const auto &caused_reason = caused->template node<::model::Reason>();
+            if (caused_reason.has_value())
+            {
+                details = caused_reason->value();
+            }
+        }
+        throw std::runtime_error("unexpected search response, status: " + std::to_string(status->value()) + "\nError: " + fail_reason->value() +
+                                 ", details: " + (details.empty() ? "<Unknown>" : details));
     }
 
-    auto hits = search_ans_ptr->template getValue<::model::HitsNode<data>>();
+    const auto &hits = search_ans_ptr.template node<::model::HitsNode<data>>();
     if (!hits)
     {
         throw std::runtime_error("unexpected search request answer: no `HintNode` detected");
     }
 
-    auto hits_array = hits->template getValue<::model::HitsArray<data>>()->getValue();
+    const auto &hits_array = hits->template node<::model::HitsArray<data>>()->value();
     std::vector<record_t<data>> ret;
     ret.reserve(hits_array.size());
     for (const auto &hit : hits_array)
     {
-        auto source_ptr = hit->template getValue<::model::_Source<data>>();
-        if (source_ptr && source_ptr->template getValue<data>())
+        const auto &source_ptr = hit->template node<::model::_Source<data>>();
+        if (source_ptr.has_value() && source_ptr->template node<data>())
         {
-            ret.emplace_back(hit->template getValue<::model::_Type>()->getValue() + "/" + hit->template getValue<::model::_Id>()->getValue(),
-                             source_ptr->template getValue<data>());
+            ret.emplace_back(hit->template node<::model::_Type>()->value() + "/" + hit->template node<::model::_Id>()->value(),
+                             source_ptr->template node<data>());
         }
     }
     return ret;
@@ -194,30 +217,71 @@ request_book_search_match(const dispatcher &d,
     }
     else
     {
-        auto mu = tag::create::must_tag(tag::make(details::get_match_elem<element::Contributor, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<element::Creator, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<element::Identifier, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<element::Language, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<element::Title, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<elasticsearch::common_model::BinaryBlob, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<elasticsearch::common_model::CreationDateTime, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<elasticsearch::common_model::Description, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<elasticsearch::common_model::Format, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<elasticsearch::common_model::OriginalPath, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<elasticsearch::common_model::Preview, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<elasticsearch::common_model::SourceName, std::string>(match_params)),
-                                        /*std::optional<std::list<std::string>>{}*/
-                                        tag::make(details::get_match_elem<elasticsearch::common_model::Tags, elasticsearch::common_model::Tags>(match_params, ",")));
-        auto boo = tag::create::boolean_tag(mu);
-        search_ptr = d.execute_request<transaction>(schema_indices[0], schema_indices[0],
+        auto r = tag::create::range_tag<elasticsearch::common_model::CreationDateTime>(
+                {details::get_match_elem<std::string, elasticsearch::common_model::CreationDateTime>(match_params)});
+        // if MUST exist, then RANGE should be part of MUST
+        auto mu = tag::create::must_tag(details::get_match_elem<element::Contributor, std::string>(match_params),
+                                        details::get_match_elem<element::Creator, std::string>(match_params),
+                                        details::get_match_elem<element::Identifier, std::string>(match_params),
+                                        details::get_match_elem<element::Language, std::string>(match_params),
+                                        details::get_match_elem<element::Title, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::BinaryBlob, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::Description, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::Format, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::OriginalPath, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::Preview, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::SourceName, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::Tags, elasticsearch::common_model::Tags>(match_params, ","),
+                                        decltype(r) {});
+        if (mu)
+        {
+            // obtain RANGE into MUST
+            mu->value().emplace_back(std::move(r));
+            auto boo = tag::create::boolean_tag(mu);
+            search_ptr = d.execute_request<transaction>(schema_indices[0], schema_indices[0],
                                                     max_count, pit_interval,
-                                                    tag::create::query_tag(boo),
+                                                    tag::create::query_tag(boo).value(),
                                                     tag::sort<element::Contributor> ({::model::Order("desc")}),
                                                     d.get_settings().curl_verbose,
                                                     tracer);
+        }
+        else
+        {
+            // if no MUST tag presents then insert RANGE into QUERY by itsels
+            search_ptr = d.execute_request<transaction>(schema_indices[0], schema_indices[0],
+                                                    max_count, pit_interval,
+                                                    tag::create::query_tag(r).value(),
+                                                    tag::sort<element::Contributor> ({::model::Order("desc")}),
+                                                    d.get_settings().curl_verbose,
+                                                    tracer);
+        }
     }
     return helper::extract_model_records<data>(search_ptr, tracer);
 }
+
+void request_book_search_param_info(const dispatcher &, std::ostream &out)
+{
+    using namespace elasticsearch::book::model;
+    out << "\"must\" params list:" <<  std::endl;
+    out << "\t" << element::Contributor::class_name() << std::endl;
+    out << "\t" << element::Creator::class_name() << std::endl;
+    out << "\t" << element::Identifier::class_name() << std::endl;
+    out << "\t" << element::Language::class_name() << std::endl;
+    out << "\t" << element::Title::class_name() << std::endl;
+    out << "\t" << elasticsearch::common_model::Description::class_name() << std::endl;
+    out << "\t" << elasticsearch::common_model::Format::class_name() << std::endl;
+    out << "\t" << elasticsearch::common_model::OriginalPath::class_name() << std::endl;
+    out << "\t" << elasticsearch::common_model::SourceName::class_name() << std::endl;
+    out << "\t" << elasticsearch::common_model::Tags::class_name() << "\t*\tLIST: Use ',' as separator" << std::endl;
+
+    out << "\n\"range\" params list:" <<  std::endl;
+    out << "\t" << elasticsearch::common_model::CreationDateTime::class_name()
+        << "\t*\t RANGE of '2' datetimes enclosed by intervals symbols \"(\" or \"[\" and \")\" or \"]\"" << std::endl;
+
+    out << "Example:\n"
+        << "./es_search book \"Language:es\" \"title:aaa\" \"creation_datetime:(2022-07-01,2022-08-08]\"" << std::endl;
+}
+
 
 template<class Tracer>
 std::vector<record_t<elasticsearch::image::model::data>>
@@ -254,38 +318,85 @@ request_image_search_match(const dispatcher &d,
     }
     else
     {
-        auto mu = tag::create::must_tag(tag::make(details::get_match_elem<element::Camera, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<element::CameraModel, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<element::DigitizeTime, std::string>(match_params)),
+        auto fi = tag::create::filter_tag(details::get_match_elem<tag::geo_bbox, tag::geo_bbox, char>(match_params, ','));
+        auto r = tag::create::range_tag<elasticsearch::common_model::CreationDateTime,
+                                        element::DigitizeTime,
+                                        element::OriginalTime>(
+                {details::get_match_elem<std::string, elasticsearch::common_model::CreationDateTime>(match_params),
+                 details::get_match_elem<std::string, element::DigitizeTime>(match_params),
+                 details::get_match_elem<std::string, element::OriginalTime>(match_params)});
+        // if MUST exist, then RANGE should be part of MUST
+        auto mu = tag::create::must_tag(details::get_match_elem<element::Camera, std::string>(match_params),
+                                        details::get_match_elem<element::CameraModel, std::string>(match_params),
                                         //tag::make(details::get_match_elem<element::Location, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<element::OriginalTime, std::string>(match_params)),
                                         //tag::make(details::get_match_elem<element::Resolution, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<element::Title, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<elasticsearch::common_model::BinaryBlob, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<elasticsearch::common_model::CreationDateTime, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<elasticsearch::common_model::Description, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<elasticsearch::common_model::Format, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<elasticsearch::common_model::OriginalPath, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<elasticsearch::common_model::Preview, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<elasticsearch::common_model::SourceName, std::string>(match_params)),
-                                        tag::make(details::get_match_elem<elasticsearch::common_model::Tags, elasticsearch::common_model::Tags>(match_params, ",")));
-
-                                        auto fff = tag::make(details::get_match_elem<tag::geo_bbox, tag::geo_bbox, char>(match_params, ','));
-        auto fi = tag::create::filter_tag(fff);
-
-
-        //auto r = tag::create::range_create_time_tag<model::search::range::GTE>(std::string("17-07-1987"));
-
-        auto boo = tag::create::boolean_tag(mu, fi);
-        search_ptr = d.execute_request<transaction>(schema_indices[1], schema_indices[1],
-                                                    max_count, pit_interval,
-                                                    tag::create::query_tag(boo),
-                                                    tag::sort<element::Camera> ({::model::Order("desc")}),
-                                                    d.get_settings().curl_verbose,
-                                                    tracer);
+                                        details::get_match_elem<element::Title, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::BinaryBlob, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::Description, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::Format, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::OriginalPath, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::Preview, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::SourceName, std::string>(match_params),
+                                        details::get_match_elem<elasticsearch::common_model::Tags, elasticsearch::common_model::Tags>(match_params, ","),
+                                        decltype(r) {});
+        if (mu || fi)
+        {
+            // obtain RANGE into MUST
+            mu->value().emplace_back(std::move(r));
+            auto boo = tag::create::boolean_tag(mu, fi);
+            auto query = tag::create::query_tag(boo);
+            search_ptr = d.execute_request<transaction>(schema_indices[1], schema_indices[1],
+                                                        max_count, pit_interval,
+                                                        query.value(),
+                                                        tag::sort<element::Camera> ({::model::Order("desc")}),
+                                                        d.get_settings().curl_verbose,
+                                                        tracer);
+        }
+        else
+        {
+            // if no MUST tag presents then insert RANGE into QUERY by itsels
+            auto query = tag::create::query_tag(r);
+            search_ptr = d.execute_request<transaction>(schema_indices[1], schema_indices[1],
+                                                        max_count, pit_interval,
+                                                        query.value(),
+                                                        tag::sort<element::Camera> ({::model::Order("desc")}),
+                                                        d.get_settings().curl_verbose,
+                                                        tracer);
+        }
     }
     return helper::extract_model_records<data>(search_ptr, tracer);
 }
+
+void request_image_search_param_info(const dispatcher &, std::ostream &out)
+{
+    using namespace elasticsearch::image::model;
+    out << "\"must\" params list:" <<  std::endl;
+    out << "\t" << element::Camera::class_name() << std::endl;
+    out << "\t" << element::CameraModel::class_name() << std::endl;
+    out << "\t" << element::Title::class_name() << std::endl;
+    out << "\t" << elasticsearch::common_model::Description::class_name() << std::endl;
+    out << "\t" << elasticsearch::common_model::Format::class_name() << std::endl;
+    out << "\t" << elasticsearch::common_model::OriginalPath::class_name() << std::endl;
+    out << "\t" << elasticsearch::common_model::SourceName::class_name() << std::endl;
+    out << "\t" << elasticsearch::common_model::Tags::class_name() << "\t*\tLIST: use ',' as separator" << std::endl;
+
+    using namespace elasticsearch::image::search;
+    out << "\n\"filter\" params list:" <<  std::endl;
+    out << "\t" << tag::geo_bbox::class_name() << "\t*\tLIST of '4' floats with ',' as value separator:\n"
+            "\t\t\t\tX_top_left, Y_top_left, X_bottom_right, Y_botton_right:" << std::endl;
+
+    out << "\n\"range\" params list:" <<  std::endl;
+    out << "\t" << elasticsearch::common_model::CreationDateTime::class_name()
+        << "\t*\t RANGE of '2' datetimes enclosed by intervals symbols \"(\" or \"[\" and \")\" or \"]\"" << std::endl;
+    out << "\t" << element::DigitizeTime::class_name()
+        << "\t*\t RANGE of '2' datetimes enclosed by intervals symbols \"(\" or \"[\" and \")\" or \"]\"" << std::endl;
+    out << "\t" << element::OriginalTime::class_name()
+        << "\t*\t RANGE of '2' datetimes enclosed by intervals symbols \"(\" or \"[\" and \")\" or \"]\""<< std::endl;
+
+    out << "Example:\n"
+        << "./es_search image \"camera:rrr\" \"title:aaa\" \"geo_bounding_box:10,10,0,0\" \"creation_datetime:(2022-07-01,2022-08-08]\"" << std::endl;
+}
+
 
 template <class Tracer>
 void request_book_index_mapping(const dispatcher &d, Tracer)
@@ -318,7 +429,7 @@ void request_image_index_mapping_delete(const dispatcher &d, Tracer)
 template<class Tracer>
 void request_rm_data(const dispatcher &d, std::ostream &out, const char *index, const char *doc_path_id, Tracer tracer)
 {
-    std::shared_ptr<elasticsearch::v7::delete_data::response> ans_ptr;
+    std::optional<elasticsearch::v7::delete_data::response> ans_ptr;
     if (!strcmp(index, schema_indices[0]))
     {
         ans_ptr = d.execute_request<elasticsearch::book::del::transaction>(
@@ -337,9 +448,9 @@ void request_rm_data(const dispatcher &d, std::ostream &out, const char *index, 
     {
         throw std::runtime_error(std::string("invalid index: ") + index);
     }
-    if (ans_ptr->getValue<model::Result>())
+    if (ans_ptr.has_value())
     {
-        out << ans_ptr->getValue<model::Result>()->getValue() << std::endl;
+        out << ans_ptr->node<model::Result>()->value() << std::endl;
     }
     else
     {
@@ -361,17 +472,17 @@ void request_put_data(const dispatcher &d, std::ostream &out,
         using namespace elasticsearch::image::model;
         elasticsearch::image::reader r(file_path);
 
-        auto model_value = r.to_model(tracer);
+        auto&& model_value = r.to_model(tracer);
 
-        bin::data_manipulation::inject_to_model<data, IMAGE_DATA_MODEL_ELEMENTS>(*model_value, override_model_params);
-        bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(*model_value, override_model_params);
+        bin::data_manipulation::inject_to_model<data, IMAGE_DATA_MODEL_ELEMENTS>(model_value, override_model_params);
+        bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value, override_model_params);
 
         // try to search duplicates
         if (!ignore_existing)
         {
             auto finder = [&d, &tracer](auto &search_duplicates_params)
             { return request_image_search_match(d, search_duplicates_params, {}, tracer);};
-            if (helper::find_duplicate_records<data, decltype(finder), IMAGE_DATA_MODEL_ELEMENTS>(*model_value, finder, out))
+            if (helper::find_duplicate_records<data, decltype(finder), IMAGE_DATA_MODEL_ELEMENTS>(model_value, finder, out))
             {
                 return;
             }
@@ -383,24 +494,24 @@ void request_put_data(const dispatcher &d, std::ostream &out,
                             d.get_settings().curl_verbose, tracer);
         d.execute_request<elasticsearch::image::create::transaction>(
                             schema_indices[1],
-                            std::string(schema_indices[1]) + "/_doc/" + std::to_string(generator_ptr->get_unique_index().getValue()),
-                            *model_value,
+                            std::string(schema_indices[1]) + "/_doc/" + std::to_string(generator_ptr->get_unique_index().value()),
+                            model_value,
                             d.get_settings().curl_verbose,
                             tracer);
     } catch (...) {
         try {
             using namespace elasticsearch::book::model;
             elasticsearch::book::reader r(file_path);
-            auto model_value = r.to_model(tracer);
-            bin::data_manipulation::inject_to_model<data, BOOK_DATA_MODEL_ELEMENTS>(*model_value, override_model_params);
-            bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(*model_value, override_model_params);
+            auto&& model_value = r.to_model(tracer);
+            bin::data_manipulation::inject_to_model<data, BOOK_DATA_MODEL_ELEMENTS>(model_value, override_model_params);
+            bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value, override_model_params);
 
             // try to search duplicates
             if (!ignore_existing)
             {
                 auto finder = [&d, &tracer](auto &search_duplicates_params)
                 { return request_book_search_match(d, search_duplicates_params, {}, tracer);};
-                if (helper::find_duplicate_records<data, decltype(finder), BOOK_DATA_MODEL_ELEMENTS>(*model_value, finder, out))
+                if (helper::find_duplicate_records<data, decltype(finder), BOOK_DATA_MODEL_ELEMENTS>(model_value, finder, out))
                 {
                     return;
                 }
@@ -413,8 +524,8 @@ void request_put_data(const dispatcher &d, std::ostream &out,
                                         d.get_settings().curl_verbose, tracer);
             d. execute_request<elasticsearch::book::create::transaction>(
                                 schema_indices[0],
-                                std::string(schema_indices[0]) + "/_doc/" +  std::to_string(generator_ptr->get_unique_index().getValue()),
-                                *model_value,
+                                std::string(schema_indices[0]) + "/_doc/" +  std::to_string(generator_ptr->get_unique_index().value()),
+                                model_value,
                                 d.get_settings().curl_verbose,
                                 tracer);
         } catch (const std::exception& ex) {
@@ -435,28 +546,28 @@ void request_update_data(dispatcher &d,
         using namespace elasticsearch::image::model;
         elasticsearch::image::reader r(file_path);
 
-        auto model_value = r.to_model(tracer);
+        auto&& model_value = r.to_model(tracer);
 
-        bin::data_manipulation::inject_to_model<data, IMAGE_DATA_MODEL_ELEMENTS>(*model_value, override_model_params);
-        bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(*model_value, override_model_params);
+        bin::data_manipulation::inject_to_model<data, IMAGE_DATA_MODEL_ELEMENTS>(model_value, override_model_params);
+        bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value, override_model_params);
         d.execute_request<elasticsearch::image::create::transaction>(
                             schema_indices[1],
                             std::string(schema_indices[1]) + "/" + document_id,
-                            *model_value,
+                            model_value,
                             d.get_settings().curl_verbose,
                             tracer);
     } catch (...) {
         try {
             using namespace elasticsearch::book::model;
             elasticsearch::book::reader r(file_path);
-            auto model_value = r.to_model(tracer);
-            bin::data_manipulation::inject_to_model<data, BOOK_DATA_MODEL_ELEMENTS>(*model_value, override_model_params);
-            bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(*model_value, override_model_params);
+            auto&& model_value = r.to_model(tracer);
+            bin::data_manipulation::inject_to_model<data, BOOK_DATA_MODEL_ELEMENTS>(model_value, override_model_params);
+            bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value, override_model_params);
 
             d.execute_request<elasticsearch::book::create::transaction>(
                                 schema_indices[0],
                                 std::string(schema_indices[0]) + "/" + document_id,
-                                *model_value,
+                                model_value,
                                 d.get_settings().curl_verbose,
                                 tracer);
         } catch (const std::exception& ex) {
@@ -475,18 +586,18 @@ request_collect_model_data(dispatcher &d, const char *file_path, Tracer tracer)
     {
         using namespace elasticsearch::image::model;
         elasticsearch::image::reader r(file_path);
-        auto model_value = r.to_model(tracer);
+        auto&& model_value = r.to_model(tracer);
 
-        bin::data_manipulation::extract_from_model<data, IMAGE_DATA_MODEL_ELEMENTS>(*model_value, ret);
-        bin::data_manipulation::extract_from_model<data, COMMON_DATA_MODEL_ELEMENTS>(*model_value, ret);
+        bin::data_manipulation::extract_from_model<data, IMAGE_DATA_MODEL_ELEMENTS>(model_value, ret);
+        bin::data_manipulation::extract_from_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value, ret);
     } catch (...) {
         try {
             using namespace elasticsearch::book::model;
             elasticsearch::book::reader r(file_path);
 
-            auto model_value = r.to_model(tracer);
-            bin::data_manipulation::extract_from_model<data, BOOK_DATA_MODEL_ELEMENTS>(*model_value, ret);
-            bin::data_manipulation::extract_from_model<data, COMMON_DATA_MODEL_ELEMENTS>(*model_value, ret);
+            auto&& model_value = r.to_model(tracer);
+            bin::data_manipulation::extract_from_model<data, BOOK_DATA_MODEL_ELEMENTS>(model_value, ret);
+            bin::data_manipulation::extract_from_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value, ret);
         } catch (const std::exception& ex) {
             throw std::runtime_error(std::string("unsupported format by path: ") + file_path + ", error: " + ex.what());
         }
@@ -657,6 +768,22 @@ void dispatcher::search_match(const char* model_name, const std::map<std::string
     else if (!strcmp(model_name, schema_indices[1]))
     {
         image_search_match(match_params, sort_params);
+    }
+    else
+    {
+        throw std::runtime_error(std::string("invalid model name: ") + model_name);
+    }
+}
+
+void dispatcher::es_info(const char* model_name, std::ostream &out) const
+{
+    if (!strcmp(model_name, schema_indices[0]))
+    {
+        bin::v7::details::request_book_search_param_info(*this, out);
+    }
+    else if (!strcmp(model_name, schema_indices[1]))
+    {
+        bin::v7::details::request_image_search_param_info(*this, out);
     }
     else
     {

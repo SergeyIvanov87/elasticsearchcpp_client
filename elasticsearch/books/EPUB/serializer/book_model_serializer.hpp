@@ -18,14 +18,14 @@ struct to_model_data : public txml::FormatSerializerBase<to_model_data, txml::St
                                                  ::EPUB::DcContributor, ::EPUB::DcCreator,
                                                  ::EPUB::DcLanguage>
 {
-    std::shared_ptr<elasticsearch::book::model::data> data_model;
+    std::optional<elasticsearch::book::model::data> data_model;
 
     template<class Tracer>
     void serialize_impl(const ::EPUB::Package& val, Tracer tracer)
     {
         tracer.trace(__FUNCTION__, " - ", ::EPUB::Package::class_name());
-        data_model.reset(new elasticsearch::book::model::data);
-        val.format_serialize_elements(*this, tracer);
+        data_model = std::make_optional<elasticsearch::book::model::data>();
+        val.make_format_serialize(*this, tracer);
         data_model->emplace<elasticsearch::common_model::Format>("epub");
     }
 
@@ -33,43 +33,43 @@ struct to_model_data : public txml::FormatSerializerBase<to_model_data, txml::St
     void serialize_impl(const ::EPUB::Metadata& val, Tracer tracer)
     {
         tracer.trace(__FUNCTION__, " - ", ::EPUB::Metadata::class_name());
-        //auto& metadata = data_model.getValue<::EPUB::Metadata>();
-        val.format_serialize_elements(*this, tracer);
+        //auto& metadata = data_model.value<::EPUB::Metadata>();
+        val.make_format_serialize(*this, tracer);
     }
 
     template<class Tracer>
     void serialize_impl(const ::EPUB::DcTitle& val, Tracer tracer)
     {
         tracer.trace(__FUNCTION__, " - ", ::EPUB::DcTitle::class_name());
-        data_model->set(std::make_shared<elasticsearch::book::model::element::Title>(val.getValue<::EPUB::TextElement>()->getValue()));
+        data_model->emplace<elasticsearch::book::model::element::Title>(val.value<::EPUB::TextElement>().value());
     }
 
     template<class Tracer>
     void serialize_impl(const ::EPUB::DcIdentifier& val, Tracer tracer)
     {
         tracer.trace(__FUNCTION__, " - ", ::EPUB::DcIdentifier::class_name());
-        data_model->set(std::make_shared<elasticsearch::book::model::element::Identifier>(val.getValue<::EPUB::TextElement>()->getValue()));
+        data_model->emplace<elasticsearch::book::model::element::Identifier>(val.value<::EPUB::TextElement>().value());
     }
 
     template<class Tracer>
     void serialize_impl(const ::EPUB::DcContributor& val, Tracer tracer)
     {
         tracer.trace(__FUNCTION__, " - ", ::EPUB::DcContributor::class_name());
-        data_model->set(std::make_shared<elasticsearch::book::model::element::Contributor>(val.getValue<::EPUB::TextElement>()->getValue()));
+        data_model->emplace<elasticsearch::book::model::element::Contributor>(val.value<::EPUB::TextElement>().value());
     }
 
     template<class Tracer>
     void serialize_impl(const ::EPUB::DcCreator& val, Tracer tracer)
     {
         tracer.trace(__FUNCTION__, " - ", ::EPUB::DcCreator::class_name());
-        data_model->set(std::make_shared<elasticsearch::book::model::element::Creator>(val.getValue<::EPUB::TextElement>()->getValue()));
+        data_model->emplace<elasticsearch::book::model::element::Creator>(val.value<::EPUB::TextElement>().value());
     }
 
     template<class Tracer>
     void serialize_impl(const ::EPUB::DcLanguage& val, Tracer tracer)
     {
         tracer.trace(__FUNCTION__, " - ", ::EPUB::DcLanguage::class_name());
-        data_model->set(std::make_shared<elasticsearch::book::model::element::Language>(val.getValue<::EPUB::TextElement>()->getValue()));
+        data_model->emplace<elasticsearch::book::model::element::Language>(val.value<::EPUB::TextElement>().value());
     }
 
 };

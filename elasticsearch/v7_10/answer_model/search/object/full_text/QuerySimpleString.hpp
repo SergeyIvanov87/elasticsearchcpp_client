@@ -96,7 +96,7 @@ public:
     }
 
     FieldsArray() :
-        base_t({std::make_shared<element_t>()})
+        base_t({std::make_optional<element_t>()})
     {
     }
 };
@@ -123,8 +123,14 @@ public:
         return txml::TextReaderWrapper::NodeType::Element;
     }
 
+    // TODO use default XMLNode ctor
+    SimpleQueryString(const FieldsElements &...elems) {
+        this->template emplace<FieldsArray<Model, FieldsElements...>>();
+        this->template emplace<Query>( (elems.value() + ... + "") );
+    }
+
     SimpleQueryString(const std::string &query_string) {
-        this->template set(std::make_shared<FieldsArray<Model, FieldsElements...>>());
+        this->template emplace<FieldsArray<Model, FieldsElements...>>();
         this->template emplace<Query>(query_string);
     }
 
@@ -142,7 +148,7 @@ public:
         void serialize_impl(const full_text::FieldsArrayElement<Model, FieldsElements...> &val, Tracer tracer)
         {
             tracer.trace(__FUNCTION__, " - skip FieldsArrayElement by itself");
-            val.template format_serialize_elements(*this, tracer);
+            val.template make_format_serialize(*this, tracer);
         }
     };
     TXML_DECLARE_SERIALIZER_AGGREGATOR_CLASS(aggregator_serializer_type,
@@ -152,10 +158,10 @@ public:
     };
 
     template<class Formatter, class Tracer>
-    void format_serialize_impl(Formatter& out, Tracer tracer) const
+    void format_serialize_request(Formatter& out, Tracer tracer) const
     {
         aggregator_serializer_type ser(out.get_shared_mediator_object());
-        base_t:: template format_serialize_impl(ser, tracer);
+        base_t:: template format_serialize_request(ser, tracer);
     }
 };
 }

@@ -3,6 +3,7 @@
 
 #include "elasticsearch/images/data_model/model.hpp"
 #include "elasticsearch/common_model/search_common_tags.hpp"
+#include "elasticsearch/images/request/search_image_tags_mapping.hpp"
 
 namespace elasticsearch
 {
@@ -14,63 +15,9 @@ namespace tag
 {
 using namespace elasticsearch::image::search;
 
-template<class ModelElement>
-using mterm = ::model::search::must::Term<elasticsearch::image::model::data, ModelElement>;
-template<class ModelElement>
-using mterms = ::model::search::must::Terms<elasticsearch::image::model::data, ModelElement>;
-
-template<class ModelElement>
-using fterm = ::model::search::filter::Term<elasticsearch::image::model::data, ModelElement>;
-
-
-template <class T>
-inline auto make(const std::optional<T> &arg)
-{
-    return elasticsearch::common_model::search::tag::make<elasticsearch::image::model::data>(arg);
-}
-template <class T>
-inline auto make(std::optional<T> &&arg)
-{
-    return elasticsearch::common_model::search::tag::make<elasticsearch::image::model::data>(std::move(arg));
-}
-
-inline auto make(const std::optional<elasticsearch::image::model::element::Title> &arg)
-{
-    return arg.has_value() ?
-            std::optional<elasticsearch::v7::search::tag::simple_query_string<elasticsearch::image::model::data,
-                          elasticsearch::image::model::element::Title>>(
-                                elasticsearch::v7::search::tag::create::simple_query_string_tag<elasticsearch::image::model::data,
-                                                                                                elasticsearch::image::model::element::Title>(arg.value().getValue())) :
-            std::optional<elasticsearch::v7::search::tag::simple_query_string<elasticsearch::image::model::data,
-                          elasticsearch::image::model::element::Title>>();
-}
-
-inline auto make(std::optional<elasticsearch::image::model::element::Title> &&arg)
-{
-    return make(arg);
-}
-
 using geo_bbox = elasticsearch::v7::search::tag::geo_bbox<elasticsearch::image::model::data,
                                                           elasticsearch::image::model::element::Location>;
 
-inline auto make(const std::optional<geo_bbox> &arg)
-{
-    return arg.has_value() ?
-            std::optional<geo_bbox>(arg.value()) :
-            std::optional<geo_bbox>();
-}
-
-inline auto make(std::optional<geo_bbox> &&arg)
-{
-    return make(arg);
-}
-
-
-template <class T, class ...Args>
-inline auto make(Args &&...args)
-{
-    return make(std::optional<T>(std::forward<Args>(args)...));
-}
 namespace create
 {
     template<class ...SpecificModelParams>
@@ -108,7 +55,7 @@ namespace create
     }
 
     template<class ...SpecificModelElements>
-    auto simple_query_string_tag(const std::string &query_string)
+    auto simple_query_string_tag(const std::optional<std::string> &query_string)
     {
         return elasticsearch::v7::search::tag::create::simple_query_string_tag<elasticsearch::image::model::data,
                                                                                SpecificModelElements...>(query_string);
@@ -117,40 +64,16 @@ namespace create
 
 namespace create
 {
-    template<template<class> class Limit, class Value>
-    auto range_create_time_tag(const Value &l)
+    template<class ...RangedElements>
+    auto range_tag(const std::array<std::string, sizeof...(RangedElements)> &ranged_string, char sep = ',')
     {
-        return elasticsearch::v7::search::tag::create::range_tag<elasticsearch::image::model::data, elasticsearch::common_model::CreationDateTime>(Limit<Value>(l));
+        return elasticsearch::v7::search::tag::range<elasticsearch::image::model::data, RangedElements...>(ranged_string, sep);
     }
 
-    template<class Value_1, class Value_2>
-    auto range_create_time_tag(const Value_1 &l1, const Value_2 &l2)
+    template<class ...RangedElements>
+    auto range_tag(const std::array<std::optional<std::string>, sizeof...(RangedElements)> &ranged_string, char sep = ',')
     {
-        return elasticsearch::v7::search::tag::create::range_tag<elasticsearch::image::model::data, elasticsearch::common_model::CreationDateTime>(l1, l2);
-    }
-
-    template<class Value>
-    auto range_orig_time_tag(const Value &l)
-    {
-        return elasticsearch::v7::search::tag::create::range_tag<elasticsearch::image::model::data, elasticsearch::image::model::element::OriginalTime>(l);
-    }
-
-    template<class Value_1, class Value_2>
-    auto range_orig_time_tag(const Value_1 &l1, const Value_2 &l2)
-    {
-        return elasticsearch::v7::search::tag::create::range_tag<elasticsearch::image::model::data, elasticsearch::image::model::element::OriginalTime>(l1, l2);
-    }
-
-    template<class Value>
-    auto range_digitize_time_tag(const Value &l)
-    {
-        return elasticsearch::v7::search::tag::create::range_tag<elasticsearch::image::model::data, elasticsearch::image::model::element::DigitizeTime>(l);
-    }
-
-    template<class Value_1, class Value_2>
-    auto range_digitize_time_tag(const Value_1 &l1, const Value_2 &l2)
-    {
-        return elasticsearch::v7::search::tag::create::range_tag<elasticsearch::image::model::data, elasticsearch::image::model::element::DigitizeTime>(l1, l2);
+        return elasticsearch::v7::search::tag::create::range_tag<elasticsearch::image::model::data, RangedElements...>(ranged_string, sep); //tag::range<elasticsearch::image::model::data, RangedElements...>(ranged_string, sep);
     }
 } // namespace create
 

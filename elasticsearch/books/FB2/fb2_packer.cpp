@@ -27,8 +27,6 @@ packer::packer(const std::string& file_path)
 
 void packer::pack(const std::filesystem::path &path_to_pack)
 {
-    original_data_path.reset(new elasticsearch::common_model::OriginalPath(std::filesystem::absolute(path_to_pack)));
-
     //gzdopen
     std::unique_ptr<FILE, decltype(&fclose)> unpacked_file (fopen(path_to_pack.c_str(), "rb"), fclose);
     if (!unpacked_file)
@@ -91,16 +89,17 @@ void packer::pack(const std::filesystem::path &path_to_pack)
         throw std::runtime_error("cannot read compressed file, read error: " +
                                  std::to_string(errno) + " (" + strerror(errno) + ")");
     }
-    data_ptr = std::make_shared<elasticsearch::common_model::BinaryBlob>(std::move(file_data));
+    data_ptr = std::make_unique<elasticsearch::common_model::BinaryBlob>(std::move(file_data));
+    original_data_path.reset(new elasticsearch::common_model::OriginalPath(std::filesystem::absolute(path_to_pack)));
 }
 
-std::shared_ptr<elasticsearch::common_model::BinaryBlob> packer::getBlob() const
+const elasticsearch::common_model::BinaryBlob& packer::getBlob() const
 {
-    return data_ptr;
+    return *data_ptr;
 }
 
-std::shared_ptr<elasticsearch::common_model::OriginalPath> packer::getPath() const
+const elasticsearch::common_model::OriginalPath& packer::getPath() const
 {
-    return original_data_path;
+    return *original_data_path;
 }
 }

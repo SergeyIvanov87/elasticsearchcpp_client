@@ -23,7 +23,7 @@ TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(to_data, Parent, ToJSON,
         tracer.trace(__FUNCTION__, " - ", elasticsearch::image::model::element::Resolution::class_name().data());
         this->json_object_stack_helper->push(nlohmann::json::object(
                             {{elasticsearch::image::model::element::Resolution::class_name().data(),
-                             val.getValue().to_string()}}));
+                             val.value().to_string()}}));
     }
 
     template<class Tracer>
@@ -32,7 +32,7 @@ TXML_PREPARE_SERIALIZER_DISPATCHABLE_CLASS(to_data, Parent, ToJSON,
         tracer.trace(__FUNCTION__, " - ", elasticsearch::image::model::element::Location::class_name().data());
         this->json_object_stack_helper->push(nlohmann::json::object(
                             {{elasticsearch::image::model::element::Location::class_name().data(),
-                             val.getValue().to_string()}}));
+                             val.value().to_string()}}));
     }
 };
 } // namespace image

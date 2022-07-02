@@ -37,7 +37,7 @@ public:
 
     std::vector<uint8_t> getEncodedValue() const
     {
-        return elasticsearch::utils::base64_decode(base_t::getValue());
+        return elasticsearch::utils::base64_decode(base_t::value());
     }
 };
 }
