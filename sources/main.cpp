@@ -135,7 +135,7 @@ int main(int argc, char* argv[])
 
             txml::StdoutTracer std_tracer;
             epub::reader d(book_path);
-            auto epub_model_header = d.getOPF();
+            auto &&epub_model_header = d.getOPF();
             elasticsearch::book::epub::to_model_data b2m;
             epub_model_header->format_serialize(b2m, std_tracer);
 

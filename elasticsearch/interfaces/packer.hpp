@@ -13,8 +13,8 @@ struct packer_interface
 {
     virtual ~packer_interface() = default;
     virtual void pack(const std::filesystem::path &path_to_pack) = 0;
-    virtual std::optional<elasticsearch::common_model::BinaryBlob> getBlob() const = 0;
-    virtual std::optional<elasticsearch::common_model::OriginalPath> getPath() const = 0;
+    virtual const elasticsearch::common_model::BinaryBlob &getBlob() const = 0;
+    virtual const elasticsearch::common_model::OriginalPath &getPath() const = 0;
 };
 }
 #endif // INTERFACES_PACKER_HPP12

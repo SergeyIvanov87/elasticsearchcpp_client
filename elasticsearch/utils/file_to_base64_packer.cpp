@@ -10,7 +10,7 @@
 #include "elasticsearch/utils/file_to_base64_packer.hpp"
 
 
-namespace  elasticsearch
+namespace elasticsearch
 {
 namespace utils
 {
@@ -21,7 +21,7 @@ packer::packer(const std::filesystem::path &file_path)
 
 void packer::pack(const std::filesystem::path &path_to_pack)
 {
-    original_data_path = std::make_optional<elasticsearch::common_model::OriginalPath>(std::filesystem::absolute(path_to_pack));
+    original_data_path.reset(new elasticsearch::common_model::OriginalPath(std::filesystem::absolute(path_to_pack)));
 
     std::unique_ptr<FILE, decltype(&fclose)> packed_file (fopen(path_to_pack.c_str(), "rb"), fclose);
     if (!packed_file)
@@ -44,17 +44,17 @@ void packer::pack(const std::filesystem::path &path_to_pack)
             total_bytes_read += bytes_read;
         }
     } while(bytes_read != 0 or errno == EINTR);
-    data_ptr = std::make_optional<elasticsearch::common_model::BinaryBlob>(std::move(file_data));
+    data_blob = std::make_unique<elasticsearch::common_model::BinaryBlob>(std::move(file_data));
 }
 
-std::optional<elasticsearch::common_model::BinaryBlob> packer::getBlob() const
+const elasticsearch::common_model::BinaryBlob &packer::getBlob() const
 {
-    return data_ptr;
+    return *data_blob;
 }
 
-std::optional<elasticsearch::common_model::OriginalPath> packer::getPath() const
+const elasticsearch::common_model::OriginalPath &packer::getPath() const
 {
-    return original_data_path;
+    return *original_data_path;
 }
 }
 }

@@ -23,12 +23,12 @@ try {
     throw std::runtime_error("Unsupported book format by path: " + file_path);
 }
 
-std::optional<elasticsearch::common_model::BinaryBlob> reader::getBlob() const
+const elasticsearch::common_model::BinaryBlob& reader::getBlob() const
 {
     return impl->getBlob();
 }
 
-std::optional<elasticsearch::common_model::OriginalPath> reader::getPath() const
+const elasticsearch::common_model::OriginalPath& reader::getPath() const
 {
     return impl->getPath();
 }
@@ -38,11 +38,12 @@ void reader::pack(const std::filesystem::path &path_to_pack)
     impl->pack(path_to_pack);
 }
 
-std::optional<elasticsearch::book::model::data> reader::to_model(txml::EmptyTracer tracer) const
+elasticsearch::book::model::data reader::to_model(txml::EmptyTracer tracer) const
 {
     return std::static_pointer_cast<elasticsearch::book::packer_interface<txml::EmptyTracer>>(impl)->to_model(std::move(tracer));
 }
-std::optional<elasticsearch::book::model::data> reader::to_model(txml::StdoutTracer tracer) const
+
+elasticsearch::book::model::data reader::to_model(txml::StdoutTracer tracer) const
 {
     return std::static_pointer_cast<elasticsearch::book::packer_interface<txml::StdoutTracer>>(impl)->to_model(std::move(tracer));
 }

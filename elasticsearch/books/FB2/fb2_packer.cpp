@@ -20,15 +20,14 @@
 
 namespace fb2
 {
-packer::packer(const std::string& file_path)
+packer::packer(const std::string& file_path) :
+    original_data_path(std::filesystem::absolute(file_path))
 {
     packer::pack(file_path);
 }
 
 void packer::pack(const std::filesystem::path &path_to_pack)
 {
-    original_data_path = std::make_optional<elasticsearch::common_model::OriginalPath>(std::filesystem::absolute(path_to_pack));
-
     //gzdopen
     std::unique_ptr<FILE, decltype(&fclose)> unpacked_file (fopen(path_to_pack.c_str(), "rb"), fclose);
     if (!unpacked_file)
@@ -91,15 +90,15 @@ void packer::pack(const std::filesystem::path &path_to_pack)
         throw std::runtime_error("cannot read compressed file, read error: " +
                                  std::to_string(errno) + " (" + strerror(errno) + ")");
     }
-    data_ptr = std::make_optional<elasticsearch::common_model::BinaryBlob>(std::move(file_data));
+    data_ptr = std::make_unique<elasticsearch::common_model::BinaryBlob>(std::move(file_data));
 }
 
-std::optional<elasticsearch::common_model::BinaryBlob> packer::getBlob() const
+const elasticsearch::common_model::BinaryBlob& packer::getBlob() const
 {
-    return data_ptr;
+    return *data_ptr;
 }
 
-std::optional<elasticsearch::common_model::OriginalPath> packer::getPath() const
+const elasticsearch::common_model::OriginalPath& packer::getPath() const
 {
     return original_data_path;
 }

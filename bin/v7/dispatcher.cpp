@@ -472,17 +472,17 @@ void request_put_data(const dispatcher &d, std::ostream &out,
         using namespace elasticsearch::image::model;
         elasticsearch::image::reader r(file_path);
 
-        auto model_value = r.to_model(tracer);
+        auto&& model_value = r.to_model(tracer);
 
-        bin::data_manipulation::inject_to_model<data, IMAGE_DATA_MODEL_ELEMENTS>(model_value.value(), override_model_params);
-        bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value.value(), override_model_params);
+        bin::data_manipulation::inject_to_model<data, IMAGE_DATA_MODEL_ELEMENTS>(model_value, override_model_params);
+        bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value, override_model_params);
 
         // try to search duplicates
         if (!ignore_existing)
         {
             auto finder = [&d, &tracer](auto &search_duplicates_params)
             { return request_image_search_match(d, search_duplicates_params, {}, tracer);};
-            if (helper::find_duplicate_records<data, decltype(finder), IMAGE_DATA_MODEL_ELEMENTS>(model_value.value(), finder, out))
+            if (helper::find_duplicate_records<data, decltype(finder), IMAGE_DATA_MODEL_ELEMENTS>(model_value, finder, out))
             {
                 return;
             }
@@ -495,23 +495,23 @@ void request_put_data(const dispatcher &d, std::ostream &out,
         d.execute_request<elasticsearch::image::create::transaction>(
                             schema_indices[1],
                             std::string(schema_indices[1]) + "/_doc/" + std::to_string(generator_ptr->get_unique_index().value()),
-                            model_value.value(),
+                            model_value,
                             d.get_settings().curl_verbose,
                             tracer);
     } catch (...) {
         try {
             using namespace elasticsearch::book::model;
             elasticsearch::book::reader r(file_path);
-            auto model_value = r.to_model(tracer);
-            bin::data_manipulation::inject_to_model<data, BOOK_DATA_MODEL_ELEMENTS>(model_value.value(), override_model_params);
-            bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value.value(), override_model_params);
+            auto&& model_value = r.to_model(tracer);
+            bin::data_manipulation::inject_to_model<data, BOOK_DATA_MODEL_ELEMENTS>(model_value, override_model_params);
+            bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value, override_model_params);
 
             // try to search duplicates
             if (!ignore_existing)
             {
                 auto finder = [&d, &tracer](auto &search_duplicates_params)
                 { return request_book_search_match(d, search_duplicates_params, {}, tracer);};
-                if (helper::find_duplicate_records<data, decltype(finder), BOOK_DATA_MODEL_ELEMENTS>(model_value.value(), finder, out))
+                if (helper::find_duplicate_records<data, decltype(finder), BOOK_DATA_MODEL_ELEMENTS>(model_value, finder, out))
                 {
                     return;
                 }
@@ -525,7 +525,7 @@ void request_put_data(const dispatcher &d, std::ostream &out,
             d. execute_request<elasticsearch::book::create::transaction>(
                                 schema_indices[0],
                                 std::string(schema_indices[0]) + "/_doc/" +  std::to_string(generator_ptr->get_unique_index().value()),
-                                model_value.value(),
+                                model_value,
                                 d.get_settings().curl_verbose,
                                 tracer);
         } catch (const std::exception& ex) {
@@ -546,28 +546,28 @@ void request_update_data(dispatcher &d,
         using namespace elasticsearch::image::model;
         elasticsearch::image::reader r(file_path);
 
-        auto model_value = r.to_model(tracer);
+        auto&& model_value = r.to_model(tracer);
 
-        bin::data_manipulation::inject_to_model<data, IMAGE_DATA_MODEL_ELEMENTS>(model_value.value(), override_model_params);
-        bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value.value(), override_model_params);
+        bin::data_manipulation::inject_to_model<data, IMAGE_DATA_MODEL_ELEMENTS>(model_value, override_model_params);
+        bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value, override_model_params);
         d.execute_request<elasticsearch::image::create::transaction>(
                             schema_indices[1],
                             std::string(schema_indices[1]) + "/" + document_id,
-                            model_value.value(),
+                            model_value,
                             d.get_settings().curl_verbose,
                             tracer);
     } catch (...) {
         try {
             using namespace elasticsearch::book::model;
             elasticsearch::book::reader r(file_path);
-            auto model_value = r.to_model(tracer);
-            bin::data_manipulation::inject_to_model<data, BOOK_DATA_MODEL_ELEMENTS>(model_value.value(), override_model_params);
-            bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value.value(), override_model_params);
+            auto&& model_value = r.to_model(tracer);
+            bin::data_manipulation::inject_to_model<data, BOOK_DATA_MODEL_ELEMENTS>(model_value, override_model_params);
+            bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value, override_model_params);
 
             d.execute_request<elasticsearch::book::create::transaction>(
                                 schema_indices[0],
                                 std::string(schema_indices[0]) + "/" + document_id,
-                                model_value.value(),
+                                model_value,
                                 d.get_settings().curl_verbose,
                                 tracer);
         } catch (const std::exception& ex) {
@@ -586,18 +586,18 @@ request_collect_model_data(dispatcher &d, const char *file_path, Tracer tracer)
     {
         using namespace elasticsearch::image::model;
         elasticsearch::image::reader r(file_path);
-        auto model_value = r.to_model(tracer);
+        auto&& model_value = r.to_model(tracer);
 
-        bin::data_manipulation::extract_from_model<data, IMAGE_DATA_MODEL_ELEMENTS>(model_value.value(), ret);
-        bin::data_manipulation::extract_from_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value.value(), ret);
+        bin::data_manipulation::extract_from_model<data, IMAGE_DATA_MODEL_ELEMENTS>(model_value, ret);
+        bin::data_manipulation::extract_from_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value, ret);
     } catch (...) {
         try {
             using namespace elasticsearch::book::model;
             elasticsearch::book::reader r(file_path);
 
-            auto model_value = r.to_model(tracer);
-            bin::data_manipulation::extract_from_model<data, BOOK_DATA_MODEL_ELEMENTS>(model_value.value(), ret);
-            bin::data_manipulation::extract_from_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value.value(), ret);
+            auto&& model_value = r.to_model(tracer);
+            bin::data_manipulation::extract_from_model<data, BOOK_DATA_MODEL_ELEMENTS>(model_value, ret);
+            bin::data_manipulation::extract_from_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value, ret);
         } catch (const std::exception& ex) {
             throw std::runtime_error(std::string("unsupported format by path: ") + file_path + ", error: " + ex.what());
         }
