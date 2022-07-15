@@ -262,7 +262,14 @@ request_book_search_match(const dispatcher &d,
 void request_book_search_param_info(const dispatcher &, std::ostream &out)
 {
     using namespace elasticsearch::book::model;
-    out << "\"must\" params list:" <<  std::endl;
+    out << "params list \"must\":" <<  std::endl;
+    out << '\t' << element::Contributor::class_name() << "," << element::Creator::class_name() << ","
+        << element::Identifier::class_name()  << "," << element::Language::class_name() << ","
+        << element::Title::class_name() << "," << elasticsearch::common_model::Description::class_name() << ","
+        << elasticsearch::common_model::Format::class_name() << "," << elasticsearch::common_model::OriginalPath::class_name() << ","
+        << elasticsearch::common_model::SourceName::class_name() << "," << elasticsearch::common_model::Tags::class_name() << std::endl;
+
+    out << "details:\n";
     out << "\t" << element::Contributor::class_name() << std::endl;
     out << "\t" << element::Creator::class_name() << std::endl;
     out << "\t" << element::Identifier::class_name() << std::endl;
@@ -273,10 +280,14 @@ void request_book_search_param_info(const dispatcher &, std::ostream &out)
     out << "\t" << elasticsearch::common_model::OriginalPath::class_name() << std::endl;
     out << "\t" << elasticsearch::common_model::SourceName::class_name() << std::endl;
     out << "\t" << elasticsearch::common_model::Tags::class_name() << "\t*\tLIST: Use ',' as separator" << std::endl;
+    out << "\n";
 
-    out << "\n\"range\" params list:" <<  std::endl;
+    out << "params list \"range\":" <<  std::endl;
+    out << '\t' << elasticsearch::common_model::CreationDateTime::class_name() << std::endl;
+    out << "details:\n";
     out << "\t" << elasticsearch::common_model::CreationDateTime::class_name()
         << "\t*\t RANGE of '2' datetimes enclosed by intervals symbols \"(\" or \"[\" and \")\" or \"]\"" << std::endl;
+    out << "\n";
 
     out << "Example:\n"
         << "./es_search book \"Language:es\" \"title:aaa\" \"creation_datetime:(2022-07-01,2022-08-08]\"" << std::endl;
@@ -370,7 +381,12 @@ request_image_search_match(const dispatcher &d,
 void request_image_search_param_info(const dispatcher &, std::ostream &out)
 {
     using namespace elasticsearch::image::model;
-    out << "\"must\" params list:" <<  std::endl;
+    out << "params list \"must\":" <<  std::endl;
+    out << '\t' << element::Camera::class_name() << "," << element::CameraModel::class_name() << ","
+        << element::Title::class_name() << "," << elasticsearch::common_model::Description::class_name() << ","
+        << elasticsearch::common_model::Format::class_name() << "," << elasticsearch::common_model::OriginalPath::class_name() << ","
+        << elasticsearch::common_model::SourceName::class_name() << "," << elasticsearch::common_model::Tags::class_name() << std::endl;
+    out << "details:\n";
     out << "\t" << element::Camera::class_name() << std::endl;
     out << "\t" << element::CameraModel::class_name() << std::endl;
     out << "\t" << element::Title::class_name() << std::endl;
@@ -379,19 +395,27 @@ void request_image_search_param_info(const dispatcher &, std::ostream &out)
     out << "\t" << elasticsearch::common_model::OriginalPath::class_name() << std::endl;
     out << "\t" << elasticsearch::common_model::SourceName::class_name() << std::endl;
     out << "\t" << elasticsearch::common_model::Tags::class_name() << "\t*\tLIST: use ',' as separator" << std::endl;
+    out << "\n";
 
     using namespace elasticsearch::image::search;
-    out << "\n\"filter\" params list:" <<  std::endl;
-    out << "\t" << tag::geo_bbox::class_name() << "\t*\tLIST of '4' floats with ',' as value separator:\n"
+    out << "params list \"filter\":" <<  std::endl;
+    out << '\t' << tag::geo_bbox::class_name() << std::endl;
+    out << "details:\n";
+    out << '\t' << tag::geo_bbox::class_name() << "\t*\tLIST of '4' floats with ',' as value separator:\n"
             "\t\t\t\tX_top_left, Y_top_left, X_bottom_right, Y_botton_right:" << std::endl;
+    out << "\n";
 
-    out << "\n\"range\" params list:" <<  std::endl;
-    out << "\t" << elasticsearch::common_model::CreationDateTime::class_name()
+    out << "params list \"range\":" <<  std::endl;
+    out << '\t' << elasticsearch::common_model::CreationDateTime::class_name() << "," << element::DigitizeTime::class_name() << ","
+        << element::OriginalTime::class_name() << std::endl;
+    out << "details:\n";
+    out << '\t' << elasticsearch::common_model::CreationDateTime::class_name()
         << "\t*\t RANGE of '2' datetimes enclosed by intervals symbols \"(\" or \"[\" and \")\" or \"]\"" << std::endl;
     out << "\t" << element::DigitizeTime::class_name()
         << "\t*\t RANGE of '2' datetimes enclosed by intervals symbols \"(\" or \"[\" and \")\" or \"]\"" << std::endl;
     out << "\t" << element::OriginalTime::class_name()
         << "\t*\t RANGE of '2' datetimes enclosed by intervals symbols \"(\" or \"[\" and \")\" or \"]\""<< std::endl;
+    out << "\n";
 
     out << "Example:\n"
         << "./es_search image \"camera:rrr\" \"title:aaa\" \"geo_bounding_box:10,10,0,0\" \"creation_datetime:(2022-07-01,2022-08-08]\"" << std::endl;

@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import subprocess
 
 import tkinter as tk
 
@@ -15,7 +16,29 @@ from tkinter.messagebox import showinfo
 # OS: file size
 import os
 
+def fill_schema_params_list(schema_name, out_schema_params_list):
+    info_book_process = subprocess.Popen(['./es_info', schema_name],  stdout=subprocess.PIPE, text=True)
+    out,err = info_book_process.communicate()
+    l = out.split('\n')
+    param_list_name = ""
+    CONST_PARAM_LIST_NAME_TOKEN = "params list"
+    for row in l:
+        if CONST_PARAM_LIST_NAME_TOKEN in row:
+            param_list_name = row[row.find(CONST_PARAM_LIST_NAME_TOKEN) + len(CONST_PARAM_LIST_NAME_TOKEN):len(row)].strip("\t\" :")
+            continue;
+        if len(param_list_name) != 0:
+            row = row.strip()
+
+            if schema_name not in out_schema_params_list:
+                out_schema_params_list[schema_name] = dict()
+
+            out_schema_params_list[schema_name][param_list_name] = row.split(',')
+            param_list_name = ""
+    return(out_schema_params_list)
+
+
 #import cppyy
+
 
 filenames = []
 
@@ -44,10 +67,14 @@ actions_tab = ttk.Notebook(root)
 actions_tab.pack(pady=10, expand=True)
 
 # create frames
-frame_insert_data = ttk.Frame(actions_tab, width=400, height=280)
-frame_search_data = ttk.Frame(actions_tab, width=400, height=280)
+frame_insert_data = ttk.Frame(actions_tab, width=window_width, height=window_height)
+frame_search_data = ttk.Frame(actions_tab, width=window_width, height=window_height)
 
-### insert data
+### insert data in frames header
+schema_param_names = dict({'book':dict({"must":list(), "filter":list()})})
+schema_param_names = fill_schema_params_list('book', schema_param_names)
+schema_param_names = fill_schema_params_list('image', schema_param_names)
+
 insert_data_columns = ('file', 'size', 'details')
 put_data_treeview = ttk.Treeview(frame_insert_data, columns = insert_data_columns, show='headings')
 put_data_treeview.heading('file', text='File Path')
@@ -57,7 +84,7 @@ put_data_treeview.heading('details', text='Details')
 def on_double_click(event):
     item = put_data_treeview.selection()
     for i in item:
-        print("you clicked on", put_data_treeview.item(i, "values")[0])
+        print("you clicked on", put_data_treeview.item(i, "values")[1])
 
 
 put_data_treeview.bind("<Double-1>", on_double_click)

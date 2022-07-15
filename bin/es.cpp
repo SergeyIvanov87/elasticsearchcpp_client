@@ -126,10 +126,13 @@ int main(int argc, char* argv[])
         if (argc == 1)
         {
             std::cout << "Available schemas:" << std::endl;
+            std::string list("\t");
             for (const char **s = schema_indices; *s; s++)
             {
-                std::cout << *s << std ::endl;
+                list =  list + *s + ',';
             }
+            if (!list.empty()) list.pop_back();
+            std::cout << list<< std ::endl;
             return 0;
         }
         if (argc >= 2)
