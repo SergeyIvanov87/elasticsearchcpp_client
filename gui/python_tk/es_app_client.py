@@ -105,8 +105,8 @@ frame_search_data = ttk.Frame(actions_tab, width=window_width, height=window_hei
 
 ### insert data in frames header
 schema_param_names = dict({'book':dict({"must":list(), "filter":list()})})
-schema_param_names = fill_schema_params_list('book', schema_param_names)
-schema_param_names = fill_schema_params_list('image', schema_param_names)
+for schema in ("book", "image"):
+    schema_param_names = fill_schema_params_list(schema, schema_param_names)
 
 insert_data_columns = ('file', 'schema', 'size', 'details', 'status')
 put_data_treeview = ttk.Treeview(frame_insert_data, columns = insert_data_columns, show='headings')
@@ -337,11 +337,30 @@ clear_data_button = ttk.Button(
 )
 clear_data_button.pack(expand=True, side='right')
 
+### final pack insert view
+frame_insert_data.pack(fill='both', expand=True)
+
 ### search data
-search_data_columns = ('score', 'id', 'details')
+search_schema_enable_checkbox_value = dict()
+def show_checked_schema_files(name):
+    print(search_schema_enable_checkbox_value[name].get())
+schemas_search_group = ttk.LabelFrame(frame_search_data, text ='schemas')
+
+for schema in ('book', 'image'):
+    search_schema_enable_checkbox_value[schema] = IntVar()
+    ttk.Checkbutton(
+                    schemas_search_group,
+                    text=schema,
+                    variable=search_schema_enable_checkbox_value[schema],
+                    command=lambda schema=schema: show_checked_schema_files(schema)
+    ).pack(expand=True, side='top')
+schemas_search_group.pack(expand=True, side='left')
+
+search_data_columns = ('score', 'id', 'schema', 'details')
 search_data_treeview = ttk.Treeview(frame_search_data, columns = search_data_columns, show='headings')
 search_data_treeview.heading('score', text='Score')
 search_data_treeview.heading('id', text='ID')
+search_data_treeview.heading('schema', text='Schema')
 search_data_treeview.heading('details', text='Details')
 
 def on_double_click(event):
@@ -353,8 +372,67 @@ def on_double_click(event):
 search_data_treeview.bind("<Double-1>", on_double_click)
 search_data_treeview.pack(expand=True)
 
-###
-frame_insert_data.pack(fill='both', expand=True)
+### search frames: search files button
+def search_files():
+    # collect schema names
+    schemas = set()
+    for schema_name,schema_checked in search_schema_enable_checkbox_value.items():
+        print(f"schema name {schema_name!r}, value {schema_checked}")
+        if schema_checked.get():
+            schemas.add(schema_name)
+
+    print("schemas:", schemas)
+
+    common_param_names = dict()
+    for schema in schemas:
+        for param_type, param_list in schema_param_names[schema].items():
+            if param_type not in common_param_names:
+                common_param_names[param_type] = set(param_list)
+                continue
+            common_param_names[param_type] = common_param_names[param_type].intersection(param_list)
+
+    print("common_param_names: ", common_param_names)
+    prop_dialog = PropertyEditor(search_data_treeview, common_param_names)
+    prop_dialog.wm_title("Search item properties editor")
+    put_data_treeview.wait_window(prop_dialog)
+    new_item_properties = prop_dialog.properties if prop_dialog.apply_properties else dict()
+    print(new_item_properties)
+    #TODO make search request
+
+search_data_button = ttk.Button(
+    frame_search_data,
+    text='Search Files',
+    command=search_files
+)
+search_data_button.pack(expand=True, side='left')
+
+# search frames: get searched files button
+def get_searched_files():
+    filenames = search_data_treeview.selection()
+    for f in filenames:
+        print("get file: ", f)
+
+get_searched_files_button = ttk.Button(
+    frame_search_data,
+    text='Get Files',
+    command=get_searched_files
+)
+get_searched_files_button.pack(expand=True, side='left')
+
+# search frames: clear all
+def clear_searched_files():
+    filenames = search_data_treeview.selection()
+    for f in filenames:
+        search_data_treeview.delete(f);
+
+clear_search_data_button = ttk.Button(
+    frame_search_data,
+    text='Clear Files',
+    command=clear_searched_files
+)
+clear_search_data_button.pack(expand=True, side='right')
+
+### final pack search view
 frame_search_data.pack(fill='both', expand=True)
 
 # add frames to notebook
