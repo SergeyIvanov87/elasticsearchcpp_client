@@ -114,6 +114,7 @@ extract_model_records(const std::shared_ptr<SearchRequest> &search_ptr, Tracer t
 
     if (!search_ptr)
     {
+        assert(search_ptr);
         throw std::runtime_error("invalid search request");
     }
 
@@ -157,7 +158,7 @@ extract_model_records(const std::shared_ptr<SearchRequest> &search_ptr, Tracer t
     return ret;
 }
 template<class Model, class RequestOperation, class ...ElementToMatch>
-bool find_duplicate_records(const Model& model_value, RequestOperation op, std::ostream &out)
+size_t find_duplicate_records(const Model& model_value, RequestOperation op, std::ostream &out)
 {
     using data = Model;
 
@@ -175,11 +176,12 @@ bool find_duplicate_records(const Model& model_value, RequestOperation op, std::
             bin::models::print_elements<data, COMMON_DATA_MODEL_ELEMENTS>(out, *r.second);
             out << std::endl;
         }
+        out << std::endl;
         out << "use --force flag to forcibly insert new records" << std::endl;
-        out << "our 'es_update` command with appropriate <document id> from list above to update the former one" << std::endl;
-        return true;
+        out << "or 'es_update` command with appropriate <document id> from list above to update the former one" << std::endl;
+        return list.size();
     }
-    return false;
+    return 0;
 }
 }
 template<class Tracer>
@@ -491,24 +493,48 @@ void request_put_data(const dispatcher &d, std::ostream &out,
                       Tracer tracer)
 {
     // determine content type
+    std::unique_ptr<elasticsearch::image::model::data> image_model_promise;
+    std::unique_ptr<elasticsearch::book::model::data> book_model_promise;
+    std::stringstream exception_logging;
     try
     {
-        using namespace elasticsearch::image::model;
         elasticsearch::image::reader r(file_path);
 
-        auto&& model_value = r.to_model(tracer);
+        image_model_promise.reset(new elasticsearch::image::model::data(r.to_model(tracer)));
+        bin::data_manipulation::inject_to_model<elasticsearch::image::model::data,
+                                                IMAGE_DATA_MODEL_ELEMENTS>(*image_model_promise, override_model_params);
+    }
+    catch (const std::exception &ex)
+    {
+        exception_logging << "Image schema parse failed, reason:\n" << ex.what() << std::endl;
+        try
+        {
+            using namespace elasticsearch::book::model;
+            elasticsearch::book::reader r(file_path);
+            book_model_promise.reset(new elasticsearch::book::model::data(r.to_model(tracer)));
+            bin::data_manipulation::inject_to_model<elasticsearch::book::model::data,
+                                                    BOOK_DATA_MODEL_ELEMENTS>(*book_model_promise, override_model_params);
+        }
+        catch (const std::exception& ex) {
+            exception_logging << "Book schema parse failed, reason:\n" << ex.what() << std::endl;
+            throw std::runtime_error(std::string("unsupported format by path: ") + file_path + ", error: " + exception_logging.str());
+        }
+    }
 
-        bin::data_manipulation::inject_to_model<data, IMAGE_DATA_MODEL_ELEMENTS>(model_value, override_model_params);
-        bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value, override_model_params);
+    if (image_model_promise)
+    {
+        using namespace elasticsearch::image::model;
+        bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(*image_model_promise, override_model_params);
 
         // try to search duplicates
         if (!ignore_existing)
         {
             auto finder = [&d, &tracer](auto &search_duplicates_params)
             { return request_image_search_match(d, search_duplicates_params, {}, tracer);};
-            if (helper::find_duplicate_records<data, decltype(finder), IMAGE_DATA_MODEL_ELEMENTS>(model_value, finder, out))
+            size_t duplicates_count = helper::find_duplicate_records<data, decltype(finder), IMAGE_DATA_MODEL_ELEMENTS>(*image_model_promise, finder, out);
+            if (duplicates_count)
             {
-                return;
+                throw std::runtime_error("FAILED");
             }
         }
         auto generator_ptr =
@@ -519,42 +545,39 @@ void request_put_data(const dispatcher &d, std::ostream &out,
         d.execute_request<elasticsearch::image::create::transaction>(
                             schema_indices[1],
                             std::string(schema_indices[1]) + "/_doc/" + std::to_string(generator_ptr->get_unique_index().value()),
-                            model_value,
+                            *image_model_promise,
                             d.get_settings().curl_verbose,
                             tracer);
-    } catch (...) {
-        try {
-            using namespace elasticsearch::book::model;
-            elasticsearch::book::reader r(file_path);
-            auto&& model_value = r.to_model(tracer);
-            bin::data_manipulation::inject_to_model<data, BOOK_DATA_MODEL_ELEMENTS>(model_value, override_model_params);
-            bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value, override_model_params);
+    }
 
-            // try to search duplicates
-            if (!ignore_existing)
+    if (book_model_promise)
+    {
+        using namespace elasticsearch::book::model;
+        bin::data_manipulation::inject_to_model<data, COMMON_DATA_MODEL_ELEMENTS>(*book_model_promise, override_model_params);
+
+        // try to search duplicates
+        if (!ignore_existing)
+        {
+            auto finder = [&d, &tracer](auto &search_duplicates_params)
+            { return request_book_search_match(d, search_duplicates_params, {}, tracer);};
+            size_t duplicates_count = helper::find_duplicate_records<data, decltype(finder), BOOK_DATA_MODEL_ELEMENTS>(*book_model_promise, finder, out);
+            if (duplicates_count)
             {
-                auto finder = [&d, &tracer](auto &search_duplicates_params)
-                { return request_book_search_match(d, search_duplicates_params, {}, tracer);};
-                if (helper::find_duplicate_records<data, decltype(finder), BOOK_DATA_MODEL_ELEMENTS>(model_value, finder, out))
-                {
-                    return;
-                }
+                throw std::runtime_error("FAILED");
             }
-            // generate new document id
-            auto generator_ptr =
-                    d.execute_request<elasticsearch::aux::create_doc_id::transaction>(
-                                        schema_indices[0],
-                                        std::string(doc_id_schema_indices[0]) + "/_doc/0",
-                                        d.get_settings().curl_verbose, tracer);
-            d. execute_request<elasticsearch::book::create::transaction>(
-                                schema_indices[0],
-                                std::string(schema_indices[0]) + "/_doc/" +  std::to_string(generator_ptr->get_unique_index().value()),
-                                model_value,
-                                d.get_settings().curl_verbose,
-                                tracer);
-        } catch (const std::exception& ex) {
-            throw std::runtime_error(std::string("unsupported format by path: ") + file_path + ", error: " + ex.what());
         }
+        // generate new document id
+        auto generator_ptr =
+                d.execute_request<elasticsearch::aux::create_doc_id::transaction>(
+                                  schema_indices[0],
+                                  std::string(doc_id_schema_indices[0]) + "/_doc/0",
+                                  d.get_settings().curl_verbose, tracer);
+        d. execute_request<elasticsearch::book::create::transaction>(
+                           schema_indices[0],
+                           std::string(schema_indices[0]) + "/_doc/" +  std::to_string(generator_ptr->get_unique_index().value()),
+                           *book_model_promise,
+                           d.get_settings().curl_verbose,
+                           tracer);
     }
 }
 
@@ -614,6 +637,7 @@ request_collect_model_data(dispatcher &d, const char *file_path, Tracer tracer)
 
         bin::data_manipulation::extract_from_model<data, IMAGE_DATA_MODEL_ELEMENTS>(model_value, ret);
         bin::data_manipulation::extract_from_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value, ret);
+        ret["schema"] = schema_indices[1];
     } catch (...) {
         try {
             using namespace elasticsearch::book::model;
@@ -622,20 +646,22 @@ request_collect_model_data(dispatcher &d, const char *file_path, Tracer tracer)
             auto&& model_value = r.to_model(tracer);
             bin::data_manipulation::extract_from_model<data, BOOK_DATA_MODEL_ELEMENTS>(model_value, ret);
             bin::data_manipulation::extract_from_model<data, COMMON_DATA_MODEL_ELEMENTS>(model_value, ret);
+            ret["schema"] = schema_indices[0];
         } catch (const std::exception& ex) {
-            throw std::runtime_error(std::string("unsupported format by path: ") + file_path + ", error: " + ex.what());
+            throw std::runtime_error(std::string("unsupported format by path: ") + file_path);
         }
     }
     return ret;
 }
 }
 
-dispatcher::dispatcher(dispatcher_settings s, bool with_logs) :
+dispatcher::dispatcher(dispatcher_settings s, bool with_cluster_logs, bool with_request_logs) :
     settings(std::move(s)),
-    use_logging(with_logs)
+    use_request_logging(with_request_logs),
+    use_cluster_logging(with_cluster_logs)
 {
     init_cluster_dispatchers();
-    if (use_logging)
+    if (use_request_logging)
     {
         txml::StdoutTracer std_tracer;
         create_request<elasticsearch::book::index_mapping::transaction>(schema_indices[0], std_tracer);
@@ -674,7 +700,7 @@ std::ostream &dispatcher::data_outputstream() const
 }
 std::ostream &dispatcher::aux_outputstream() const
 {
-    return std::cerr;
+    return buffered_aux_stream;//std::cerr;
 }
 
 const dispatcher_settings& dispatcher::get_settings() const
@@ -725,7 +751,7 @@ void dispatcher::image_index_mapping_delete()
 
 void dispatcher::put_data(const char *file_path, const std::map<std::string, std::string>& override_model_params, bool ignore_existing)
 {
-    if (use_logging)
+    if (use_request_logging)
     {
         details::request_put_data(*this, std::cout, file_path, override_model_params, ignore_existing, txml::StdoutTracer{});
     }
@@ -738,7 +764,7 @@ void dispatcher::put_data(const char *file_path, const std::map<std::string, std
 void dispatcher::update_data(const char *file_path, const char *updated_document_id,
                              const std::map<std::string, std::string>& override_model_params)
 {
-    if (use_logging)
+    if (use_request_logging)
     {
         if (updated_document_id)
         {
@@ -764,7 +790,7 @@ void dispatcher::update_data(const char *file_path, const char *updated_document
 
 void dispatcher::rm_data(const char* index, const char *doc_path_id)
 {
-    if (use_logging)
+    if (use_request_logging)
     {
         details::request_rm_data(*this, std::cout, index, doc_path_id, txml::StdoutTracer{});
     }
@@ -776,7 +802,7 @@ void dispatcher::rm_data(const char* index, const char *doc_path_id)
 
 std::map<std::string, std::string> dispatcher::collect_model_data(const char *file_path)
 {
-    if (use_logging)
+    if (use_request_logging)
     {
         return details::request_collect_model_data(*this, file_path, txml::StdoutTracer{});
     }
@@ -817,7 +843,7 @@ void dispatcher::es_info(const char* model_name, std::ostream &out) const
 
 void dispatcher::book_search_match(const std::map<std::string, std::string>& match_params, const std::map<std::string, std::string>& sort_params)
 {
-    if (use_logging)
+    if (use_request_logging)
     {
         dump_book_search_match_impl(std::cout, match_params, sort_params, txml::StdoutTracer{});
     }
@@ -829,7 +855,7 @@ void dispatcher::book_search_match(const std::map<std::string, std::string>& mat
 
 void dispatcher::image_search_match(const std::map<std::string, std::string>& match_params, const std::map<std::string, std::string>& sort_params)
 {
-    if (use_logging)
+    if (use_request_logging)
     {
         dump_request_image_search_match(std::cout, match_params, sort_params, txml::StdoutTracer{});
     }

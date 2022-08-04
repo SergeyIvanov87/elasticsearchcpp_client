@@ -61,15 +61,32 @@ bool is_verbose(int argc, char *argv[])
     return verbose;
 }
 
+bool is_param_exist(int argc, char *argv[], const char *param_name)
+{
+    bool name_exist = false;
+    auto param_name_size = strlen(param_name);
+    for (int i = 0; i < argc && !name_exist; i++)
+    {
+        name_exist |= !strncmp(argv[i], param_name, param_name_size);
+    }
+    return name_exist;
+}
+
 bool is_curl_verbose(int argc, char *argv[])
 {
-    bool verbose = false;
-    for (int i = 0; i < argc && !verbose; i++)
-    {
-        verbose |= !strcmp(argv[i], "--curl_verbose");
-    }
-    return verbose;
+    return is_param_exist(argc, argv, "--curl_verbose");
 }
+
+bool is_cluster_verbose(int argc, char *argv[])
+{
+    return !is_param_exist(argc, argv, "--no_cluster_verbose");
+}
+
+bool is_force(int argc, char *argv[])
+{
+    return is_param_exist(argc, argv, "--force");
+}
+
 int main(int argc, char* argv[])
 {
     using namespace bin;
@@ -82,9 +99,13 @@ int main(int argc, char* argv[])
     s.hosts = utils::cfg_reader::parse_discovery_cluster(cluster_hosts, port);
     s.curl_verbose = is_curl_verbose(argc,argv);
 
-    std::cerr << s.to_string() << std::endl;
+    bool cluster_logs = is_cluster_verbose(argc, argv);
+    if (cluster_logs)
+    {
+        std::cerr << s.to_string() << std::endl;
+    }
 
-    v7::dispatcher d(s, is_verbose(argc, argv));
+    v7::dispatcher d(s, cluster_logs, is_verbose(argc, argv));
 
     std::string binary_name(argv[0]);
     if (binary_name.find("es_pm_init") != std::string::npos)
@@ -102,13 +123,22 @@ int main(int argc, char* argv[])
             std::cerr << "Please set <filename>" << std::endl;
             return -1;
         }
-        if (argc == 2)
+        try
         {
-            d.put_data(argv[1]);
+            if (argc == 2)
+            {
+                d.put_data(argv[1]);
+            }
+            else
+            {
+                d.put_data(argv[1], parse_params_list(argv + 2, argc - 2),
+                           is_force(argc, argv));
+            }
         }
-        else
+        catch (const std::exception &ex)
         {
-            d.put_data(argv[1], parse_params_list(argv + 2, argc - 2));
+            std::cerr << ex.what() << std::endl;
+            return -1;
         }
     }
     else if(binary_name.find("es_rm") != std::string::npos)
@@ -196,10 +226,10 @@ int main(int argc, char* argv[])
             return -1;
         }
         auto map = d.collect_model_data(argv[1]);
-        std::cout << "Document attributes: " << std::endl;
         for (const auto &pair : map)
         {
             std::cout << pair.first << ": " << pair.second << std::endl;
         }
     }
+    return 0;
 }
