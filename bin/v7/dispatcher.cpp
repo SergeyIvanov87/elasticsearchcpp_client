@@ -172,8 +172,8 @@ size_t find_duplicate_records(const Model& model_value, RequestOperation op, std
         for (const auto& r : list)
         {
             out << r.first << "\t";
-            bin::models::print_elements<data, ElementToMatch...>(out, *r.second);
-            bin::models::print_elements<data, COMMON_DATA_MODEL_ELEMENTS>(out, *r.second);
+            bin::models::print_element_values<data, ElementToMatch...>(out, *r.second);
+            bin::models::print_element_values<data, COMMON_DATA_MODEL_ELEMENTS>(out, *r.second);
             out << std::endl;
         }
         out << std::endl;
@@ -264,6 +264,12 @@ request_book_search_match(const dispatcher &d,
 void request_book_search_param_info(const dispatcher &, std::ostream &out)
 {
     using namespace elasticsearch::book::model;
+    out << "params list all:" << std::endl;
+    out << '\t';
+    bin::models::print_elements<BOOK_DATA_MODEL_ELEMENTS>(out);
+    bin::models::print_elements<COMMON_DATA_MODEL_ELEMENTS>(out);
+    out << std::endl;
+
     out << "params list \"must\":" <<  std::endl;
     out << '\t' << element::Contributor::class_name() << "," << element::Creator::class_name() << ","
         << element::Identifier::class_name()  << "," << element::Language::class_name() << ","
@@ -383,6 +389,12 @@ request_image_search_match(const dispatcher &d,
 void request_image_search_param_info(const dispatcher &, std::ostream &out)
 {
     using namespace elasticsearch::image::model;
+    out << "params list all:" << std::endl;
+    out << '\t';
+    bin::models::print_elements<IMAGE_DATA_MODEL_ELEMENTS>(out);
+    bin::models::print_elements<COMMON_DATA_MODEL_ELEMENTS>(out);
+    out << std::endl;
+
     out << "params list \"must\":" <<  std::endl;
     out << '\t' << element::Camera::class_name() << "," << element::CameraModel::class_name() << ","
         << element::Title::class_name() << "," << elasticsearch::common_model::Description::class_name() << ","
@@ -876,8 +888,8 @@ void dispatcher::dump_book_search_match_impl(std::ostream& out, const std::map<s
     for (const auto& r : list)
     {
         out << r.first << "\t";
-        bin::models::print_elements<data, BOOK_DATA_MODEL_ELEMENTS>(out, *r.second);
-        bin::models::print_elements<data, COMMON_DATA_MODEL_ELEMENTS>(out, *r.second);
+        bin::models::print_element_values<data, BOOK_DATA_MODEL_ELEMENTS>(out, *r.second);
+        bin::models::print_element_values<data, COMMON_DATA_MODEL_ELEMENTS>(out, *r.second);
         out << std::endl;
     }
 }
@@ -893,8 +905,8 @@ void dispatcher::dump_request_image_search_match(std::ostream& out, const std::m
     for (const auto& r : list)
     {
         out << r.first << "\t";
-        bin::models::print_elements<data, IMAGE_DATA_MODEL_ELEMENTS>(out, *r.second);
-        bin::models::print_elements<data, COMMON_DATA_MODEL_ELEMENTS>(out, *r.second);
+        bin::models::print_element_values<data, IMAGE_DATA_MODEL_ELEMENTS>(out, *r.second);
+        bin::models::print_element_values<data, COMMON_DATA_MODEL_ELEMENTS>(out, *r.second);
         out << std::endl;
     }
 }

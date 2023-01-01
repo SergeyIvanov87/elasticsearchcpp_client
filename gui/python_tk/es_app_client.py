@@ -13,15 +13,31 @@ from pprint import pprint
 from tkinter import filedialog as fd
 from tkinter.messagebox import showinfo
 
+import dialogs
 #https://github.com/TkinterEP/ttkwidgets
 #from ttkwidgets import CheckboxTreeview
 
 # OS: file size
 import os
 
-def fill_schema_params_list(schema_name, out_schema_params_list):
-    info_book_process = subprocess.Popen(['./es_info', schema_name],  stdout=subprocess.PIPE, text=True)
-    out,err = info_book_process.communicate()
+def init_schema_list(out_schema_list):
+    info_process = subprocess.Popen(['./es_info'],  stdout=subprocess.PIPE, text=True)
+    out,err = info_process.communicate()
+    if info_process.returncode != 0:
+        raise RuntimeError(out.split('\n'))
+    l = out.split('\n')
+    out_schema_list = l[1].strip("\t").split(',')
+    if len(out_schema_list) == 0:
+        raise RuntimeError("there are no registered schemas");
+    return(out_schema_list)
+
+
+def init_schema_params_list(schema_name, out_schema_params_list):
+    info_process = subprocess.Popen(['./es_info', schema_name],  stdout=subprocess.PIPE, text=True)
+    out,err = info_process.communicate()
+    if info_process.returncode != 0:
+        raise RuntimeError(out.split('\n'))
+
     l = out.split('\n')
     param_list_name = ""
     CONST_PARAM_LIST_NAME_TOKEN = "params list"
@@ -35,11 +51,33 @@ def fill_schema_params_list(schema_name, out_schema_params_list):
             if schema_name not in out_schema_params_list:
                 out_schema_params_list[schema_name] = dict()
 
-            out_schema_params_list[schema_name][param_list_name] = row.split(',')
+            if param_list_name == "all":
+                out_schema_params_list[schema_name][""] = row.split(',')
+            else:
+                out_schema_params_list[schema_name][param_list_name] = row.split(',')
             param_list_name = ""
     return(out_schema_params_list)
 
+def get_schema_group_parameters(schemas, schemas_param_names_list):
+    # build common params as all params in schema intersection
+    unified_param_names = dict()
+    # build schema groups list as all groups in schema intersection
+    unified_group_list = list()
+    for schema in schemas:
+        for param_type, param_list in schemas_param_names_list[schema].items():
+            #skip empty/all group
+            if not param_type:
+                continue
+            # add functional group only
+            if param_type not in unified_param_names:
+                unified_param_names[param_type] = set(param_list)
+                unified_group_list.append(param_type)
+                continue
+            unified_param_names[param_type] = unified_param_names[param_type].union(param_list)
+    return(unified_param_names, unified_group_list)
+
 def invoke_insert_data_request(filename, schema, properties_dict, force = False):
+    #TODO apply properties_dict
     print("force: ", force)
     if not force:
         insert_file_process = subprocess.Popen(['./es_put', filename],  stdout=subprocess.PIPE, text=True)
@@ -72,6 +110,8 @@ def fill_file_info(file_path):
     return schema,out_info
 #import cppyy
 
+sep_param_value = ':'
+sep_params= '\n'
 
 filenames = []
 
@@ -103,29 +143,41 @@ actions_tab.pack(pady=10, expand=True)
 frame_insert_data = ttk.Frame(actions_tab, width=window_width, height=window_height)
 frame_search_data = ttk.Frame(actions_tab, width=window_width, height=window_height)
 
-### insert data in frames header
-schema_param_names = dict({'book':dict({"must":list(), "filter":list()})})
-for schema in ("book", "image"):
-    schema_param_names = fill_schema_params_list(schema, schema_param_names)
+#ask API about registered schema
+schema_list = list()
+schema_list = init_schema_list(schema_list)
+schema_param_names = dict()
+#and about registered schema params
+for schema in schema_list:
+    schema_param_names = init_schema_params_list(schema, schema_param_names)
 
+### insert data in frames header
 insert_data_columns = ('file', 'schema', 'size', 'details', 'status')
+insert_data_columns_shown_test = ('File Path', 'Schema', 'Size', 'Details', 'Status')
 put_data_treeview = ttk.Treeview(frame_insert_data, columns = insert_data_columns, show='headings')
-put_data_treeview.heading('file', text='File Path')
-put_data_treeview.heading('schema', text='Schema')
-put_data_treeview.heading('size', text='Size')
-put_data_treeview.heading('details', text='Details')
-put_data_treeview.heading('status', text='Status')
+for i in range (0, len(insert_data_columns)):
+    put_data_treeview.heading(insert_data_columns[i], text=insert_data_columns_shown_test[i])
 
 def get_schema_from_insert_item(insert_treeview_data, index):
-    return insert_treeview_data.item(index, "values")[1]
+    for i in range(0, 10000):
+        ID = insert_treeview_data.column(i, option='id')
+        if ID == "schema":
+            break
+    return insert_treeview_data.item(index, "values")[i]
+
 #todo return dictionary!
 def get_insert_item_data(insert_treeview_data, index):
-    json_data = insert_treeview_data.item(index, "values")[3]
-    return json.loads(json_data[len("Click to edit\n"): len(json_data)])
+    for i in range(0, 10000):
+        ID = insert_treeview_data.column(i, option='id')
+        if ID == "details":
+            break
+
+    json_data = insert_treeview_data.item(index, "values")[i]
+    return json.loads(json_data[len("Click for details\n"): len(json_data)])
 
 def prepare_insert_item_data(data):
     json_object = json.dumps(data, indent = 4)
-    return "Click to edit\n" + json_object
+    return "Click for details\n" + json_object
 
 def change_insert_item_data(insert_treeview_data, index, new_data):
     item_values = insert_treeview_data.item(index, 'values')
@@ -138,73 +190,6 @@ def update_insert_item_status(insert_treeview_data, index, new_status_string):
     item_values = insert_treeview_data.item(index, 'values')
     insert_treeview_data.item(index, values=(item_values[0], item_values[1], item_values[2], item_values[3], new_status_string))
 
-class PropertyEditor(tk.Toplevel):
-    non_nonmodified_properties = ['format', 'orig_path']
-    unassigned_property_value = "<UNASSIGNED>"
-    apply_properties = False
-
-    def __init__(self, parent, param_type_names_dict):
-        tk.Toplevel.__init__(self)
-        self.named_entries = dict()
-        self.properties = dict()
-        r = 1
-        for param_type, params_set in param_type_names_dict.items():
-            for param_name in params_set:
-                if param_name in self.non_nonmodified_properties:
-                    continue
-
-                l = tk.Label(self, text=param_name)
-                l.grid(row=r, column=1)
-                self.named_entries[param_name] = ttk.Entry(self)
-                self.named_entries[param_name].grid(row=r, column=2)
-                #self.named_entries[param_name].bind("KeyPress", self.on_modify)
-                r += 1
-        Ok = tk.Button(self, text="Ok", command=self.store_setting)
-        Cancel = tk.Button(self, text="Cancel", command=self.cancel_setting)
-        Ok.grid(row=r, column=1)
-        Cancel.grid(row=r, column=2)
-
-        self.parent = parent
-        self.__acquire_modality()
-
-    def fill(self, json_param_values):
-        for param_name,entry in self.named_entries.items():
-            if param_name not in json_param_values:
-                json_param_values[param_name] = self.unassigned_property_value
-            #pprint(vars(entry))
-            entry.insert("end", json_param_values[param_name])
-
-    def store_setting(self):
-        for param_name,entry in self.named_entries.items():
-            #if param_name not in self.properties:
-            #    self.properties[param_name] = ''
-            if entry.get() != self.unassigned_property_value:
-                self.properties[param_name] = entry.get()
-        self.apply_properties = True
-        self.__release_modality()
-
-    def cancel_setting(self):
-        self.apply_properties = False
-        self.properties.clear()
-        self.__release_modality()
-
-    #def on_modify(event):
-        #pprint(vars(event))
-        #print(event)
-
-    def __del__(self):
-        self.apply_properties = False
-        self.__release_modality()
-
-    def __acquire_modality(self):
-        self.wait_visibility()
-        self.grab_set()
-        self.transient(self.parent)
-
-    def __release_modality(self):
-        self.grab_release()
-        self.destroy()
-
 def on_double_click(event):
     item = put_data_treeview.selection()
     selected_count = len(item)
@@ -216,15 +201,10 @@ def on_double_click(event):
             schemas.add(get_schema_from_insert_item(put_data_treeview, i))
 
         # build common params as all params in schema intersection
-        common_param_names = dict()
-        for schema in schemas:
-            for param_type, param_list in schema_param_names[schema].items():
-                if param_type not in common_param_names:
-                    common_param_names[param_type] = set(param_list)
-                    continue
-                common_param_names[param_type] = common_param_names[param_type].intersection(param_list)
+        common_param_names, common_param_group = get_schema_group_parameters(schemas, schema_param_names)
 
-        prop_dialog = PropertyEditor(put_data_treeview, common_param_names)
+        # invoke dialog
+        prop_dialog = dialogs.PropertyEditor(put_data_treeview, common_param_names, common_param_group)
         prop_dialog.wm_title("Group item properties editor")
         put_data_treeview.wait_window(prop_dialog)
         new_item_properties = prop_dialog.properties if prop_dialog.apply_properties else dict()
@@ -238,7 +218,8 @@ def on_double_click(event):
         # if single item param selected then we apply allowable-for-edit mask only
         # and show up final params list for editing
         schema = get_schema_from_insert_item(put_data_treeview, specific_item)
-        prop_dialog = PropertyEditor(put_data_treeview, schema_param_names[schema])
+        common_param_names, common_param_group = get_schema_group_parameters( {schema}, schema_param_names)
+        prop_dialog = dialogs.PropertyEditor(put_data_treeview, common_param_names, common_param_group)
         prop_dialog.wm_title("Edit '%s' Properties" % get_schema_from_insert_item(put_data_treeview, specific_item))
 
         prop_dialog.fill(get_insert_item_data(put_data_treeview, specific_item))
@@ -291,7 +272,7 @@ def insert_selected_files():
             invoke_insert_data_request(item_values[0], item_values[1], get_insert_item_data(put_data_treeview, f))
             update_insert_item_status(put_data_treeview, f, "Done")
         except RuntimeError as err:
-            print("Bad thing happens during insert files:\n", err)
+            print("Bad things happen during a files insertion:\n", err)
             if 'Duplicated' in err.args[0][0]:
                 update_insert_item_status(put_data_treeview, f, "Failed: Already exist. use 'Force'")
             else:
@@ -346,7 +327,7 @@ def show_checked_schema_files(name):
     print(search_schema_enable_checkbox_value[name].get())
 schemas_search_group = ttk.LabelFrame(frame_search_data, text ='schemas')
 
-for schema in ('book', 'image'):
+for schema in schema_list:
     search_schema_enable_checkbox_value[schema] = IntVar()
     ttk.Checkbutton(
                     schemas_search_group,
@@ -357,17 +338,49 @@ for schema in ('book', 'image'):
 schemas_search_group.pack(expand=True, side='left')
 
 search_data_columns = ('score', 'id', 'schema', 'details')
+search_data_columns_shown_test = ('Score', 'ID', 'Schema', 'Details')
 search_data_treeview = ttk.Treeview(frame_search_data, columns = search_data_columns, show='headings')
-search_data_treeview.heading('score', text='Score')
-search_data_treeview.heading('id', text='ID')
-search_data_treeview.heading('schema', text='Schema')
-search_data_treeview.heading('details', text='Details')
+for i in range (0, len(search_data_columns)):
+    search_data_treeview.heading(search_data_columns[i], text=search_data_columns_shown_test[i])
 
 def on_double_click(event):
     item = search_data_treeview.selection()
     for i in item:
         print("you clicked on", search_data_treeview.item(i, "values")[0])
 
+    selected_count = len(item)
+    new_item_properties = dict()
+    if selected_count > 1:
+        # collect schema names
+        schemas = set()
+        for i in item:
+            schemas.add(get_schema_from_insert_item(search_data_treeview, i))
+
+        # build common params as all params in schema intersection
+        common_param_names, common_param_group = get_schema_group_parameters(schemas, schema_param_names)
+
+        prop_dialog = dialogs.PropertyPrinter(search_data_treeview, common_param_names, common_param_group)
+        prop_dialog.wm_title("Group item properties editor")
+        search_data_treeview.wait_window(prop_dialog)
+        new_item_properties = prop_dialog.properties if prop_dialog.apply_properties else dict()
+        del prop_dialog
+    elif selected_count == 1:
+        specific_item = item[0]
+        # if group editor should be selected we find schemas param name intersection mask
+        # and apply allowable-for-edit mask
+        # and show up final params for editing
+        #
+        # if single item param selected then we apply allowable-for-edit mask only
+        # and show up final params list for editing
+        schema = get_schema_from_insert_item(search_data_treeview, specific_item)
+        common_param_names, common_param_group = get_schema_group_parameters({schema}, schema_param_names)
+        prop_dialog = dialogs.PropertyPrinter(search_data_treeview, common_param_names, common_param_group)
+        prop_dialog.wm_title("Edit '%s' Properties" % get_schema_from_insert_item(search_data_treeview, specific_item))
+
+        prop_dialog.fill(get_insert_item_data(search_data_treeview, specific_item))
+        search_data_treeview.wait_window(prop_dialog)
+        new_item_properties = prop_dialog.properties if prop_dialog.apply_properties else dict()
+        del prop_dialog
 
 search_data_treeview.bind("<Double-1>", on_double_click)
 search_data_treeview.pack(expand=True)
@@ -381,23 +394,69 @@ def search_files():
         if schema_checked.get():
             schemas.add(schema_name)
 
-    print("schemas:", schemas)
-
-    common_param_names = dict()
-    for schema in schemas:
-        for param_type, param_list in schema_param_names[schema].items():
-            if param_type not in common_param_names:
-                common_param_names[param_type] = set(param_list)
-                continue
-            common_param_names[param_type] = common_param_names[param_type].intersection(param_list)
-
-    print("common_param_names: ", common_param_names)
-    prop_dialog = PropertyEditor(search_data_treeview, common_param_names)
+    # Show all parameters for all selected schemas as property editor dialog
+    united_schema_param_names, param_group = get_schema_group_parameters(schemas, schema_param_names)
+    prop_dialog = dialogs.PropertyEditor(search_data_treeview, united_schema_param_names, param_group)
     prop_dialog.wm_title("Search item properties editor")
     put_data_treeview.wait_window(prop_dialog)
     new_item_properties = prop_dialog.properties if prop_dialog.apply_properties else dict()
-    print(new_item_properties)
+
     #TODO make search request
+    search_param_string = ""
+    for param, value in new_item_properties.items():
+        if value:
+            search_param_string = "\"" + param + sep_param_value + value + "\""
+
+    search_param_string_per_schema = dict()
+    for schema in schemas:
+        search_param_string_per_schema[schema] = ""
+        for param, value in new_item_properties.items():
+            if value and param in schema_param_names[schema][""]:
+                if len(search_param_string_per_schema[schema]) == 0:
+                    search_param_string_per_schema[schema] = "\"" + param + sep_param_value + value + "\""
+                else:
+                    search_param_string_per_schema[schema] = search_param_string_per_schema[schema] + "\n\"" + param + sep_param_value + value + "\""
+
+    #files_info = dict({schema_name:dict()})
+    files_info = dict()
+    for schema in schemas:
+        print(f"ask {schema} for params {search_param_string_per_schema[schema]}")
+        search_process = subprocess.Popen(['./es_search', schema, search_param_string_per_schema[schema]],  stdout=subprocess.PIPE, text=True)
+
+        out,err = search_process.communicate()
+        l = out.split('\n')
+        record_count = 0
+        record_index = 0;
+
+        RECORDS_COUNT_NAME_TOKEN = "records count"
+        for row in l:
+            if RECORDS_COUNT_NAME_TOKEN in row:
+                record_count = int(row[row.find(RECORDS_COUNT_NAME_TOKEN) + len(RECORDS_COUNT_NAME_TOKEN):len(row)].strip("\t\" :"))
+                continue;
+            if record_count > record_index + 1:
+                file_description = row.split('\t')
+
+                if schema not in files_info:
+                    files_info[schema] = dict()
+
+                files_info[schema][file_description[0]] = dict()
+                file_property_values = file_description[1].split(',')
+                for file_property_key in schema_param_names[schema][""]:
+                    files_info[schema][file_description[0]][file_property_key] = file_property_values[len(files_info[schema][file_description[0]].keys())]
+
+                record_index = record_index + 1
+    print(files_info)
+    # fill in search frame
+    for schema,files_dict in files_info.items():
+        for file_name, file_prop in files_dict.items():
+            #json_object = json.dumps(info, indent = 4)
+            item_values = (0.0, file_name, schema,
+                            "Click for details\n" + json.dumps(file_prop, indent = 4)
+                            )
+            search_data_treeview.insert('', tk.END, values = item_values);
+    return(files_info)
+
+    #######
 
 search_data_button = ttk.Button(
     frame_search_data,
