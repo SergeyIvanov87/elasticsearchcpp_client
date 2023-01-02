@@ -14,27 +14,33 @@ from tkinter import filedialog as fd
 from tkinter.messagebox import showinfo
 
 class PropertyDialog(tk.Toplevel):
-    non_nonmodified_properties = ['format', 'orig_path']
+    immutable_properties = ['format', 'orig_path']
     unassigned_property_value = "<UNASSIGNED>"
 
     def __init__(self, parent, PropertyWidgetClass, param_type_names_dict, param_group_names):
         tk.Toplevel.__init__(self)
-        self.named_entries = dict()
-        self.widget_textvar = dict()
+        self.property_widgets = dict()
+        self.property_widget_textvalue = dict()
         self.properties = dict()
         r = 1
         for param_type, params_set in param_type_names_dict.items():
             for param_name in params_set:
-                if param_name in self.non_nonmodified_properties:
+                # hide immutable properties
+                if param_name in self.immutable_properties:
                     continue
 
+                # create property name
                 l = tk.Label(self, text=param_name)
                 l.grid(row=r, column=1)
-                self.widget_textvar[param_name] = tk.StringVar()
-                #self.unassigned_property_value)
-                self.named_entries[param_name] = PropertyWidgetClass(self, textvariable = self.widget_textvar[param_name])
-                self.named_entries[param_name].grid(row=r, column=2)
-                #self.named_entries[param_name].bind("KeyPress", self.on_modify)
+
+                # get property values tagged as unassigned/untouched by default
+                self.property_widget_textvalue[param_name] = tk.StringVar()
+                self.property_widget_textvalue[param_name].set(self.unassigned_property_value)
+
+                # create property value by type of PropertyWidgetClass
+                self.property_widgets[param_name] = PropertyWidgetClass(self, textvariable = self.property_widget_textvalue[param_name])
+
+                self.property_widgets[param_name].grid(row=r, column=2)
                 r += 1
         Ok = tk.Button(self, text="Ok", command=self.store_setting)
         Cancel = tk.Button(self, text="Cancel", command=self.cancel_setting)
@@ -71,20 +77,15 @@ class PropertyEditor(PropertyDialog):
         PropertyDialog.__init__(self, parent, ttk.Entry, param_type_names_dict, param_group_names)
 
     def fill(self, json_param_values):
-        for param_name,entry in self.named_entries.items():
+        for param_name,entry in self.property_widgets.items():
             if param_name not in json_param_values:
-                json_param_values[param_name] = self.unassigned_property_value
-            #pprint(vars(entry))
-            #entry.insert("end", json_param_values[param_name])
-            self.widget_textvar[param_name].set(json_param_values[param_name])
+                continue
+            self.property_widget_textvalue[param_name].set(json_param_values[param_name])
 
     def store_setting(self):
-        for param_name,entry in self.named_entries.items():
-            #if param_name not in self.properties:
-            #    self.properties[param_name] = ''
+        for param_name,entry in self.property_widgets.items():
             if entry.get() != self.unassigned_property_value:
-                #self.properties[param_name] = entry.get()
-                self.properties[param_name] = self.widget_textvar[param_name].get()
+                self.properties[param_name] = self.property_widget_textvalue[param_name].get()
         self.apply_properties = True
         PropertyDialog.release_modality(self)
 
@@ -108,13 +109,10 @@ class PropertyPrinter(PropertyDialog):
         PropertyDialog.__init__(self, parent, ttk.Label, param_type_names_dict, param_group_names)
 
     def fill(self, json_param_values):
-        r = 1
-        for param_name,entry in self.named_entries.items():
+        for param_name,entry in self.property_widgets.items():
             if param_name not in json_param_values:
-                json_param_values[param_name] = self.unassigned_property_value
-            #entry[param_name] = ttk.Label(self, text = json_param_values[param_name])
-            #entry.text(json_param_values[param_name])
-            self.widget_textvar[param_name].set(json_param_values[param_name])
+                continue
+            self.property_widget_textvalue[param_name].set(json_param_values[param_name])
         self.update_idletasks()
 
     def store_setting(self):
