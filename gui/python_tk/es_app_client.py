@@ -306,17 +306,31 @@ insert_data_force_button = ttk.Button(
 insert_data_force_button.pack(expand=True, side='left')
 
 # fill frames: clear all
-def clear_files():
+def drop_selected_inserted_data_button():
     filenames = put_data_treeview.selection()
     for f in filenames:
         put_data_treeview.delete(f);
 
 clear_data_button = ttk.Button(
     frame_insert_data,
-    text='Clear Files',
-    command=clear_files
+    text='Drop Selected',
+    command=drop_selected_inserted_data_button
 )
-clear_data_button.pack(expand=True, side='right')
+clear_data_button.pack(expand=True, side='left')
+
+
+# fill frames: clear all
+def clear_inserted_files():
+    filenames = put_data_treeview.get_children()
+    for f in filenames:
+        put_data_treeview.delete(f);
+
+clear_inserted_data_button = ttk.Button(
+    frame_insert_data,
+    text='Clear All',
+    command=clear_inserted_files
+)
+clear_inserted_data_button.pack(expand=True, side='right')
 
 ### final pack insert view
 frame_insert_data.pack(fill='both', expand=True)
