@@ -25,6 +25,7 @@ def init_schema_list(out_schema_list):
     out,err = info_process.communicate()
     if info_process.returncode != 0:
         raise RuntimeError(out.split('\n'))
+    # schema list is in a table, split by rows
     l = out.split('\n')
     out_schema_list = l[1].strip("\t").split(',')
     if len(out_schema_list) == 0:
@@ -38,42 +39,53 @@ def init_schema_params_list(schema_name, out_schema_params_list):
     if info_process.returncode != 0:
         raise RuntimeError(out.split('\n'))
 
+    # schema params list is in a table, split by rows
     l = out.split('\n')
-    param_list_name = ""
+    param_group_name = ""
+
+    # each schema params list is beginning with token and defines a group of params
     CONST_PARAM_LIST_NAME_TOKEN = "params list"
     for row in l:
         if CONST_PARAM_LIST_NAME_TOKEN in row:
-            param_list_name = row[row.find(CONST_PARAM_LIST_NAME_TOKEN) + len(CONST_PARAM_LIST_NAME_TOKEN):len(row)].strip("\t\" :")
+            param_group_name = row[row.find(CONST_PARAM_LIST_NAME_TOKEN) + len(CONST_PARAM_LIST_NAME_TOKEN):len(row)].strip("\t\" :")
             continue;
-        if len(param_list_name) != 0:
+        if len(param_group_name) != 0:
             row = row.strip()
 
             if schema_name not in out_schema_params_list:
                 out_schema_params_list[schema_name] = dict()
 
-            if param_list_name == "all":
+            # extract subsequent params in group in list
+            if param_group_name == "all":
                 out_schema_params_list[schema_name][""] = row.split(',')
             else:
-                out_schema_params_list[schema_name][param_list_name] = row.split(',')
-            param_list_name = ""
+                out_schema_params_list[schema_name][param_group_name] = row.split(',')
+            param_group_name = ""
     return(out_schema_params_list)
 
-def get_schema_group_parameters(schemas, schemas_param_names_list):
+def union_processor(set_1, set_2):
+    return set_1.union(set_2)
+
+def intersection_processor(set_1, set_2):
+    return set_1.intersection(set_2)
+
+def get_schema_group_parameters(schemas, schemas_param_names_list, processor_lambda = union_processor):
     # build common params as all params in schema intersection
     unified_param_names = dict()
-    # build schema groups list as all groups in schema intersection
+    # build schema groups list as all groups in schema
     unified_group_list = list()
     for schema in schemas:
         for param_type, param_list in schemas_param_names_list[schema].items():
             #skip empty/all group
             if not param_type:
                 continue
+
             # add functional group only
             if param_type not in unified_param_names:
                 unified_param_names[param_type] = set(param_list)
                 unified_group_list.append(param_type)
                 continue
-            unified_param_names[param_type] = unified_param_names[param_type].union(param_list)
+            unified_param_names[param_type] = processor_lambda(unified_param_names[param_type], param_list)
     return(unified_param_names, unified_group_list)
 
 def invoke_insert_data_request(filename, schema, properties_dict, force = False):
@@ -197,33 +209,34 @@ def update_insert_item_status(insert_treeview_data, index, new_status_string):
     item_values = insert_treeview_data.item(index, 'values')
     insert_treeview_data.item(index, values=(item_values[0], item_values[1], item_values[2], item_values[3], new_status_string))
 
-def on_double_click(event):
+def on_double_click_inserted_files(event):
     item = put_data_treeview.selection()
     selected_count = len(item)
     new_item_properties = dict()
     if selected_count > 1:
-        # collect schema names
+        # collect collective schema names from files are chosen for insertion
         schemas = set()
         for i in item:
             schemas.add(get_schema_from_insert_item(put_data_treeview, i))
 
-        # build common params as all params in schema intersection
-        common_param_names, common_param_group = get_schema_group_parameters(schemas, schema_param_names)
+        # build unified param names list as all params from schemas param intersection by the rule:
+        # we obliged to edit params only in an `intersection` set of selected schemas params.
+        # because it is not reasonable to edit non-existed params values in schema S1 for items belong to S2
+        # while collective items in S1+S2 are chosen to be inserted
+        # This is quite different schema in comparison with a search-items-list schema, which use `union`
+        # for mixed schema params
+        common_param_names, common_param_group = get_schema_group_parameters(schemas, schema_param_names, intersection_processor)
 
         # invoke dialog
         prop_dialog = dialogs.PropertyEditor(put_data_treeview, common_param_names, common_param_group)
         prop_dialog.wm_title("Group item properties editor")
         put_data_treeview.wait_window(prop_dialog)
         new_item_properties = prop_dialog.properties if prop_dialog.apply_properties else dict()
+        isOkClicked = prop_dialog.apply_properties;
         del prop_dialog
     elif selected_count == 1:
         specific_item = item[0]
-        # if group editor should be selected we find schemas param name intersection mask
-        # and apply allowable-for-edit mask
-        # and show up final params for editing
-        #
-        # if single item param selected then we apply allowable-for-edit mask only
-        # and show up final params list for editing
+        # get schema from selected item and build schema param list for properties editing
         schema = get_schema_from_insert_item(put_data_treeview, specific_item)
         common_param_names, common_param_group = get_schema_group_parameters( {schema}, schema_param_names)
         prop_dialog = dialogs.PropertyEditor(put_data_treeview, common_param_names, common_param_group)
@@ -232,14 +245,18 @@ def on_double_click(event):
         prop_dialog.fill(get_insert_item_data(put_data_treeview, specific_item))
         put_data_treeview.wait_window(prop_dialog)
         new_item_properties = prop_dialog.properties if prop_dialog.apply_properties else dict()
+        isOkClicked = prop_dialog.apply_properties;
         del prop_dialog
 
     # assign properties for items
+    if not isOkClicked:
+        return
+
     if new_item_properties:
         for i in item:
             change_insert_item_data(put_data_treeview, i, new_item_properties)
 
-put_data_treeview.bind("<Double-1>", on_double_click)
+put_data_treeview.bind("<Double-1>", on_double_click_inserted_files)
 put_data_treeview.pack(expand=True)
 
 # fill frames: insert
@@ -386,13 +403,12 @@ def get_unique_searched_item_params(index):
     return values[1], values[2], values[3]
 
 
-def on_double_click(event):
+def on_double_click_searched_files(event):
     item = search_data_treeview.selection()
     for i in item:
         print("you clicked on", search_data_treeview.item(i, "values")[0])
 
     selected_count = len(item)
-    new_item_properties = dict()
     if selected_count > 1:
         # collect schema names
         schemas = set()
@@ -405,7 +421,6 @@ def on_double_click(event):
         prop_dialog = dialogs.PropertyPrinter(search_data_treeview, common_param_names, common_param_group)
         prop_dialog.wm_title("Group item properties editor")
         search_data_treeview.wait_window(prop_dialog)
-        new_item_properties = prop_dialog.properties if prop_dialog.apply_properties else dict()
         del prop_dialog
     elif selected_count == 1:
         specific_item = item[0]
@@ -422,10 +437,9 @@ def on_double_click(event):
 
         prop_dialog.fill(get_insert_item_data(search_data_treeview, specific_item))
         search_data_treeview.wait_window(prop_dialog)
-        new_item_properties = prop_dialog.properties if prop_dialog.apply_properties else dict()
         del prop_dialog
 
-search_data_treeview.bind("<Double-1>", on_double_click)
+search_data_treeview.bind("<Double-1>", on_double_click_searched_files)
 search_data_treeview.pack(expand=True)
 
 ### search frames: search files button
@@ -443,8 +457,14 @@ def search_files():
     prop_dialog.wm_title("Search item properties editor")
     put_data_treeview.wait_window(prop_dialog)
     new_item_properties = prop_dialog.properties if prop_dialog.apply_properties else dict()
+    isOkClicked = prop_dialog.apply_properties;
+    del prop_dialog;
 
-    #TODO make search request
+    # check Ok or Cancel
+    if not isOkClicked:
+        return
+
+    #TODO Implement search request function
     search_param_string = ""
     for param, value in new_item_properties.items():
         if value:
@@ -499,7 +519,6 @@ def search_files():
     # fill in search frame
     for schema,files_dict in files_info.items():
         for file_name, file_prop in files_dict.items():
-            #json_object = json.dumps(info, indent = 4)
             item_values = (0.0, file_name, schema,
                             "Click for details\n" + json.dumps(file_prop, indent = 4)
                             )
