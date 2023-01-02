@@ -478,19 +478,31 @@ get_searched_files_button = ttk.Button(
 )
 get_searched_files_button.pack(expand=True, side='left')
 
+# search frames: drop selected
+def drop_selected_files():
+    filenames = search_data_treeview.selection()
+    for f in filenames:
+        search_data_treeview.delete(f);
+
+drop_selected_search_data_button = ttk.Button(
+    frame_search_data,
+    text='Drop Selected',
+    command=drop_selected_files
+)
+drop_selected_search_data_button.pack(expand=True, side='left')
+
 # search frames: clear all
 def clear_searched_files():
-    filenames = search_data_treeview.selection()
+    filenames = search_data_treeview.get_children()
     for f in filenames:
         search_data_treeview.delete(f);
 
 clear_search_data_button = ttk.Button(
     frame_search_data,
-    text='Clear Files',
+    text='Clear All',
     command=clear_searched_files
 )
 clear_search_data_button.pack(expand=True, side='right')
-
 ### final pack search view
 frame_search_data.pack(fill='both', expand=True)
 
