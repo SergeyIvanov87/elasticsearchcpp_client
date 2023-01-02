@@ -158,6 +158,13 @@ put_data_treeview = ttk.Treeview(frame_insert_data, columns = insert_data_column
 for i in range (0, len(insert_data_columns)):
     put_data_treeview.heading(insert_data_columns[i], text=insert_data_columns_shown_test[i])
 
+def get_path_from_insert_item(insert_treeview_data, index):
+    for i in range(0, 10000):
+        ID = insert_treeview_data.column(i, option='id')
+        if ID == insert_data_columns[0]:
+            break
+    return insert_treeview_data.item(index, "values")[i]
+
 def get_schema_from_insert_item(insert_treeview_data, index):
     for i in range(0, 10000):
         ID = insert_treeview_data.column(i, option='id')
@@ -247,7 +254,18 @@ def select_files():
         initialdir='./',
         filetypes=filetypes)
 
+    # prepare filter on existed items
+    existed_items = put_data_treeview.get_children();
+    existed_items_path = set()
+    for existed in existed_items:
+        existed_items_path.add(get_path_from_insert_item(put_data_treeview, existed))
+
     for f in filenames:
+        # do not insert duplicates
+        if f in existed_items_path:
+            print(f"duplicated item: {f} - won't be inserted")
+            continue
+
         stat = os.stat(f);
         schema,info = fill_file_info(f)
         #json_object = json.dumps(info, indent = 4)
@@ -357,6 +375,17 @@ search_data_treeview = ttk.Treeview(frame_search_data, columns = search_data_col
 for i in range (0, len(search_data_columns)):
     search_data_treeview.heading(search_data_columns[i], text=search_data_columns_shown_test[i])
 
+def get_unique_searched_item_params(index):
+    #TODO make position independent lookup
+    #for i in range(0, 10000):
+    #    ID = insert_treeview_data.column(i, option='id')
+    #    if ID == insert_data_columns[0]:
+    #        break
+
+    values = search_data_treeview.item(index, "values")
+    return values[1], values[2], values[3]
+
+
 def on_double_click(event):
     item = search_data_treeview.selection()
     for i in item:
@@ -459,7 +488,14 @@ def search_files():
                     files_info[schema][file_description[0]][file_property_key] = file_property_values[len(files_info[schema][file_description[0]].keys())]
 
                 record_index = record_index + 1
-    print(files_info)
+
+    # prepare filter on existed items
+    existed_items = search_data_treeview.get_children();
+    existed_items_path = set()
+    for existed in existed_items:
+        existed_items_path.add(get_unique_searched_item_params(existed))
+
+    print(existed_items_path)
     # fill in search frame
     for schema,files_dict in files_info.items():
         for file_name, file_prop in files_dict.items():
@@ -467,6 +503,9 @@ def search_files():
             item_values = (0.0, file_name, schema,
                             "Click for details\n" + json.dumps(file_prop, indent = 4)
                             )
+            if (item_values[1], item_values[2], item_values[3]) in existed_items_path:
+                print(f"duplicated item: {file_name}/{schema} - won't be inserted")
+                continue
             search_data_treeview.insert('', tk.END, values = item_values);
     return(files_info)
 
