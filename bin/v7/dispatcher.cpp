@@ -488,7 +488,7 @@ void request_rm_data(const dispatcher &d, std::ostream &out, const char *index, 
     }
     if (ans_ptr.has_value())
     {
-        out << ans_ptr->node<model::Result>()->value() << std::endl;
+        out << doc_path_id << " - " << ans_ptr->node<model::Result>()->value() << std::endl;
     }
     else
     {
@@ -591,6 +591,48 @@ void request_put_data(const dispatcher &d, std::ostream &out,
                            d.get_settings().curl_verbose,
                            tracer);
     }
+}
+
+template <class Tracer>
+std::map<std::string, dispatcher::csv_data_t>
+    request_get_data(const dispatcher &d, std::ostream &out,
+                     const char *index, const char **document_names, size_t document_count,
+                     Tracer tracer)
+{
+    std::map<std::string, dispatcher::csv_data_t> ret;
+    if (!strcmp(index, schema_indices[0]))
+    {
+        using namespace elasticsearch::book::get;
+        transaction::response return_model;
+        for (size_t i = 0; i < document_count; i++)
+        {
+            return_model = d.execute_request<transaction>(index,
+                                                          std::string(index) + "/" + document_names[i],
+                                                          d.get_settings().curl_verbose)->get_response();
+            ret.emplace(document_names[i],
+                        std::make_tuple(return_model.template node<elasticsearch::common_model::OriginalPath>()->value(),
+                                        return_model.template node<elasticsearch::common_model::BinaryBlob>()->getEncodedValue()));
+        }
+    }
+    else if (!strcmp(index, schema_indices[1]))
+    {
+        using namespace elasticsearch::image::get;
+        transaction::response return_model;
+        for (size_t i = 0; i < document_count; i++)
+        {
+            return_model = d.execute_request<transaction>(index,
+                                                          std::string(index) + "/" + document_names[i],
+                                                          d.get_settings().curl_verbose)->get_response();
+            ret.emplace(document_names[i],
+                        std::make_tuple(return_model.template node<elasticsearch::common_model::OriginalPath>()->value(),
+                                        return_model.template node<elasticsearch::common_model::BinaryBlob>()->getEncodedValue()));
+        }
+    }
+    else
+    {
+        throw std::runtime_error(std::string("invalid index: ") + index);
+    }
+    return ret;
 }
 
 template <class Tracer>
@@ -770,6 +812,18 @@ void dispatcher::put_data(const char *file_path, const std::map<std::string, std
     else
     {
         details::request_put_data(*this, std::cout, file_path, override_model_params, ignore_existing, txml::EmptyTracer{});
+    }
+}
+
+std::map<std::string, dispatcher::csv_data_t> dispatcher::get_data(const char *index, const char **document_names, size_t document_count)
+{
+    if (use_request_logging)
+    {
+        return details::request_get_data(*this, std::cout, index, document_names, document_count, txml::StdoutTracer{});
+    }
+    else
+    {
+        return details::request_get_data(*this, std::cout, index, document_names, document_count, txml::EmptyTracer{});
     }
 }
 

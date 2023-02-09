@@ -8,12 +8,14 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import *
 from pprint import pprint
+from tkinter import messagebox
 
 #file open dialog
 from tkinter import filedialog as fd
 from tkinter.messagebox import showinfo
 
 import dialogs
+import get_data_dialog
 #https://github.com/TkinterEP/ttkwidgets
 #from ttkwidgets import CheckboxTreeview
 
@@ -209,6 +211,14 @@ def update_insert_item_status(insert_treeview_data, index, new_status_string):
     item_values = insert_treeview_data.item(index, 'values')
     insert_treeview_data.item(index, values=(item_values[0], item_values[1], item_values[2], item_values[3], new_status_string))
 
+def get_name_from_searched_item(search_treeview_data, index):
+    for i in range(0, 10000):
+        ID = search_treeview_data.column(i, option='id')
+        if ID == "id":
+            break
+    return search_treeview_data.item(index, "values")[i]
+
+
 def on_double_click_inserted_files(event):
     item = put_data_treeview.selection()
     selected_count = len(item)
@@ -371,11 +381,18 @@ clear_inserted_data_button.pack(expand=True, side='right')
 frame_insert_data.pack(fill='both', expand=True)
 
 ### search data
+tools_frame = ttk.Frame(frame_search_data)
+tools_frame.grid(row = 0, column = 0, padx = 5, pady = 5)
+
+tools_frame_row_1_search_frame = ttk.LabelFrame(tools_frame, text = 'Search Options', relief=RAISED, borderwidth = 2)
+tools_frame_row_1_search_frame.grid(row = 0, column = 0)
+
 search_schema_enable_checkbox_value = dict()
 def show_checked_schema_files(name):
     print(search_schema_enable_checkbox_value[name].get())
-schemas_search_group = ttk.LabelFrame(frame_search_data, text ='schemas')
+schemas_search_group = ttk.LabelFrame(tools_frame_row_1_search_frame, text ='schemas', width = 100)
 
+schemas_tools_counter  = 0
 for schema in schema_list:
     search_schema_enable_checkbox_value[schema] = IntVar()
     ttk.Checkbutton(
@@ -383,12 +400,14 @@ for schema in schema_list:
                     text=schema,
                     variable=search_schema_enable_checkbox_value[schema],
                     command=lambda schema=schema: show_checked_schema_files(schema)
-    ).pack(expand=True, side='top')
-schemas_search_group.pack(expand=True, side='left')
+    ).grid(row = schemas_tools_counter, column = 0)
+    schemas_tools_counter = schemas_tools_counter + 1
+schemas_search_group.grid(row = 0, column = 0, padx = 5, pady = 10)
 
+search_view_frame = ttk.Frame(frame_search_data)
 search_data_columns = ('score', 'id', 'schema', 'details')
 search_data_columns_shown_test = ('Score', 'ID', 'Schema', 'Details')
-search_data_treeview = ttk.Treeview(frame_search_data, columns = search_data_columns, show='headings')
+search_data_treeview = ttk.Treeview(search_view_frame, columns = search_data_columns, show='headings')
 for i in range (0, len(search_data_columns)):
     search_data_treeview.heading(search_data_columns[i], text=search_data_columns_shown_test[i])
 
@@ -440,7 +459,6 @@ def on_double_click_searched_files(event):
         del prop_dialog
 
 search_data_treeview.bind("<Double-1>", on_double_click_searched_files)
-search_data_treeview.pack(expand=True)
 
 ### search frames: search files button
 def search_files():
@@ -450,6 +468,10 @@ def search_files():
         print(f"schema name {schema_name!r}, value {schema_checked}")
         if schema_checked.get():
             schemas.add(schema_name)
+
+    if not schemas:
+        messagebox.showwarning("Warning", "Please choose schemas to search")
+        return
 
     # Show all parameters for all selected schemas as property editor dialog
     united_schema_param_names, param_group = get_schema_group_parameters(schemas, schema_param_names)
@@ -529,26 +551,15 @@ def search_files():
     return(files_info)
 
     #######
-
+tools_frame_row_1_search_frame_buttons_frame = ttk.Frame(tools_frame_row_1_search_frame)
+tools_frame_row_1_search_frame_buttons_frame.grid(row = 0, column = 1, padx = 5, pady = 5)
 search_data_button = ttk.Button(
-    frame_search_data,
-    text='Search Files',
+    tools_frame_row_1_search_frame_buttons_frame,
+    text='Run Search',
+    width = 12,
     command=search_files
 )
-search_data_button.pack(expand=True, side='left')
-
-# search frames: get searched files button
-def get_searched_files():
-    filenames = search_data_treeview.selection()
-    for f in filenames:
-        print("get file: ", f)
-
-get_searched_files_button = ttk.Button(
-    frame_search_data,
-    text='Get Files',
-    command=get_searched_files
-)
-get_searched_files_button.pack(expand=True, side='left')
+search_data_button.grid(row = 0, column = 0, pady = 2)
 
 # search frames: drop selected
 def drop_selected_files():
@@ -557,11 +568,12 @@ def drop_selected_files():
         search_data_treeview.delete(f);
 
 drop_selected_search_data_button = ttk.Button(
-    frame_search_data,
-    text='Drop Selected',
+    tools_frame_row_1_search_frame_buttons_frame,
+    width = 12,
+    text='Clear Selected',
     command=drop_selected_files
 )
-drop_selected_search_data_button.pack(expand=True, side='left')
+drop_selected_search_data_button.grid(row = 1, column = 0, pady = 2)
 
 # search frames: clear all
 def clear_searched_files():
@@ -570,12 +582,101 @@ def clear_searched_files():
         search_data_treeview.delete(f);
 
 clear_search_data_button = ttk.Button(
-    frame_search_data,
+    tools_frame_row_1_search_frame_buttons_frame,
+    width = 12,
     text='Clear All',
     command=clear_searched_files
 )
-clear_search_data_button.pack(expand=True, side='right')
+clear_search_data_button.grid(row = 2, column = 0, pady = 2)
+
+
+
+# search frames: get searched files button
+tools_frame_row_2_download_frame = ttk.LabelFrame(tools_frame, text = 'Copy Data', relief = RAISED, borderwidth = 2)
+tools_frame_row_2_download_frame.grid(row = 1, column = 0, sticky ='w'+'n'+'e'+'s')
+def get_searched_files():
+    filenames = search_data_treeview.selection()
+
+    if not filenames:
+        messagebox.showwarning("Warning", "Please choose files to download")
+        return
+    schema_files = dict();
+    for i in filenames:
+        schema = get_schema_from_insert_item(search_data_treeview, i)
+        name = get_name_from_searched_item(search_data_treeview, i)
+        if schema not in schema_files.keys():
+            schema_files[schema] = list()
+        schema_files[schema].append(name)
+
+    try:
+        download_options = get_data_dialog.GetDataDialog(search_data_treeview, schema_files)
+        download_options.wm_title("Download options")
+        search_data_treeview.wait_window(download_options)
+
+    except RuntimeError as err:
+        print("Bad thing happens:\n", err)
+
+get_searched_files_button = ttk.Button(
+    tools_frame_row_2_download_frame,
+    text='Run Copy',
+    command=get_searched_files
+)
+get_searched_files_button.grid(row = 1, column = 0, padx = 5, pady = 5)
+
+
+# search frames: delete files button
+tools_frame_row_3_delete_frame = ttk.LabelFrame(tools_frame, text = 'Delete Data', relief = RAISED, borderwidth = 2)
+tools_frame_row_3_delete_frame.grid(row = 2, column = 0, sticky ='w'+'n'+'e'+'s')
+def delete_stored_files(no_confirm):
+    filenames = search_data_treeview.selection()
+
+    if not filenames:
+        messagebox.showwarning("Warning", "Please choose files to delete")
+        return
+
+    schema_files = dict();
+    for i in filenames:
+        schema = get_schema_from_insert_item(search_data_treeview, i)
+        name = get_name_from_searched_item(search_data_treeview, i)
+        if schema not in schema_files.keys():
+            schema_files[schema] = list()
+        schema_files[schema].append(name)
+
+    file_statuses = list()
+    for schema in schema_files.keys():
+        for doc in schema_files[schema]:
+            delete_process = subprocess.Popen(['./es_rm', schema,
+                                               doc,
+                                               "--no_cluster_verbose"],
+                                               stdout=subprocess.PIPE, text=True,
+                                               stderr=subprocess.STDOUT)
+            out,err = delete_process.communicate()
+            l = out.split('\n')
+            for el in l:
+                # TODO filter out filename and remove it from table view
+                if l:
+                    file_statuses = file_statuses + l
+
+    messagebox.showinfo("Info", "Delete operation result:\n\n" + "\n".join(file_statuses))
+
+delete_stored_files_force_value = tk.IntVar()
+delete_stored_files_button = ttk.Button(
+    tools_frame_row_3_delete_frame,
+    text='Run Delete',
+    command=lambda delete_stored_files_force_value = delete_stored_files_force_value: delete_stored_files(delete_stored_files_force_value)
+)
+delete_stored_files_button.grid(row = 1, column = 0, padx = 5, pady = 5)
+delete_stored_files_force = ttk.Checkbutton(
+                    tools_frame_row_3_delete_frame,
+                    text='No Confirm',
+                    variable=delete_stored_files_force_value,
+                    onvalue=1, offvalue=0,
+)
+delete_stored_files_force.grid(row = 1, column = 2, padx = 5, pady = 5)
+
 ### final pack search view
+search_data_treeview.grid(row = 0, column = 0, padx = 5, pady = 5)
+search_view_frame.grid(row = 0, column = 1, sticky ='w'+'n'+'e'+'s')
 frame_search_data.pack(fill='both', expand=True)
 
 # add frames to notebook

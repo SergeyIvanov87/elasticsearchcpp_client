@@ -79,6 +79,9 @@ public:
                   const std::map<std::string, std::string>& override_model_params = {},
                   bool ignore_existing = false);
 
+    using csv_data_t = std::tuple<std::string, std::vector<uint8_t>>;
+    std::map<std::string, csv_data_t> get_data(const char *index, const char **document_names, size_t documents_count);
+
     void update_data(const char *file_path, const char *updated_document_id, const std::map<std::string, std::string>& override_model_params = {});
 
     void rm_data(const char* index, const char *file_path);
