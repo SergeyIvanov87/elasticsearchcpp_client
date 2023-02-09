@@ -2,6 +2,7 @@
 #define ADAPTER_BASE_ADAPTEE_MIXIN_HPP
 
 #include <algorithm>
+#include <array>
 #include <tuple>
 #include <type_traits>
 

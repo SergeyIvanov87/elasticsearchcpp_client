@@ -56,11 +56,12 @@ class dispatcher
         if (!success)
         {
             aux_outputstream() << "Cluster is not operable" << std::endl;
+            throw std::runtime_error(buffered_aux_stream.str());
         }
     }
 
 public:
-    dispatcher(dispatcher_settings s, bool with_logs = false);
+    dispatcher(dispatcher_settings s, bool with_cluster_logs = true, bool with_request_logs = false);
 
     std::ostream &data_outputstream() const;
     std::ostream &aux_outputstream() const;
@@ -77,6 +78,9 @@ public:
     void put_data(const char *file_path,
                   const std::map<std::string, std::string>& override_model_params = {},
                   bool ignore_existing = false);
+
+    using csv_data_t = std::tuple<std::string, std::vector<uint8_t>>;
+    std::map<std::string, csv_data_t> get_data(const char *index, const char **document_names, size_t documents_count);
 
     void update_data(const char *file_path, const char *updated_document_id, const std::map<std::string, std::string>& override_model_params = {});
 
@@ -125,12 +129,15 @@ public:
         if (!ret)
         {
             aux_outputstream() << "Cannot execute request: cluster is not operable" << std::endl;
+            throw std::runtime_error(buffered_aux_stream.str());
         }
         return ret;
     }
 
 private:
-    bool use_logging;
+    bool use_request_logging;
+    bool use_cluster_logging;
+    mutable std::stringstream buffered_aux_stream;
 
     template<class Tracer>
     void dump_book_search_match_impl(std::ostream& out, const std::map<std::string, std::string>& match_params, const std::map<std::string, std::string>& sort_params, Tracer tracer);

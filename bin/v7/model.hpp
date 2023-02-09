@@ -18,10 +18,11 @@ template<>
 struct ElementPrintableTraits<elasticsearch::common_model::Preview> {static constexpr bool is_printable() {return false;}};
 
 template <>
-struct ElementPrinter <elasticsearch::common_model::Tags>
+struct ElementPrinter <elasticsearch::common_model::Tags> : public ElementPrinterBase<elasticsearch::common_model::Tags>
 {
+    using ElementPrinterBase<elasticsearch::common_model::Tags>::print_element;
     template <class Model>
-    static std::ostream &print(std::ostream &out, const Model &m)
+    static std::ostream &print_element_value(std::ostream &out, const Model &m, const std::string &sep)
     {
         using Element = elasticsearch::common_model::Tags;
         if (const auto &n = m.template node<Element>(); n)
@@ -29,49 +30,51 @@ struct ElementPrinter <elasticsearch::common_model::Tags>
             const auto &list = n->value();
             out << "\"";
             std::copy(list.begin(), list.end(), std::ostream_iterator<std::string>(out, ","));
-            out << "\",";
+            out << "\"" << sep;
         }
         else
         {
-            out << "null,";
+            out << "null" << sep;
         }
         return out;
     }
 };
 
 template <>
-struct ElementPrinter <elasticsearch::image::model::element::Location>
+struct ElementPrinter <elasticsearch::image::model::element::Location>: public ElementPrinterBase<elasticsearch::image::model::element::Location>
 {
+    using ElementPrinterBase<elasticsearch::image::model::element::Location>::print_element;
     template <class Model>
-    static std::ostream &print(std::ostream &out, const Model &m)
+    static std::ostream &print_element_value(std::ostream &out, const Model &m, const std::string &sep)
     {
         using Element = elasticsearch::image::model::element::Location;
         if (const auto &n = m.template node<Element>(); n)
         {
-            out << "\"" << n->value().to_string() << "\",";
+            out << "\"" << n->value().to_string() << "\"" << sep;
         }
         else
         {
-            out << "null,";
+            out << "null" << sep;
         }
         return out;
     }
 };
 
 template <>
-struct ElementPrinter <elasticsearch::image::model::element::Resolution>
+struct ElementPrinter <elasticsearch::image::model::element::Resolution>: public ElementPrinterBase<elasticsearch::image::model::element::Resolution>
 {
+    using ElementPrinterBase<elasticsearch::image::model::element::Resolution>::print_element;
     template <class Model>
-    static std::ostream &print(std::ostream &out, const Model &m)
+    static std::ostream &print_element_value(std::ostream &out, const Model &m, const std::string &sep)
     {
         using Element = elasticsearch::image::model::element::Resolution;
         if (const auto &n = m.template node<Element>(); n)
         {
-            out << "\"" << n->value().to_string() << "\",";
+            out << "\"" << n->value().to_string() << "\"" << sep;
         }
         else
         {
-            out << "null,";
+            out << "null" << sep;
         }
         return out;
     }
