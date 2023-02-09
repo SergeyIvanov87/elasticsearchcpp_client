@@ -16,10 +16,7 @@ from tkinter.messagebox import showinfo
 
 import dialogs
 import get_data_dialog
-#https://github.com/TkinterEP/ttkwidgets
-#from ttkwidgets import CheckboxTreeview
 
-# OS: file size
 import os
 
 def init_schema_list(out_schema_list):
@@ -92,15 +89,12 @@ def get_schema_group_parameters(schemas, schemas_param_names_list, processor_lam
 
 def invoke_insert_data_request(filename, schema, properties_dict, force = False):
     #TODO apply properties_dict
-    print("force: ", force)
     if not force:
         insert_file_process = subprocess.Popen(['./es_put', filename],  stdout=subprocess.PIPE, text=True)
     else:
         insert_file_process = subprocess.Popen(['./es_put', filename, '--force'],  stdout=subprocess.PIPE, text=True)
     out,err = insert_file_process.communicate()
-    print(out)
-    print(err)
-    print(insert_file_process.returncode)
+
     if insert_file_process.returncode != 0:
         raise RuntimeError(out.split('\n'))
     return err
@@ -290,12 +284,10 @@ def select_files():
     for f in filenames:
         # do not insert duplicates
         if f in existed_items_path:
-            print(f"duplicated item: {f} - won't be inserted")
             continue
 
         stat = os.stat(f);
         schema,info = fill_file_info(f)
-        #json_object = json.dumps(info, indent = 4)
         item_values = (f, schema if len(schema) != 0 else "UNSUPPORTED",
                        '{:.2f} MB'.format(stat.st_size / (1024 * 1024)),
                        prepare_insert_item_data(info),
@@ -424,8 +416,6 @@ def get_unique_searched_item_params(index):
 
 def on_double_click_searched_files(event):
     item = search_data_treeview.selection()
-    for i in item:
-        print("you clicked on", search_data_treeview.item(i, "values")[0])
 
     selected_count = len(item)
     if selected_count > 1:
@@ -465,7 +455,6 @@ def search_files():
     # collect schema names
     schemas = set()
     for schema_name,schema_checked in search_schema_enable_checkbox_value.items():
-        print(f"schema name {schema_name!r}, value {schema_checked}")
         if schema_checked.get():
             schemas.add(schema_name)
 
@@ -502,10 +491,8 @@ def search_files():
                 else:
                     search_param_string_per_schema[schema] = search_param_string_per_schema[schema] + "\n\"" + param + sep_param_value + value + "\""
 
-    #files_info = dict({schema_name:dict()})
     files_info = dict()
     for schema in schemas:
-        print(f"ask {schema} for params {search_param_string_per_schema[schema]}")
         search_process = subprocess.Popen(['./es_search', schema, search_param_string_per_schema[schema]],  stdout=subprocess.PIPE, text=True)
 
         out,err = search_process.communicate()
@@ -537,7 +524,6 @@ def search_files():
     for existed in existed_items:
         existed_items_path.add(get_unique_searched_item_params(existed))
 
-    print(existed_items_path)
     # fill in search frame
     for schema,files_dict in files_info.items():
         for file_name, file_prop in files_dict.items():
@@ -545,7 +531,6 @@ def search_files():
                             "Click for details\n" + json.dumps(file_prop, indent = 4)
                             )
             if (item_values[1], item_values[2], item_values[3]) in existed_items_path:
-                print(f"duplicated item: {file_name}/{schema} - won't be inserted")
                 continue
             search_data_treeview.insert('', tk.END, values = item_values);
     return(files_info)

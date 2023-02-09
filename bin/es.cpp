@@ -67,7 +67,7 @@ bool is_verbose(int argc, const char *argv[])
     return verbose;
 }
 
-bool is_param_exist(int argc, const char *argv[], const char *param_name)
+bool find_param_by_name(const char *param_name, int argc, const char *argv[])
 {
     bool name_exist = false;
     auto param_name_size = strlen(param_name);
@@ -80,17 +80,17 @@ bool is_param_exist(int argc, const char *argv[], const char *param_name)
 
 bool is_curl_verbose(int argc, const char *argv[])
 {
-    return is_param_exist(argc, argv, "--curl_verbose");
+    return find_param_by_name("--curl_verbose", argc, argv);
 }
 
 bool is_cluster_verbose(int argc, const char *argv[])
 {
-    return !is_param_exist(argc, argv, "--no_cluster_verbose");
+    return !find_param_by_name("--no_cluster_verbose", argc, argv);
 }
 
 bool is_force(int argc, const char *argv[])
 {
-    return is_param_exist(argc, argv, "--force");
+    return find_param_by_name("--force", argc, argv);
 }
 
 namespace documents
@@ -198,20 +198,9 @@ int main(int argc, const char* argv[])
             std::cerr << ex.what() << std::endl;
             return -1;
         }
-    }//////////////
+    }
     else if (binary_name.find("es_csv_get") != std::string::npos)
     {
-        // CONSIDER output to multiple files
-        // mycommand.sh | awk '/A/{ print > "file1" }/B/{ print > "file2" }'
-        // from https://unix.stackexchange.com/questions/419575/run-command-once-and-filter-output-in-multiple-files
-        // echo QWxhZGRpbjpvcGVuIHNlc2FtZQ== | base64 --decode
-        // TODO add additional parameter --base64_decode
-        // https://askubuntu.com/questions/178521/how-can-i-decode-a-base64-string-from-the-command-line
-        // The idea is:
-        // use output in base64 and demultiplex it using `awk` into multiplefiles
-        // base64 required to form strings like "docId_A{<path???>,<base64>}\n docId_B"{<path???>,<base64>}\n ..."
-        // to allow separation using token 'docId_X' in 'awk'
-
         const char *csv_header[] = {"document_name", "restored_file_path", "base64_file_data", nullptr};
         if (argc < 3)
         {
