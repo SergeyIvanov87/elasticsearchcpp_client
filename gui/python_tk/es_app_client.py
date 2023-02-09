@@ -141,15 +141,27 @@ center_y = int(screen_height/2 - window_height / 2)
 # set the position of the window to the center of the screen
 #root.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
 
+filler_frame = ttk.Frame(root, width=window_width, height=window_height)
+filler_frame.grid(row=0, column=0, sticky="nsew")
 
+root.grid_rowconfigure(0, weight=1)
+root.grid_columnconfigure(0, weight=1)
 
 # create a notebook
-actions_tab = ttk.Notebook(root)
-actions_tab.pack(pady=10, expand=True)
+actions_tab = ttk.Notebook(filler_frame)
+actions_tab.grid_rowconfigure(0, weight=1)
+actions_tab.grid_columnconfigure(0, weight=1)
+actions_tab.pack(fill='both', expand=True)
+
+filler_frame.grid_rowconfigure(0, weight=1)
+filler_frame.grid_columnconfigure(0, weight=1)
 
 # create frames
 frame_insert_data = ttk.Frame(actions_tab, width=window_width, height=window_height)
 frame_search_data = ttk.Frame(actions_tab, width=window_width, height=window_height)
+frame_search_data.grid_rowconfigure(0, weight=1)
+frame_search_data.grid_columnconfigure(0, weight=0)
+frame_search_data.grid_columnconfigure(1, weight=1)
 
 #ask API about registered schema
 schema_list = list()
@@ -217,6 +229,7 @@ def on_double_click_inserted_files(event):
     item = put_data_treeview.selection()
     selected_count = len(item)
     new_item_properties = dict()
+    isOkClicked = False
     if selected_count > 1:
         # collect collective schema names from files are chosen for insertion
         schemas = set()
@@ -261,7 +274,7 @@ def on_double_click_inserted_files(event):
             change_insert_item_data(put_data_treeview, i, new_item_properties)
 
 put_data_treeview.bind("<Double-1>", on_double_click_inserted_files)
-put_data_treeview.pack(expand=True)
+put_data_treeview.pack(fill = 'both', expand=True)
 
 # fill frames: insert
 def select_files():
@@ -374,7 +387,7 @@ frame_insert_data.pack(fill='both', expand=True)
 
 ### search data
 tools_frame = ttk.Frame(frame_search_data)
-tools_frame.grid(row = 0, column = 0, padx = 5, pady = 5)
+tools_frame.grid(row = 0, column = 0, padx = 5, pady = 5, sticky = 'wnes')
 
 tools_frame_row_1_search_frame = ttk.LabelFrame(tools_frame, text = 'Search Options', relief=RAISED, borderwidth = 2)
 tools_frame_row_1_search_frame.grid(row = 0, column = 0)
@@ -397,6 +410,9 @@ for schema in schema_list:
 schemas_search_group.grid(row = 0, column = 0, padx = 5, pady = 10)
 
 search_view_frame = ttk.Frame(frame_search_data)
+search_view_frame.grid_rowconfigure(0, weight=1)
+search_view_frame.grid_columnconfigure(0, weight=1)
+
 search_data_columns = ('score', 'id', 'schema', 'details')
 search_data_columns_shown_test = ('Score', 'ID', 'Schema', 'Details')
 search_data_treeview = ttk.Treeview(search_view_frame, columns = search_data_columns, show='headings')
@@ -612,6 +628,17 @@ get_searched_files_button.grid(row = 1, column = 0, padx = 5, pady = 5)
 # search frames: delete files button
 tools_frame_row_3_delete_frame = ttk.LabelFrame(tools_frame, text = 'Delete Data', relief = RAISED, borderwidth = 2)
 tools_frame_row_3_delete_frame.grid(row = 2, column = 0, sticky ='w'+'n'+'e'+'s')
+
+tools_frame_filler = ttk.Frame(tools_frame)
+tools_frame_filler.grid(row = 3, column = 0, sticky ='w'+'n'+'e'+'s')
+
+tools_frame.grid_columnconfigure(0, weight=0)
+tools_frame.grid_rowconfigure(0, weight=0)
+tools_frame.grid_rowconfigure(1, weight=0)
+tools_frame.grid_rowconfigure(2, weight=0)
+tools_frame.grid_rowconfigure(3, weight=0)
+
+
 def delete_stored_files(no_confirm):
     filenames = search_data_treeview.selection()
 
@@ -660,8 +687,8 @@ delete_stored_files_force = ttk.Checkbutton(
 delete_stored_files_force.grid(row = 1, column = 2, padx = 5, pady = 5)
 
 ### final pack search view
-search_data_treeview.grid(row = 0, column = 0, padx = 5, pady = 5)
-search_view_frame.grid(row = 0, column = 1, sticky ='w'+'n'+'e'+'s')
+search_data_treeview.grid(row = 0, column = 0, padx = 5, pady = 5, sticky = 'wnes')
+search_view_frame.grid(row = 0, column = 1, sticky ='wnes')
 frame_search_data.pack(fill='both', expand=True)
 
 # add frames to notebook
