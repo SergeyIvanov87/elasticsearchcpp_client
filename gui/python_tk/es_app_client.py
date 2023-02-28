@@ -89,7 +89,6 @@ def get_schema_group_parameters(schemas, schemas_param_names_list, processor_lam
 
 def invoke_insert_data_request(filename, schema, properties_dict, force = False):
     #TODO apply properties_dict
-    print("Force: ", force)
     if not force:
         insert_file_process = subprocess.Popen(['./es_put', filename],  stdout=subprocess.PIPE, text=True)
     else:
