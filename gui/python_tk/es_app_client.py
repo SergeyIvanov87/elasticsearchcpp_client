@@ -141,15 +141,32 @@ center_y = int(screen_height/2 - window_height / 2)
 # set the position of the window to the center of the screen
 #root.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
 
+filler_frame = ttk.Frame(root, width=window_width, height=window_height)
+filler_frame.grid(row=0, column=0, sticky="nsew")
 
+root.grid_rowconfigure(0, weight=1)
+root.grid_columnconfigure(0, weight=1)
 
 # create a notebook
-actions_tab = ttk.Notebook(root)
-actions_tab.pack(pady=10, expand=True)
+actions_tab = ttk.Notebook(filler_frame)
+actions_tab.grid_rowconfigure(0, weight=1)
+actions_tab.grid_columnconfigure(0, weight=1)
+actions_tab.pack(fill='both', expand=True)
+
+filler_frame.grid_rowconfigure(0, weight=1)
+filler_frame.grid_columnconfigure(0, weight=1)
 
 # create frames
 frame_insert_data = ttk.Frame(actions_tab, width=window_width, height=window_height)
+frame_insert_data.grid_rowconfigure(0, weight=1)
+frame_insert_data.grid_columnconfigure(0, weight=0)
+frame_insert_data.grid_columnconfigure(1, weight=1)
+
+
 frame_search_data = ttk.Frame(actions_tab, width=window_width, height=window_height)
+frame_search_data.grid_rowconfigure(0, weight=1)
+frame_search_data.grid_columnconfigure(0, weight=0)
+frame_search_data.grid_columnconfigure(1, weight=1)
 
 #ask API about registered schema
 schema_list = list()
@@ -159,10 +176,14 @@ schema_param_names = dict()
 for schema in schema_list:
     schema_param_names = init_schema_params_list(schema, schema_param_names)
 
+insert_view_frame = ttk.Frame(frame_insert_data)
+insert_view_frame.grid_rowconfigure(0, weight=1)
+insert_view_frame.grid_columnconfigure(0, weight=1)
+
 ### insert data in frames header
 insert_data_columns = ('file', 'schema', 'size', 'details', 'status')
 insert_data_columns_shown_test = ('File Path', 'Schema', 'Size', 'Details', 'Status')
-put_data_treeview = ttk.Treeview(frame_insert_data, columns = insert_data_columns, show='headings')
+put_data_treeview = ttk.Treeview(insert_view_frame, columns = insert_data_columns, show='headings')
 for i in range (0, len(insert_data_columns)):
     put_data_treeview.heading(insert_data_columns[i], text=insert_data_columns_shown_test[i])
 
@@ -217,6 +238,7 @@ def on_double_click_inserted_files(event):
     item = put_data_treeview.selection()
     selected_count = len(item)
     new_item_properties = dict()
+    isOkClicked = False
     if selected_count > 1:
         # collect collective schema names from files are chosen for insertion
         schemas = set()
@@ -261,7 +283,6 @@ def on_double_click_inserted_files(event):
             change_insert_item_data(put_data_treeview, i, new_item_properties)
 
 put_data_treeview.bind("<Double-1>", on_double_click_inserted_files)
-put_data_treeview.pack(expand=True)
 
 # fill frames: insert
 def select_files():
@@ -294,19 +315,28 @@ def select_files():
                        "Unknown")
         put_data_treeview.insert('', tk.END, values = item_values);
 
+### Insert data tools
+insert_tools_frame = ttk.Frame(frame_insert_data)
+insert_tools_frame.grid(row = 0, column = 0, padx = 5, pady = 5, sticky = 'wnes')
+
+tools_frame_row_1_insert_frame = ttk.LabelFrame(insert_tools_frame, text = 'Find Files', relief=RAISED, borderwidth = 2)
+tools_frame_row_1_insert_frame.grid(row = 0, column = 0, sticky ='wnes')
+
+
 choose_data_button = ttk.Button(
-    frame_insert_data,
-    text='Choose Files',
+    tools_frame_row_1_insert_frame,
+    text='Browse',
+    width = 24,
     command=select_files
 )
-choose_data_button.pack(expand=True, side='left')
+choose_data_button.grid(row = 0, column = 0, padx = 5, pady = 10)
 
-def insert_selected_files():
+def insert_selected_files(force_overwrite):
     filenames = put_data_treeview.selection()
     for f in filenames:
         try:
             item_values = put_data_treeview.item(f, 'values')
-            invoke_insert_data_request(item_values[0], item_values[1], get_insert_item_data(put_data_treeview, f))
+            invoke_insert_data_request(item_values[0], item_values[1], get_insert_item_data(put_data_treeview, f), force_overwrite.get())
             update_insert_item_status(put_data_treeview, f, "Done")
         except RuntimeError as err:
             print("Bad things happen during a files insertion:\n", err)
@@ -316,31 +346,25 @@ def insert_selected_files():
                 update_insert_item_status(put_data_treeview, f, "Failed")
 
 
+tools_frame_row_2_insert_frame = ttk.LabelFrame(insert_tools_frame, text = 'Upload Files', relief=RAISED, borderwidth = 2)
+tools_frame_row_2_insert_frame.grid(row = 1, column = 0, sticky = 'wnes')
+
+insert_data_force_button_value = tk.IntVar()
 insert_data_button = ttk.Button(
-    frame_insert_data,
-    text='Insert selected',
-    command=insert_selected_files
+    tools_frame_row_2_insert_frame,
+    text='Run',
+    width = 12,
+    command=lambda insert_data_force_button_value = insert_data_force_button_value: insert_selected_files(insert_data_force_button_value)
 )
-insert_data_button.pack(expand=True, side='left')
+insert_data_button.grid(row = 0, column = 0, padx = 5, pady = 5)
 
-
-def insert_selected_files_force():
-    filenames = put_data_treeview.selection()
-    for f in filenames:
-        try:
-            item_values = put_data_treeview.item(f, 'values')
-            invoke_insert_data_request(item_values[0], item_values[1], get_insert_item_data(put_data_treeview, f), True)
-            update_insert_item_status(put_data_treeview, f, "Done (forced)")
-        except RuntimeError as err:
-            print("Bad thing happens:\n", err)
-            update_insert_item_status(put_data_treeview, f, "Failed")
-
-insert_data_force_button = ttk.Button(
-    frame_insert_data,
-    text='Force Insert selected',
-    command=insert_selected_files_force
+insert_data_force_button = ttk.Checkbutton(
+                    tools_frame_row_2_insert_frame,
+                    text='Force push',
+                    variable=insert_data_force_button_value,
+                    onvalue=1, offvalue=0,
 )
-insert_data_force_button.pack(expand=True, side='left')
+insert_data_force_button.grid(row = 0, column = 1)
 
 # fill frames: clear all
 def drop_selected_inserted_data_button():
@@ -348,12 +372,17 @@ def drop_selected_inserted_data_button():
     for f in filenames:
         put_data_treeview.delete(f);
 
+tools_frame_row_3_insert_frame = ttk.LabelFrame(insert_tools_frame, text = 'Clear Options', relief=RAISED, borderwidth = 2)
+tools_frame_row_3_insert_frame.grid(row = 2, column = 0, sticky = 'wnes')
+
+
 clear_data_button = ttk.Button(
-    frame_insert_data,
+    tools_frame_row_3_insert_frame,
     text='Drop Selected',
+    width = 12,
     command=drop_selected_inserted_data_button
 )
-clear_data_button.pack(expand=True, side='left')
+clear_data_button.grid(row = 0, column = 0, padx = 5, pady = 10)
 
 
 # fill frames: clear all
@@ -363,18 +392,15 @@ def clear_inserted_files():
         put_data_treeview.delete(f);
 
 clear_inserted_data_button = ttk.Button(
-    frame_insert_data,
+    tools_frame_row_3_insert_frame,
     text='Clear All',
     command=clear_inserted_files
 )
-clear_inserted_data_button.pack(expand=True, side='right')
-
-### final pack insert view
-frame_insert_data.pack(fill='both', expand=True)
+clear_inserted_data_button.grid(row = 0, column = 1, padx = 5, pady = 10)
 
 ### search data
 tools_frame = ttk.Frame(frame_search_data)
-tools_frame.grid(row = 0, column = 0, padx = 5, pady = 5)
+tools_frame.grid(row = 0, column = 0, padx = 5, pady = 5, sticky = 'wnes')
 
 tools_frame_row_1_search_frame = ttk.LabelFrame(tools_frame, text = 'Search Options', relief=RAISED, borderwidth = 2)
 tools_frame_row_1_search_frame.grid(row = 0, column = 0)
@@ -397,6 +423,9 @@ for schema in schema_list:
 schemas_search_group.grid(row = 0, column = 0, padx = 5, pady = 10)
 
 search_view_frame = ttk.Frame(frame_search_data)
+search_view_frame.grid_rowconfigure(0, weight=1)
+search_view_frame.grid_columnconfigure(0, weight=1)
+
 search_data_columns = ('score', 'id', 'schema', 'details')
 search_data_columns_shown_test = ('Score', 'ID', 'Schema', 'Details')
 search_data_treeview = ttk.Treeview(search_view_frame, columns = search_data_columns, show='headings')
@@ -604,6 +633,7 @@ def get_searched_files():
 get_searched_files_button = ttk.Button(
     tools_frame_row_2_download_frame,
     text='Run Copy',
+    width = 24,
     command=get_searched_files
 )
 get_searched_files_button.grid(row = 1, column = 0, padx = 5, pady = 5)
@@ -612,6 +642,17 @@ get_searched_files_button.grid(row = 1, column = 0, padx = 5, pady = 5)
 # search frames: delete files button
 tools_frame_row_3_delete_frame = ttk.LabelFrame(tools_frame, text = 'Delete Data', relief = RAISED, borderwidth = 2)
 tools_frame_row_3_delete_frame.grid(row = 2, column = 0, sticky ='w'+'n'+'e'+'s')
+
+tools_frame_filler = ttk.Frame(tools_frame)
+tools_frame_filler.grid(row = 3, column = 0, sticky ='w'+'n'+'e'+'s')
+
+tools_frame.grid_columnconfigure(0, weight=0)
+tools_frame.grid_rowconfigure(0, weight=0)
+tools_frame.grid_rowconfigure(1, weight=0)
+tools_frame.grid_rowconfigure(2, weight=0)
+tools_frame.grid_rowconfigure(3, weight=0)
+
+
 def delete_stored_files(no_confirm):
     filenames = search_data_treeview.selection()
 
@@ -660,8 +701,13 @@ delete_stored_files_force = ttk.Checkbutton(
 delete_stored_files_force.grid(row = 1, column = 2, padx = 5, pady = 5)
 
 ### final pack search view
-search_data_treeview.grid(row = 0, column = 0, padx = 5, pady = 5)
-search_view_frame.grid(row = 0, column = 1, sticky ='w'+'n'+'e'+'s')
+search_data_treeview.grid(row = 0, column = 0, padx = 5, pady = 5, sticky = 'wnes')
+put_data_treeview.grid(row = 0, column = 0, padx = 5, pady = 5, sticky = 'wnes')
+
+search_view_frame.grid(row = 0, column = 1, sticky ='wnes')
+insert_view_frame.grid(row = 0, column = 1, sticky ='wnes')
+
+frame_insert_data.pack(fill='both', expand=True)
 frame_search_data.pack(fill='both', expand=True)
 
 # add frames to notebook
