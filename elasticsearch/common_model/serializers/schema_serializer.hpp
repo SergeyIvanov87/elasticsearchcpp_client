@@ -96,6 +96,12 @@ TXML_PREPARE_SCHEMA_SERIALIZER_DISPATCHABLE_CLASS(to_schema, Parent, SchemaToJSO
         })
         );
     }
+
+    template<class Tracer>
+    void serialize_schema_impl(txml::details::SchemaTag<SchemaVersion>, Tracer tracer)
+    {
+        this->json_object_stack_helper->push(nlohmann::json::object({{SchemaVersion::class_name(),{{"type", "version"}}}}));
+    }
 };
 } // namespace common_model
 } // namespace elasticsearch
