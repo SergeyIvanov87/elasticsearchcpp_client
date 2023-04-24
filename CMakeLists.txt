@@ -103,6 +103,7 @@ set (ELASTICSEARCH_CLIENT_TARGET es_client)
 list (APPEND ELASTICSEARCH_CLIENT_SRC
                         elasticsearch/v7_10/request/index_mapping.cpp
                         elasticsearch/v7_10/request/index_mapping_delete.cpp
+                        elasticsearch/v7_10/request/index_mapping_update.cpp
                         elasticsearch/v7_10/request/get_data.cpp
                         elasticsearch/v7_10/request/put_data.cpp
                         elasticsearch/v7_10/request/delete_data.cpp

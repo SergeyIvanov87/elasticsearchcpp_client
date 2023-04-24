@@ -124,6 +124,26 @@ struct CustomNode : public txml::XMLNodeLeaf<CustomNode, CustomStruct>
     }
 };
 
+struct CustomNodeToAdd : public txml::XMLNodeLeaf<CustomNodeToAdd, CustomStruct>
+{
+    using base_t = txml::XMLNodeLeaf<CustomNodeToAdd, CustomStruct>;
+
+    static constexpr std::string_view class_name()
+    {
+        return "test_custom_leaf_to_add";
+    }
+
+    static constexpr txml::TextReaderWrapper::NodeType class_node_type()
+    {
+        return txml::TextReaderWrapper::NodeType::Element;
+    }
+
+    CustomNodeToAdd(CustomStruct value) :
+        base_t(std::move(value))
+    {
+    }
+};
+
 struct CustomModel : public txml::XMLNode<CustomModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string, CustomNode> {
     using base_t = txml::XMLNode<CustomModel, StubLeafNode_bool, StubLeafNode_int, StubLeafNode_string, CustomNode>;
 
@@ -138,5 +158,18 @@ struct CustomModel : public txml::XMLNode<CustomModel, StubLeafNode_bool, StubLe
     }
 };
 
+struct CustomModelToAdd : public txml::XMLNode<CustomModelToAdd, CustomNodeToAdd> {
+    using base_t = txml::XMLNode<CustomModelToAdd, CustomNodeToAdd>;
+
+    static constexpr std::string_view class_name()
+    {
+        return "test_custom_model_to_add";
+    }
+
+    static constexpr txml::TextReaderWrapper::NodeType class_node_type()
+    {
+        return txml::TextReaderWrapper::NodeType::Element;
+    }
+};
 }
 #endif // TESTS_COMMON_NODES_HPP

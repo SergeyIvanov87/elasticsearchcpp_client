@@ -19,12 +19,19 @@ namespace v7
 namespace index_mapping {
 class transaction;
 }
+namespace index_mapping_update {
+class transaction;
+}
 namespace put_json_data
 {
 class transaction : public elasticsearch::base::transaction
 {
 public:
+    //-S- reinvent to avoid friends.
+    // it is possible to split up put_json_data onto 2 different classes
+    // one of them is used up by index_mapping and another for other reasons
     friend class elasticsearch::v7::index_mapping::transaction;
+    friend class elasticsearch::v7::index_mapping_update::transaction;
 
     using base_t = elasticsearch::base::transaction;
     using receiver =  adapter::easy::StringStreamReceiver;
