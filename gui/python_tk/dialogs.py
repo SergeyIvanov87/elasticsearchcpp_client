@@ -12,12 +12,14 @@ from pprint import pprint
 from tkinter import filedialog as fd
 from tkinter.messagebox import showinfo
 
+
 class PropertyDialog(tk.Toplevel):
     """
     Base dialog class with a single task:
     create and groups widgets in a table by pairs: a property name & a property value -
     for all available properties in dictionary/list passed as ctor parameters
     """
+
     immutable_properties = ["format", "orig_path"]
     unassigned_property_value = "<UNASSIGNED>"
 
@@ -95,12 +97,13 @@ class PropertyEditor(PropertyDialog):
         )
 
     def fill(self, json_param_values):
-        for param_name, entry in self.property_widgets.items():
-            if param_name not in json_param_values:
-                continue
+        [
             self.property_widget_textvalue[param_name].set(
                 json_param_values[param_name]
             )
+            for param_name in lf.property_widgets.keys()
+            if param_name in json_param_values
+        ]
 
     def store_setting(self):
         for param_name, entry in self.property_widgets.items():
@@ -109,11 +112,11 @@ class PropertyEditor(PropertyDialog):
                     param_name
                 ].get()
         self.apply_properties = True
-        PropertyDialog.release_modality(self)
+        super().release_modality()
 
     def cancel_setting(self):
         self.apply_properties = False
-        PropertyDialog.cancel_setting(self)
+        super().cancel_setting()
 
     # def on_modify(event):
     # pprint(vars(event))
@@ -121,12 +124,12 @@ class PropertyEditor(PropertyDialog):
 
     def __del__(self):
         self.apply_properties = False
-        PropertyDialog.__del__(self)
+        super().__del__()
 
 
 class PropertyPrinter(PropertyDialog):
     def __init__(self, parent, param_type_names_dict, param_group_names):
-        PropertyDialog.__init__(
+        super().__init__(
             self, parent, ttk.Label, param_type_names_dict, param_group_names
         )
 
@@ -140,10 +143,10 @@ class PropertyPrinter(PropertyDialog):
         self.update_idletasks()
 
     def store_setting(self):
-        PropertyDialog.release_modality(self)
+        super().release_modality()
 
     def cancel_setting(self):
-        PropertyDialog.cancel_setting(self)
+        super().cancel_setting()
 
     def __del__(self):
-        PropertyDialog.__del__(self)
+        super().__del__()
