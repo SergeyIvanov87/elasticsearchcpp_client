@@ -26,7 +26,7 @@ struct request : public txml::XMLNode<request<SpecificMappingModel>, ::model::Pr
     }
 };
 
-using response = index_mapping::response; ??? Ack only!!!!
+using response = index_mapping::response; // TODO -S- ??? Ack only!!!!
 } // namespace index_mapping_update
 } // namespace v7
 } // namespace elasticsearch
