@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+#TODO opened for comments! :)
+
 import subprocess
 import os
 import tkinter as tk

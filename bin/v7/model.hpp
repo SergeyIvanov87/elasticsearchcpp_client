@@ -79,6 +79,31 @@ struct ElementPrinter <elasticsearch::image::model::element::Resolution>: public
         return out;
     }
 };
+
+template <>
+struct ElementPrinter <elasticsearch::common_model::SchemaVersion> : public ElementPrinterBase<elasticsearch::common_model::SchemaVersion>
+{
+    using ElementPrinterBase<elasticsearch::common_model::SchemaVersion>::print_element;
+    template <class Model>
+    static std::ostream &print_element_value(std::ostream &out, const Model &m, const std::string &sep)
+    {
+        using Element = elasticsearch::common_model::SchemaVersion;
+        if (const auto &n = m.template node<Element>(); n)
+        {
+            const auto &vector = n->value();
+            out << "\"";
+            std::copy(vector.begin(), vector.end(), std::ostream_iterator<size_t>(out, "."));
+            out << "\"" << sep;
+        }
+        else
+        {
+            out << "null" << sep;
+        }
+        return out;
+    }
+};
+
+
 }
 
 namespace data_manipulation
@@ -88,6 +113,9 @@ struct ElementInjectableTraits<elasticsearch::common_model::BinaryBlob> {static 
 
 template <>
 struct ElementInjectableTraits<elasticsearch::common_model::Preview> {static constexpr bool is_injectable() {return false;}};
+
+template <>
+struct ElementInjectableTraits<elasticsearch::common_model::SchemaVersion> {static constexpr bool is_injectable() {return false;}};
 
 template <>
 struct ModelInjector <elasticsearch::common_model::Tags>
@@ -165,6 +193,27 @@ struct ModelExtractor <elasticsearch::image::model::element::Resolution>
         if (val)
         {
             data_storage.emplace(std::string(Element::class_name()), val->value().to_string());
+        }
+    }
+};
+
+template <>
+struct ModelExtractor <elasticsearch::common_model::SchemaVersion>
+{
+    template <class Model>
+    static void extract(const Model &m, std::map<std::string, std::string> &data_storage)
+    {
+        using Element = elasticsearch::common_model::SchemaVersion;
+        auto conv = [] (const Element::value_t &list)
+        {
+            std::stringstream ss;
+            std::copy(list.begin(), list.end(), std::ostream_iterator<size_t>(ss, "."));
+            return ss.str();
+        };
+        const auto &val = m.template node<Element>();
+        if (val)
+        {
+            data_storage.emplace(std::string(Element::class_name()), conv(val->value()));
         }
     }
 };

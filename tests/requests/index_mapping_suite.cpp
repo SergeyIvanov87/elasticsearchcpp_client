@@ -3,6 +3,7 @@
 #include "tests/common/settings.hpp"
 #include "elasticsearch/v7_10/request/index_mapping.hpp"
 #include "elasticsearch/v7_10/request/index_mapping_delete.hpp"
+#include "elasticsearch/v7_10/request/index_mapping_update.hpp"
 #include "tests/common/Serializers.hpp"
 #include "tests/common/Deserializers.hpp"
 
@@ -115,5 +116,37 @@ TEST_F(IMFixture, request_with_duplicate)
     ASSERT_TRUE(rc_elem->node<model::Reason>());
     ASSERT_TRUE(rc_elem->node<model::IndexUUID>());
     ASSERT_TRUE(rc_elem->node<model::Type>());
+}
+
+
+TEST_F(IMFixture, map_and_update)
+{
+    using namespace elasticsearch::v7;
+
+    // create index
+    index_mapping::transaction req(get_host(), index_mapping::transaction::Tag<CustomModel, CustomModelSerializer> {}, true);
+    ASSERT_NO_THROW(req.execute(get_index(), curl_verbose()));
+
+    std::optional<index_mapping::response> ans_ptr;
+    txml::StdoutTracer tracer;
+    ASSERT_NO_THROW(ans_ptr = req.get_response());
+
+    ASSERT_TRUE(ans_ptr->node<model::Ack>());
+    ASSERT_TRUE(ans_ptr->node<model::Ack>()->value());
+
+    ASSERT_TRUE(ans_ptr->node<model::Index>());
+    ASSERT_EQ(ans_ptr->node<model::Index>()->value(), get_index());
+
+    ASSERT_TRUE(ans_ptr->node<model::ShardsAck>());
+
+    //update index
+    index_mapping_update::transaction req_update(get_host(), index_mapping_update::transaction::Tag<CustomModelToAdd, CustomModelToAddSerializer> {}, true, tracer);
+    ASSERT_NO_THROW(req_update.execute(get_index(), curl_verbose()));
+
+    std::optional<index_mapping_update::response> ans_update_ptr;
+    ASSERT_NO_THROW(ans_update_ptr = req_update.get_response());
+
+    ASSERT_TRUE(ans_update_ptr->node<model::Ack>());
+    ASSERT_TRUE(ans_update_ptr->node<model::Ack>()->value());
 }
 }

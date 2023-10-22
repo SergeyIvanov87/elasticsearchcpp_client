@@ -63,6 +63,14 @@ struct table<model::search::MustElementTag,
 
 template<>
 struct table<model::search::MustElementTag,
+            ::elasticsearch::common_model::SchemaVersion>
+{
+    template<class Model>
+    using value_t = ::model::search::must::Term<Model, ::elasticsearch::common_model::SchemaVersion>;
+};
+
+template<>
+struct table<model::search::MustElementTag,
             ::elasticsearch::common_model::SourceName>
 {
     template<class Model>
