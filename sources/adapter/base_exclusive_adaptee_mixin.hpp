@@ -59,7 +59,7 @@ struct IExclusiveAdaptee
     void set_adapter(SpecificAdapterSharedPtr<SpecificAdapter> adapt) {
         static_assert(std::is_base_of_v<AdapterType, SpecificAdapter>,
                       "'SpecificAdapter' must implement `AdapterType`");
-        // TODO static check on available adapters
+        // TODO static check on available m_adapters
         constexpr int specific_adapter_index = details::tuple_index<SpecificAdapter, ExclusiveAdapters...>::value;
         if (set_adapter_index != std::numeric_limits<int>::max() &&
             set_adapter_index != specific_adapter_index)
@@ -68,7 +68,7 @@ struct IExclusiveAdaptee
         }
 
         Impl* self = static_cast<Impl*>(this);
-        auto& current_adapter = std::get<SpecificAdapterSharedPtr<SpecificAdapter>>(adapters);
+        auto& current_adapter = std::get<SpecificAdapterSharedPtr<SpecificAdapter>>(m_adapters);
         if (current_adapter)
         {
             if (adapt)
@@ -92,9 +92,9 @@ struct IExclusiveAdaptee
     }
 
     template<class ...SpecificAdapters>
-    void set_adapters(SpecificAdapterSharedPtr<SpecificAdapters>...adapters)
+    void set_adapters(SpecificAdapterSharedPtr<SpecificAdapters>...adapts)
     {
-        std::array<bool, sizeof...(SpecificAdapters)> expander {(set_adapter(adapters), true)...};
+        std::array<bool, sizeof...(SpecificAdapters)> expander {(set_adapter(adapts), true)...};
         (void)expander;
     }
 
@@ -111,7 +111,7 @@ struct IExclusiveAdaptee
             return std::count_if(dispatchingResult, dispatchingResult + sizeof...(ExclusiveAdapters), [] (bool val) {
                 return val;
             });
-        }, adapters);
+        }, m_adapters);
     }
 
     bool has_adapter_changed() const
@@ -126,7 +126,7 @@ struct IExclusiveAdaptee
             return std::any_of(dispatchingResult, dispatchingResult + sizeof...(ExclusiveAdapters), [] (bool val) {
                 return val;
             });
-        }, adapters);
+        }, m_adapters);
     }
 protected:
     template<class SpecificAdapter>
@@ -161,7 +161,7 @@ protected:
     }
 
 private:
-    ExclusiveAdaptersTuple adapters;
+    ExclusiveAdaptersTuple m_adapters;
 
     int set_adapter_index = std::numeric_limits<int>::max();
 };

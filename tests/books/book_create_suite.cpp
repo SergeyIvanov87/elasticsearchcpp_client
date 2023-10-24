@@ -1,4 +1,5 @@
 #include <iostream>
+#include <txml/applications/fb2/fb2.hpp>
 
 #include "tests/common/settings.hpp"
 #include "elasticsearch/books/request/book_index_mapping.hpp"

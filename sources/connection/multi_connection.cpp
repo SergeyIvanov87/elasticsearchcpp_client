@@ -38,7 +38,7 @@ void MultiConnection::add_connection(ConnectionSharedPtr connection)
         return;
     }
 
-    SpecificAdapterSharedPtr multi =
+    SpecificAdapterSharedPtr<adapter::easy::MultiAdapter> multi =
                                 std::static_pointer_cast<adapter::easy::MultiAdapter>(this->get_ptr());
     connection->add_adapter(multi);
 
@@ -59,7 +59,7 @@ void MultiConnection::remove_connection(ConnectionSharedPtr connection)
     if (it != connections.end())
     {
         connections.erase(it);
-        SpecificAdapterSharedPtr multi =
+        SpecificAdapterSharedPtr<adapter::easy::MultiAdapter> multi =
                                 std::static_pointer_cast<adapter::easy::MultiAdapter>(this->get_ptr());
         connection->remove_adapter(multi);
     }

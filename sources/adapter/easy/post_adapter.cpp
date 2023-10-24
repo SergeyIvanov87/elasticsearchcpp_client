@@ -29,7 +29,7 @@ void POSTAdapter::deinit(CURL *curl_handle)
     connection_handle = nullptr;
 }
 
-void POSTAdapter::reinit(CURL *curl_handle)
+void POSTAdapter::reinit(CURL *)
 {
     //TODO
 }

@@ -31,7 +31,7 @@ struct IAdaptee
         // TODO static check on available adapters
 
         Impl* self = static_cast<Impl*>(this);
-        auto& current_adapter = std::get<SpecificAdapterSharedPtr<SpecificAdapter>>(adapters);
+        auto& current_adapter = std::get<SpecificAdapterSharedPtr<SpecificAdapter>>(m_adapters);
         if (current_adapter)
         {
             if (adapt)
@@ -55,9 +55,9 @@ struct IAdaptee
     }
 
     template<class ...SpecificAdapters>
-    void set_adapters(SpecificAdapterSharedPtr<SpecificAdapters>...adapters)
+    void set_adapters(SpecificAdapterSharedPtr<SpecificAdapters>...adapts)
     {
-        std::array<bool, sizeof...(SpecificAdapters)> expander {(set_adapter(adapters), true)...};
+        std::array<bool, sizeof...(SpecificAdapters)> expander {(set_adapter(adapts), true)...};
         (void)expander;
     }
 
@@ -74,7 +74,7 @@ struct IAdaptee
             return std::count_if(dispatchingResult, dispatchingResult + sizeof...(Adapters), [] (bool val) {
                 return val;
             });
-        }, adapters);
+        }, m_adapters);
     }
 protected:
     template<class SpecificAdapter>
@@ -109,7 +109,7 @@ protected:
     }
 
 private:
-    AdaptersTuple adapters;
+    AdaptersTuple m_adapters;
 };
 }
 #endif // ADAPTER_BASE_ADAPTEE_MIXIN_HPP

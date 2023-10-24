@@ -5,6 +5,9 @@ set (PROC_LIB_NAME "cpp_book_indexer")
 
 project(${PROC_NAME} CXX C)
 
+include(CheckCCompilerFlag)
+option(PICKY_COMPILER "Enable picky compiler" OFF)
+
 set (BRANCH_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 get_filename_component(BRANCH_ROOT ${BRANCH_ROOT} ABSOLUTE)
 
@@ -12,6 +15,12 @@ set (PROCESS_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 get_filename_component(PROCESS_DIR ${PROCESS_DIR} ABSOLUTE)
 
 set (BRANCH_NAME ${PROC_NAME})
+
+if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_CLANG)
+  if (PICKY_COMPILER)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -pedantic -Wconversion -Winline -Wno-long-long -Wno-multichar -Wpointer-arith -Wshadow -Wsign-compare -Wundef -Wunused -Wwrite-strings -Wcast-align -Wempty-body -Wendif-labels -Wfloat-equal -Wignored-qualifiers -Wno-format-nonliteral -Wno-sign-conversion -Wno-system-headers -Wtype-limits -Wvla -Wstrict-aliasing=3 -Wformat=2 -Warray-bounds=2 -ftree-vrp -Wduplicated-cond -Wnull-dereference -fdelete-null-pointer-checks -Wshift-negative-value -Wshift-overflow=2 -Walloc-zero -Wduplicated-branches -Wformat-overflow=2 -Wformat-truncation=1 -Wrestrict -Warith-conversion -Wdouble-promotion -Wenum-conversion -Wunused-const-variable")
+  endif()
+endif()
 
 set(WITH_CURL       ON CACHE BOOL "Configure with CURL")
 set(WITH_TXML       ON CACHE BOOL "Configure with TemplatedXML")

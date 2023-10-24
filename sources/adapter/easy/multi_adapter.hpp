@@ -26,7 +26,7 @@ public:
 protected:
     ~MultiAdapter();
 private:
-    UniqueCURLMultiHandle multi_handle;
+    UniqueCURLMultiHandle m_multi_handle;
     std::size_t easy_handles_count;
 };
 } // namespace easy

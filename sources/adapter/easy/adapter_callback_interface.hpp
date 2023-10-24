@@ -20,7 +20,7 @@ struct IEasyCallbackAdapter : public IEasyAdapter, public ICallbackAdapter<Impl,
         curl_easy_setopt(curl_handle, this->get_cb_opt_id(), this->get_callback());
 
         if constexpr(ImplOverrideBehavior == true) {
-            static_cast<Impl*>(this)->init_next(curl_handle);
+            self->init_next(curl_handle);
         }
     }
 

@@ -21,7 +21,7 @@ public:
         return txml::TextReaderWrapper::NodeType::Element;
     }
 
-    _Score(float val) : base_t(val) {}
+    _Score(float s) : base_t(s) {}
 };
 }
 #endif // ANSWER_MODEL_SEARCH_OBJECT_RESP_SCORE_H

@@ -8,7 +8,7 @@ namespace easy
 {
 MultiAdapter::MultiAdapter() :
     IEasyAdapter(),
-    multi_handle(curl_multi_init(),  curl_multi_cleanup),
+    m_multi_handle(curl_multi_init(),  curl_multi_cleanup),
     easy_handles_count()
 {
 }
@@ -20,17 +20,17 @@ MultiAdapter::~MultiAdapter()
 
 void MultiAdapter::init(CURL *curl_handle)
 {
-    curl_multi_add_handle(multi_handle.get(), curl_handle);
+    curl_multi_add_handle(m_multi_handle.get(), curl_handle);
     easy_handles_count++;
 }
 
 void MultiAdapter::deinit(CURL *curl_handle)
 {
-    curl_multi_remove_handle(multi_handle.get(), curl_handle);
+    curl_multi_remove_handle(m_multi_handle.get(), curl_handle);
     easy_handles_count--;
 }
 
-void MultiAdapter::reinit(CURL *curl_handle)
+void MultiAdapter::reinit(CURL *)
 {
 }
 
@@ -41,7 +41,7 @@ bool MultiAdapter::has_changed() const
 
 CURLM* MultiAdapter::get_handle()
 {
-    return multi_handle.get();
+    return m_multi_handle.get();
 }
 } // namespace easy
 } // namespase adapter

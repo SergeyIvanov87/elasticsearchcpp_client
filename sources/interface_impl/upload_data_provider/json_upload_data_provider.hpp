@@ -50,8 +50,8 @@ struct JSONUploadDataProvider :
     private:
         accessor &operator= (const accessor &src) = delete;
         accessor(const accessor &src) = delete;
-        accessor(JSONUploadDataProvider &p, json_core_t& obj) : parent(p),
-                                                                parent_object(obj),
+        accessor(JSONUploadDataProvider &p, json_core_t& obj) : parent_object(obj),
+                                                                parent(p),
                                                                 commit(false) {}
 
         json_core_t &parent_object;

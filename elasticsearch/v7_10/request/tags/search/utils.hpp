@@ -59,10 +59,10 @@ struct table_mapper
 struct has_value
 {
     template<class T>
-    bool operator()(const T&) { return  true; };
+    bool operator()(const T&) { return  true; }
 
     template<class T>
-    bool operator()(const std::optional<T> &) { return  true; };
+    bool operator()(const std::optional<T> &) { return  true; }
 
     template<class ... Args>
     static bool test(const Args&... args)
