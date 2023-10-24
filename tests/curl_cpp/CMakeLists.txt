@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required (VERSION 3.6)
 
 file (GLOB SUITE_SRC *.cpp)
 foreach (file ${SUITE_SRC})

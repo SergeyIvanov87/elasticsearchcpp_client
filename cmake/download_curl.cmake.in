@@ -6,9 +6,9 @@ include(ExternalProject)
 ExternalProject_Add(curl
     GIT_REPOSITORY    https://github.com/curl/curl.git
     GIT_TAG           master
-    PREFIX            ${CMAKE_CURRENT_BINARY_DIR}
-    SOURCE_DIR        "${CMAKE_CURRENT_BINARY_DIR}/curl-src"
-    BINARY_DIR        "${CMAKE_CURRENT_BINARY_DIR}/curl-build"
+    #PREFIX            ${CMAKE_CURRENT_BINARY_DIR}
+    SOURCE_DIR        src
+    BINARY_DIR        build
 #    PREFIX            "${CMAKE_CURRENT_BINARY_DIR}/curl"
     INSTALL_DIR       "${CURL_INSTALLED_PATH}"
     CMAKE_ARGS        -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>

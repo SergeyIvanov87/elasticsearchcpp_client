@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.1)
+cmake_minimum_required (VERSION 3.6)
 
 set (PROC_NAME "BookIndexer")
 set (PROC_LIB_NAME "cpp_book_indexer")

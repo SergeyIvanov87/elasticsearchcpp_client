@@ -1,3 +1,5 @@
+cmake_minimum_required (VERSION 3.6)
+
 if(WITH_ZLIB)
     find_package(PkgConfig REQUIRED)
     set (PKG_CONFIG_USE_CMAKE_PREFIX_PATH ON)
