@@ -12,6 +12,7 @@ class Id : public txml::XMLNodeLeaf<Id, std::string>
 {
 public:
     using base_t = txml::XMLNodeLeaf<Id, std::string>;
+    using base_t::base_t;
 
     static constexpr std::string_view class_name()
     {
@@ -23,7 +24,10 @@ public:
         return txml::TextReaderWrapper::NodeType::Element;
     }
 
-    Id(std::string&& str);
+    Id(std::string&& str) :
+        base_t(std::move(str))
+    {
+    }
 };
 }
 #endif // ANSWER_MODEL_OBJECT_ID_H

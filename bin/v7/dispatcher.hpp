@@ -4,7 +4,7 @@
 #include "bin/common/schema_dispatcher.hpp"
 
 #include "bin/v7/model.hpp"
-#include "elasticsearch/aux/all_requests.hpp"
+#include "elasticsearch/service/all_requests.hpp"
 #include "elasticsearch/v7_10/request/index_mapping_delete.hpp"
 
 namespace bin

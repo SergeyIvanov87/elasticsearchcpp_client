@@ -1,6 +1,6 @@
-#include "elasticsearch/aux/doc_id_pm.hpp"
-#include "elasticsearch/aux/doc_id/model.hpp"
-#include "elasticsearch/aux/doc_id/schema_serializer.hpp"
+#include "elasticsearch/service/doc_id_pm.hpp"
+#include "elasticsearch/service/doc_id/model.hpp"
+#include "elasticsearch/service/doc_id/schema_serializer.hpp"
 #include "elasticsearch/common_model/serializers/schema_serializer.hpp"
 
 namespace elasticsearch

@@ -2,7 +2,7 @@
 #define ELASTICSEARCH_AUX_DOC_INDEX_CREATE_HPP
 
 #include "elasticsearch/v7_10/request/put_data.hpp"
-#include "elasticsearch/aux/doc_id/model.hpp"
+#include "elasticsearch/service/doc_id/model.hpp"
 
 namespace elasticsearch
 {

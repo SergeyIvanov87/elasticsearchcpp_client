@@ -1,8 +1,8 @@
 #ifndef ELASTICSEARCH_AUX_ALL_REQUESTS_HPP
 #define ELASTICSEARCH_AUX_ALL_REQUESTS_HPP
 
-#include "elasticsearch/aux/doc_id_create.hpp"
-#include "elasticsearch/aux/doc_id_pm.hpp"
+#include "elasticsearch/service/doc_id_create.hpp"
+#include "elasticsearch/service/doc_id_pm.hpp"
 
 #define ALL_AUX_REQUEST_LIST                                                                       \
                             elasticsearch::aux::index_mapping::transaction,                        \

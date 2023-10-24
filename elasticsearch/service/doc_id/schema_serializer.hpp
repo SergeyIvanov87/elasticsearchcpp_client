@@ -2,7 +2,7 @@
 #define ELASTICSEARCH_AUX_DOC_INDEX_MODEL_SCHEMA_SERIALIZER_HPP
 
 #include <txml/applications/json/json.hpp>
-#include "elasticsearch/aux/doc_id/model.hpp"
+#include "elasticsearch/service/doc_id/model.hpp"
 
 namespace elasticsearch
 {

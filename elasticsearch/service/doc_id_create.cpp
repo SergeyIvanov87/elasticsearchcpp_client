@@ -1,5 +1,5 @@
-#include "elasticsearch/aux/doc_id_create.hpp"
-#include "elasticsearch/aux/doc_id/serializer.hpp"
+#include "elasticsearch/service/doc_id_create.hpp"
+#include "elasticsearch/service/doc_id/serializer.hpp"
 
 namespace elasticsearch
 {

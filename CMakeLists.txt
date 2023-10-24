@@ -117,8 +117,8 @@ list (APPEND ELASTICSEARCH_CLIENT_SRC
                         elasticsearch/utils/file_to_base64_packer.cpp
                         elasticsearch/utils/base64_to_file_unpacker.cpp
 
-                        elasticsearch/aux/doc_id_pm.cpp
-                        elasticsearch/aux/doc_id_create.cpp
+                        elasticsearch/service/doc_id_pm.cpp
+                        elasticsearch/service/doc_id_create.cpp
 
                         elasticsearch/utils/zutils.cpp)
 add_library(${ELASTICSEARCH_CLIENT_TARGET}

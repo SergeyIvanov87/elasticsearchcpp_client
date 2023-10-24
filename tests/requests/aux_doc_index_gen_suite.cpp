@@ -1,8 +1,8 @@
 #include <iostream>
 
 #include "tests/common/settings.hpp"
-#include "elasticsearch/aux/doc_id_pm.hpp"
-#include "elasticsearch/aux/doc_id_create.hpp"
+#include "elasticsearch/service/doc_id_pm.hpp"
+#include "elasticsearch/service/doc_id_create.hpp"
 #include "elasticsearch/v7_10/request/index_mapping_delete.hpp"
 #include <gtest/gtest.h>
 
