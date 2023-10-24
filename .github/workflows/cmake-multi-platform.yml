@@ -68,8 +68,18 @@ jobs:
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
 
+    - name: Setup Elasticsearch with Plugins
+      # You may pin to the exact commit or the version.
+      # uses: everpcpc/elasticsearch-action@3bb5b459616fdee344c147a64baf140d8bb570d4
+      uses: everpcpc/elasticsearch-action@v2
+      with:
+        # The version of the Elasticsearch you want to run
+        version: 7.10
+        # Plugins to install before start
+        #plugins:
+        
     - name: Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ctest --build-config ${{ matrix.build_type }}
+      run: SET UT_HOST_ADDR=http://es1:9200 ctest --build-config ${{ matrix.build_type }}
