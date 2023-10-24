@@ -79,6 +79,8 @@ template void transaction::execute_impl(const std::string&, size_t, bool, txml::
 template void transaction::execute_impl(const std::string&, size_t, bool, txml::StdoutTracer);
 template void transaction::execute_impl(const std::string&, size_t, const ::model::KeepAlive&, bool, txml::EmptyTracer);
 template void transaction::execute_impl(const std::string&, size_t, const ::model::KeepAlive&, bool, txml::StdoutTracer);
+template void transaction::execute_impl(size_t, const ::model::PIT&,bool, txml::EmptyTracer);
+template void transaction::execute_impl(size_t, const ::model::PIT&,bool, txml::StdoutTracer);
 } // namespace search
 } // namespace v7
 } // namespace elasticsearch
