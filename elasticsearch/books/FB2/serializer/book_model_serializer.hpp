@@ -29,7 +29,7 @@ struct to_model_data : public txml::FormatSerializerBase<to_model_data, txml::St
         val.make_format_serialize(*this, tracer);
     }
     template<class Tracer>
-    void serialize_impl(const ::fb2::FB2TextElement &val, Tracer tracer)
+    void serialize_impl(const ::fb2::FB2TextElement &, Tracer)
     {
     }
 

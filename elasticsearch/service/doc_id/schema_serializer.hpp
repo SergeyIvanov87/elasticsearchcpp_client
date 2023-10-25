@@ -28,7 +28,7 @@ TXML_PREPARE_SCHEMA_SERIALIZER_DISPATCHABLE_CLASS(to_schema, Parent, SchemaToJSO
     }
 
     template<class SerializedItem, class Tracer>
-    void serialize_schema_tag_impl(txml::LeafTag&& t, Tracer &tracer)
+    void serialize_schema_tag_impl(txml::LeafTag&& t, Tracer &)
     {
         this->json_object_stack_helper->push(nlohmann::json::object(
         {

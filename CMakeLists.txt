@@ -5,7 +5,9 @@ set (PROC_LIB_NAME "cpp_book_indexer")
 
 project(${PROC_NAME} CXX C)
 
-include(CheckCCompilerFlag)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 option(PICKY_COMPILER "Enable picky compiler" OFF)
 
 set (BRANCH_ROOT ${CMAKE_CURRENT_SOURCE_DIR})

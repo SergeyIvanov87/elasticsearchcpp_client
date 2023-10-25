@@ -9,6 +9,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <txml/applications/fb2/fb2.hpp>
+
 #include "elasticsearch/books/FB2/fb2_packer.hpp"
 #include "elasticsearch/books/FB2/fb2_unpacker.hpp"
 #include <gtest/gtest.h>

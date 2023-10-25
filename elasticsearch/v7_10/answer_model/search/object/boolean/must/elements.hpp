@@ -213,7 +213,7 @@ public:
     // standalone serializier
     TXML_DECLARE_SERIALIZER_AGGREGATOR_CLASS(aggregator_serializer_type,
                                              serializer_parted_type<aggregator_serializer_type>,
-                                             typename SubContexts::serializer_parted_type<aggregator_serializer_type>...)
+                                             typename SubContexts::template serializer_parted_type<aggregator_serializer_type>...)
     {
         TXML_SERIALIZER_AGGREGATOR_OBJECT
     };
