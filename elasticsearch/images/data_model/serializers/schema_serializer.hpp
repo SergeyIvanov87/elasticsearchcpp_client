@@ -20,13 +20,13 @@ TXML_PREPARE_SCHEMA_SERIALIZER_DISPATCHABLE_CLASS(to_schema, Parent, SchemaToJSO
     TXML_SCHEMA_SERIALIZER_DISPATCHABLE_OBJECT
 
     template<class Tracer>
-    void serialize_schema_impl(txml::details::SchemaTag<element::Location>, Tracer tracer)
+    void serialize_schema_impl(txml::details::SchemaTag<element::Location>, Tracer)
     {
         this->json_object_stack_helper->push(nlohmann::json::object({{element::Location::class_name().data(),{{"type", "geo_point"}}}}));
     }
 
     template<class Tracer>
-    void serialize_schema_impl(txml::details::SchemaTag<element::OriginalTime>, Tracer tracer)
+    void serialize_schema_impl(txml::details::SchemaTag<element::OriginalTime>, Tracer)
     {
         this->json_object_stack_helper->push(nlohmann::json::object(
             {{element::OriginalTime::class_name().data(),
@@ -34,7 +34,7 @@ TXML_PREPARE_SCHEMA_SERIALIZER_DISPATCHABLE_CLASS(to_schema, Parent, SchemaToJSO
     }
 
     template<class Tracer>
-    void serialize_schema_impl(txml::details::SchemaTag<element::DigitizeTime>, Tracer tracer)
+    void serialize_schema_impl(txml::details::SchemaTag<element::DigitizeTime>, Tracer)
     {
         this->json_object_stack_helper->push(nlohmann::json::object(
             {{elasticsearch::image::model::element::DigitizeTime::class_name().data(),
@@ -52,7 +52,7 @@ TXML_PREPARE_SCHEMA_SERIALIZER_DISPATCHABLE_CLASS(to_schema, Parent, SchemaToJSO
     }
 
     template<class SerializedItem, class Tracer>
-    void serialize_schema_tag_impl(txml::LeafTag&& t, Tracer &tracer)
+    void serialize_schema_tag_impl(txml::LeafTag&&, Tracer &)
     {/*
         this->json_object_stack_helper->push(nlohmann::json::object({
                                 {SerializedItem::class_name().data(),{

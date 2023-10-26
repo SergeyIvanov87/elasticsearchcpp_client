@@ -2,6 +2,7 @@
 #define COMMON_MODEL_ORIGINAL_PATH_H
 
 #include <txml/txml_fwd.h>
+#include <txml/include/XMLNodeLeaf.hpp>
 
 namespace elasticsearch
 {
