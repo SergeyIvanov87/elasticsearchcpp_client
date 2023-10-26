@@ -198,6 +198,8 @@ endif()
 if (WITH_BIN)
     add_subdirectory(bin)
 endif()
+
+add_subdirectory(services EXCLUDE_FROM_ALL)
 #add_executable(test sources/main.cpp)# ${ELASTICSEARCH_CLIENT} ${ELASTICSEARCH_APPLICATION})
 #target_include_directories(test PUBLIC
 #            "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_SOURCE_DIR}/sources>;${INCL}"
