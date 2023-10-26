@@ -8,10 +8,10 @@ namespace model
 class EmptyModel {};
 struct EmptyParam {using value_type = EmptyParam; };
 
-class MatchAll : public txml::XMLNode<MatchAll>
+class MatchAll : public txml::XMLNodeLeafNoData<MatchAll>
 {
 public:
-    using base_t = txml::XMLNode<MatchAll>;
+    using base_t = txml::XMLNodeLeafNoData<MatchAll>;
 
     static constexpr std::string_view class_name()
     {

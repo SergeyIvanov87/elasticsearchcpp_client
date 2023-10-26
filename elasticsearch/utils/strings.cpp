@@ -5,8 +5,8 @@ namespace elasticsearch
 namespace utils
 {
 range_descriptor::range_descriptor(value_t && v, bool enclosed) :
-    value(std::move(v)),
-    border_included(enclosed)
+    border_included(enclosed),
+    value(std::move(v))
 {
 }
 

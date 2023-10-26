@@ -23,7 +23,7 @@ public:
     int release();
 private:
     int m_fd;
-;
+
     fd_guard(const fd_guard &) = delete;
     fd_guard& operator= (const fd_guard& ) = delete;
 };

@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <txml/txml_fwd.h>
+#include <txml/include/XMLNodeLeaf.hpp>
+
 #include "elasticsearch/utils/base64.h"
 
 namespace elasticsearch

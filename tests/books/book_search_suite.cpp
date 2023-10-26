@@ -203,6 +203,7 @@ protected:
         for (const auto& id : generated_item_ids)
         {
             // TODO delete
+            (void)id;
         }
     }
 
@@ -256,7 +257,6 @@ TEST_F(BookMultipleCreateSearchFixture_10, create_n_search_pit)
     ASSERT_FALSE(hits_array.empty());
 
     //std::this_thread::sleep_for(30s);
-    bool found = false;
     for (const auto &hit : hits_array)
     {
         std::cout << hit->node<::model::_Index>()->value() << std::endl;

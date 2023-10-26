@@ -8,7 +8,6 @@
 
 namespace fb2
 {
-class ShortFictionBook;
 class packer;
 class reader : public elasticsearch::book::packer_interface_aggregator
 {

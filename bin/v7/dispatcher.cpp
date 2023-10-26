@@ -73,7 +73,7 @@ get_match_elem<elasticsearch::image::search::tag::geo_bbox,
         const char *pEnd = pStart;
         while (*pStart && values.size() != float_num)
         {
-            const char *pEnd = elasticsearch::utils::get_next_char_if(pStart, [sep]( const char* sym) { return (*sym == sep);});
+            pEnd = elasticsearch::utils::get_next_char_if(pStart, [sep]( const char* sym) { return (*sym == sep);});
             try
             {
                 values.push_back(stof(std::string(pStart, pEnd - pStart)));
@@ -109,7 +109,6 @@ template<class Model, class SearchRequest, class Tracer>
 std::vector<record_t<Model>>
 extract_model_records(const std::shared_ptr<SearchRequest> &search_ptr, Tracer tracer)
 {
-    using transaction = SearchRequest;
     using data = Model;
 
     if (!search_ptr)
@@ -465,7 +464,7 @@ void request_image_index_mapping_delete(const dispatcher &d, Tracer)
 }
 
 template<class Tracer>
-void request_rm_data(const dispatcher &d, std::ostream &out, const char *index, const char *doc_path_id, Tracer tracer)
+void request_rm_data(const dispatcher &d, std::ostream &out, const char *index, const char *doc_path_id, Tracer)
 {
     std::optional<elasticsearch::v7::delete_data::response> ans_ptr;
     if (!strcmp(index, schema_indices[0]))
@@ -527,8 +526,8 @@ void request_put_data(const dispatcher &d, std::ostream &out,
             bin::data_manipulation::inject_to_model<elasticsearch::book::model::data,
                                                     BOOK_DATA_MODEL_ELEMENTS>(*book_model_promise, override_model_params);
         }
-        catch (const std::exception& ex) {
-            exception_logging << "Book schema parse failed, reason:\n" << ex.what() << std::endl;
+        catch (const std::exception& exx) {
+            exception_logging << "Book schema parse failed, reason:\n" << exx.what() << std::endl;
             throw std::runtime_error(std::string("unsupported format by path: ") + file_path + ", error: " + exception_logging.str());
         }
     }
@@ -595,9 +594,9 @@ void request_put_data(const dispatcher &d, std::ostream &out,
 
 template <class Tracer>
 std::map<std::string, dispatcher::csv_data_t>
-    request_get_data(const dispatcher &d, std::ostream &out,
+    request_get_data(const dispatcher &d, std::ostream &,
                      const char *index, const char **document_names, size_t document_count,
-                     Tracer tracer)
+                     Tracer)
 {
     std::map<std::string, dispatcher::csv_data_t> ret;
     if (!strcmp(index, schema_indices[0]))
@@ -637,7 +636,7 @@ std::map<std::string, dispatcher::csv_data_t>
 
 template <class Tracer>
 void request_update_data(dispatcher &d,
-                         std::ostream &out, const char *file_path, const char* document_id,
+                         std::ostream &, const char *file_path, const char* document_id,
                          const std::map<std::string, std::string>& override_model_params,
                          Tracer tracer)
 {

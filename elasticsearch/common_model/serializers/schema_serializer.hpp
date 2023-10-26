@@ -18,19 +18,19 @@ TXML_PREPARE_SCHEMA_SERIALIZER_DISPATCHABLE_CLASS(to_schema, Parent, SchemaToJSO
     TXML_SCHEMA_SERIALIZER_DISPATCHABLE_OBJECT
 
     template<class Tracer>
-    void serialize_schema_impl(txml::details::SchemaTag<BinaryBlob>, Tracer tracer)
+    void serialize_schema_impl(txml::details::SchemaTag<BinaryBlob>, Tracer)
     {
         this->json_object_stack_helper->push(nlohmann::json::object({{BinaryBlob::class_name(),{{"type", "binary"}}}}));
     }
 
     template<class Tracer>
-    void serialize_schema_impl(txml::details::SchemaTag<CreationDateTime>, Tracer tracer)
+    void serialize_schema_impl(txml::details::SchemaTag<CreationDateTime>, Tracer)
     {
         this->json_object_stack_helper->push(nlohmann::json::object({{CreationDateTime::class_name(),{{"type", "date"}}}}));
     }
 
     template<class Tracer>
-    void serialize_schema_impl(txml::details::SchemaTag<Tags>, Tracer tracer)
+    void serialize_schema_impl(txml::details::SchemaTag<Tags>, Tracer)
     {
         this->json_object_stack_helper->push(nlohmann::json::object(
         {
@@ -47,7 +47,7 @@ TXML_PREPARE_SCHEMA_SERIALIZER_DISPATCHABLE_CLASS(to_schema, Parent, SchemaToJSO
     }
 
     template<class Tracer>
-    void serialize_schema_impl(txml::details::SchemaTag<Preview>, Tracer tracer)
+    void serialize_schema_impl(txml::details::SchemaTag<Preview>, Tracer)
     {
         this->json_object_stack_helper->push(nlohmann::json::object({{Preview::class_name(),{{"type", "binary"}}}}));
     }
@@ -63,7 +63,7 @@ TXML_PREPARE_SCHEMA_SERIALIZER_DISPATCHABLE_CLASS(to_schema, Parent, SchemaToJSO
     }
 
     template<class SerializedItem, class Tracer>
-    void serialize_schema_tag_impl(txml::LeafTag&& t, Tracer &tracer)
+    void serialize_schema_tag_impl(txml::LeafTag&&, Tracer &)
     {
         //this->json_object_stack_helper->push(nlohmann::json::object({{SerializedItem::class_name(),{{"type", "text"}, decorator::make_keyword()}}}));
         this->json_object_stack_helper->push(nlohmann::json::object(
@@ -81,7 +81,7 @@ TXML_PREPARE_SCHEMA_SERIALIZER_DISPATCHABLE_CLASS(to_schema, Parent, SchemaToJSO
     }
 
     template<class Tracer>
-    void serialize_schema_impl(txml::details::SchemaTag<OriginalPath>, Tracer tracer)
+    void serialize_schema_impl(txml::details::SchemaTag<OriginalPath>, Tracer)
     {
         this->json_object_stack_helper->push(nlohmann::json::object(
         {
@@ -98,7 +98,7 @@ TXML_PREPARE_SCHEMA_SERIALIZER_DISPATCHABLE_CLASS(to_schema, Parent, SchemaToJSO
     }
 
     template<class Tracer>
-    void serialize_schema_impl(txml::details::SchemaTag<SchemaVersion>, Tracer tracer)
+    void serialize_schema_impl(txml::details::SchemaTag<SchemaVersion>, Tracer)
     {
         this->json_object_stack_helper->push(nlohmann::json::object({{SchemaVersion::class_name(),{{"type", "version"}}}}));
     }

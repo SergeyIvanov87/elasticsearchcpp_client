@@ -140,7 +140,7 @@ namespace documents
     template<class T, class ...U>
     std::vector<T> tmp_entry_extractor(std::vector<tmp_entry> &tmp_entries,
                                        std::filesystem::path extract_prefix,
-                                       int &error_number,
+                                       size_t &error_number,
                                        U &&...args);
 }
 
@@ -234,7 +234,7 @@ int main(int argc, const char* argv[])
         }
 
         //to form csv
-        for(const auto ret_data_it : ret_data)
+        for(const auto &ret_data_it : ret_data)
         {
             std::cout << ret_data_it.first << ",";
             std::cout << std::get<0>(ret_data_it.second) << ",";
@@ -312,8 +312,8 @@ int main(int argc, const char* argv[])
         std::vector<documents::tmp_entry> restored_documents;
 
         // request for documents
-        int skipped_err_files = 0;
-        for (int i = 0; i < requested_doc_num; i += group_size)
+        size_t skipped_err_files = 0;
+        for (i = 0; i < requested_doc_num; i += group_size)
         {
             size_t requested_document_count = std::min(requested_doc_num - i, group_size);
             try
@@ -323,7 +323,7 @@ int main(int argc, const char* argv[])
             catch (const std::exception &ex)
             {
                 std::cerr << "Cannot get some or more documents:\n" << std::endl;
-                for (int j = 0; j < requested_document_count; j ++)
+                for (size_t j = 0; j < requested_document_count; j ++)
                 {
                     std::cerr << *(argv + doc_arg_index + i + j) << std::endl;
                 }
@@ -336,7 +336,7 @@ int main(int argc, const char* argv[])
             // create temporary files
             size_t prev_records = restored_documents.size();
             restored_documents.reserve(prev_records + ret_data.size());
-            for(const auto ret_data_it : ret_data)
+            for(const auto &ret_data_it : ret_data)
             {
                 try
                 {
@@ -417,9 +417,9 @@ int main(int argc, const char* argv[])
         {
             std::cout << "Available schemas:" << std::endl;
             std::string list("\t");
-            for (const char **s = schema_indices; *s; s++)
+            for (const char **s_ptr = schema_indices; *s_ptr; s_ptr++)
             {
-                list =  list + *s + ',';
+                list =  list + *s_ptr + ',';
             }
             if (!list.empty()) list.pop_back();
             std::cout << list<< std ::endl;
@@ -429,21 +429,21 @@ int main(int argc, const char* argv[])
         {
             const char *found_schema = nullptr;
             size_t argv_len = strlen(argv[1]);
-            for (const char **s = schema_indices; *s; s++)
+            for (const char **s_ptr = schema_indices; *s_ptr; s_ptr++)
             {
-                size_t s_len = strlen(*s);
-                if (argv_len == s_len && !strncmp(argv[1], *s, s_len))
+                size_t s_len = strlen(*s_ptr);
+                if (argv_len == s_len && !strncmp(argv[1], *s_ptr, s_len))
                 {
-                    found_schema = *s;
+                    found_schema = *s_ptr;
                     break;
                 }
             }
             if (!found_schema)
             {
                 std::cout << "Unexpected schema: " << argv[1] << ". Check on list of available schemas:" <<std::endl;
-                for (const char **s = schema_indices; *s; s++)
+                for (const char **s_ptr = schema_indices; *s_ptr; s_ptr++)
                 {
-                    std::cout << *s << std ::endl;
+                    std::cout << *s_ptr << std ::endl;
                 }
                 return -1;
             }
@@ -518,7 +518,7 @@ tmp_entry::tmp_entry(std::string_view doc_name, const bin::v7::dispatcher::csv_d
     size_t written_size = 0;
     do
     {
-        int ret = write(fd, doc_data.data(), size_to_write - written_size);
+        ssize_t ret = write(fd, doc_data.data(), size_to_write - written_size);
         if (ret == -1)
         {
             if (errno != EINTR)
@@ -645,7 +645,7 @@ permanent_plain_entry::permanent_plain_entry(tmp_entry &&in, std::filesystem::pa
 template <class T, class ... U>
 std::vector<T> tmp_entry_extractor(std::vector<tmp_entry> &tmp_entries,
                                    std::filesystem::path extract_prefix,
-                                   int &error_number,
+                                   size_t &error_number,
                                    U &&...args)
 {
     std::vector<T> copied_files;

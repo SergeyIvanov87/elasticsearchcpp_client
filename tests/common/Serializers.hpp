@@ -15,7 +15,7 @@ TXML_PREPARE_SCHEMA_SERIALIZER_DISPATCHABLE_CLASS(StubLeafNodeSerializer, Parent
     TXML_SCHEMA_SERIALIZER_DISPATCHABLE_OBJECT
 
     template<class SerializedItem, class Tracer>
-    void serialize_schema_tag_impl(txml::LeafTag&& t, Tracer &tracer)
+    void serialize_schema_tag_impl(txml::LeafTag&&, Tracer &)
     {
         this->json_object_stack_helper->push(nlohmann::json::object({{SerializedItem::class_name(),{{"type", "text"}}}}));
     }
@@ -46,7 +46,7 @@ TXML_PREPARE_SCHEMA_SERIALIZER_DISPATCHABLE_CLASS(StubModelSerializer, Parent, S
     TXML_SCHEMA_SERIALIZER_DISPATCHABLE_OBJECT
 
     template<class SerializedItem, class Tracer>
-    void serialize_schema_tag_impl(txml::LeafTag&& t, Tracer &tracer)
+    void serialize_schema_tag_impl(txml::LeafTag&&, Tracer &)
     {
         this->json_object_stack_helper->push(nlohmann::json::object({{SerializedItem::class_name(),{{"type", "text"}}}}));
     }
@@ -78,14 +78,14 @@ TXML_PREPARE_SCHEMA_SERIALIZER_DISPATCHABLE_CLASS(CustomModelSerializer, Parent,
     }
 
     template<class Tracer>
-    void serialize_schema_impl(txml::details::SchemaTag<CustomNode>, Tracer tracer)
+    void serialize_schema_impl(txml::details::SchemaTag<CustomNode>, Tracer)
     {
         this->json_object_stack_helper->push(nlohmann::json::object({{CustomNode::class_name(),{{"type", "date"}}}}));
     }
 
 
     template<class SerializedItem, class Tracer>
-    void serialize_schema_tag_impl(txml::LeafTag&& t, Tracer &tracer)
+    void serialize_schema_tag_impl(txml::LeafTag&&, Tracer &)
     {
         this->json_object_stack_helper->push(nlohmann::json::object(
         {
@@ -131,13 +131,13 @@ TXML_PREPARE_SCHEMA_SERIALIZER_DISPATCHABLE_CLASS(CustomModelToAddSerializer, Pa
     }
 
     template<class Tracer>
-    void serialize_schema_impl(txml::details::SchemaTag<CustomNodeToAdd>, Tracer tracer)
+    void serialize_schema_impl(txml::details::SchemaTag<CustomNodeToAdd>, Tracer)
     {
         this->json_object_stack_helper->push(nlohmann::json::object({{CustomNodeToAdd::class_name(),{{"type", "date"}}}}));
     }
 
     template<class SerializedItem, class Tracer>
-    void serialize_schema_tag_impl(txml::LeafTag&& t, Tracer &tracer)
+    void serialize_schema_tag_impl(txml::LeafTag&&, Tracer &)
     {
         this->json_object_stack_helper->push(nlohmann::json::object(
         {

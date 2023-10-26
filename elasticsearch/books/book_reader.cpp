@@ -1,3 +1,4 @@
+#include <txml/txml.hpp>
 #include "elasticsearch/books/book_reader.hpp"
 
 #include <txml/applications/fb2/fb2_fwd.h>

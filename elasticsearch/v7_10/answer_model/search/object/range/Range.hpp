@@ -53,7 +53,7 @@ public:
 
     TXML_DECLARE_SERIALIZER_AGGREGATOR_CLASS(aggregator_serializer_type,
                                              serializer_parted_type<aggregator_serializer_type>,
-                                             typename range::element<Model, Element>::serializer_parted_type<aggregator_serializer_type>...)
+                                             typename range::element<Model, Element>::template serializer_parted_type<aggregator_serializer_type>...)
     {
         TXML_SERIALIZER_AGGREGATOR_OBJECT
     };
