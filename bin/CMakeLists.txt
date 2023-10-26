@@ -14,7 +14,7 @@ foreach (file ${BINARY_SRC})
 
     add_executable(${filename} ${filename}.cpp ${COMMON_SRC})
     target_link_libraries(${filename} PRIVATE
-                        ${ELASTICSEARCH_APPLICATION_TARGET}
+                        ${ELASTICSEARCH_APPLICATIONS_TARGET}
                         gtest_main)
     target_include_directories(${filename}  PUBLIC
                         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../>)

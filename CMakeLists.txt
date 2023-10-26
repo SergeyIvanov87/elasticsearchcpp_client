@@ -149,9 +149,28 @@ target_include_directories(${ELASTICSEARCH_CLIENT_TARGET}
                         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_SOURCE_DIR}/elasticsearch>"
                         "$<INSTALL_INTERFACE:./;elasticsearch>")
 
+set (ELASTICSEARCH_APPLICATIONS_TARGET es_application)
+add_library(${ELASTICSEARCH_APPLICATIONS_TARGET} INTERFACE)
 
-set (ELASTICSEARCH_APPLICATION_TARGET es_application)
-list (APPEND ELASTICSEARCH_APPLICATION_SRC
+function(add_application_target target_name target_src_list ext_src_list)
+    add_library(${target_name}
+                        STATIC
+                        ${target_src_list}
+                        ${ext_src_list}
+    )
+    target_link_libraries(${target_name}
+                        PUBLIC
+                        ${ELASTICSEARCH_CLIENT_TARGET}
+    )
+    target_include_directories(${target_name}
+                        PRIVATE
+                        .
+    )
+
+    target_link_libraries(${ELASTICSEARCH_APPLICATIONS_TARGET} INTERFACE ${target_name})
+endfunction()
+
+list (APPEND ELASTICSEARCH_APPLICATION_BOOK_SRC
                         elasticsearch/books/request/create_book.cpp
                         elasticsearch/books/request/get_book.cpp
                         elasticsearch/books/request/delete_book.cpp
@@ -163,7 +182,8 @@ list (APPEND ELASTICSEARCH_APPLICATION_SRC
                         elasticsearch/books/FB2/fb2_unpacker.cpp
                         elasticsearch/books/FB2/fb2_reader.cpp
                         elasticsearch/books/book_reader.cpp
-
+)
+list (APPEND ELASTICSEARCH_APPLICATION_IMAGE_SRC
                         elasticsearch/images/request/create_image.cpp
                         elasticsearch/images/request/get_image.cpp
                         elasticsearch/images/request/delete_image.cpp
@@ -173,23 +193,35 @@ list (APPEND ELASTICSEARCH_APPLICATION_SRC
                         elasticsearch/images/JPG/reader.cpp
                         elasticsearch/images/data_model/GeoPoint.cpp
                         elasticsearch/images/data_model/Resolution.cpp
-                        elasticsearch/images/image_reader.cpp)
+                        elasticsearch/images/image_reader.cpp
+)
 
-
-add_library(${ELASTICSEARCH_APPLICATION_TARGET}
-                        STATIC
-                        ${ELASTICSEARCH_APPLICATION_SRC}
-                        ${ZLIB_CONTRIB_SRC}
-                        ${EASYEXIF_SRC})
-target_link_libraries(${ELASTICSEARCH_APPLICATION_TARGET}
+set (ELASTICSEARCH_APPLICATION_BOOK_TARGET es_app_books)
+list (APPEND BOOKS_EXTERNAL_SRC ${ZLIB_CONTRIB_SRC})
+add_application_target("${ELASTICSEARCH_APPLICATION_BOOK_TARGET}"
+                       "${ELASTICSEARCH_APPLICATION_BOOK_SRC}"
+                       "${BOOKS_EXTERNAL_SRC}"
+)
+target_link_libraries(${ELASTICSEARCH_APPLICATION_BOOK_TARGET}
                         PUBLIC
-                        ${ELASTICSEARCH_CLIENT_TARGET}
-                        ${FILE_ARCHIVER_TARGET})
-target_include_directories(${ELASTICSEARCH_APPLICATION_TARGET}
+                        ${FILE_ARCHIVER_TARGET}
+)
+target_include_directories(${ELASTICSEARCH_APPLICATION_BOOK_TARGET}
                         PRIVATE
-                        .
                         ${ZLIB_CONTRIB_INCL}
-                        ${EASYEXIF_INCL})
+)
+
+
+set (ELASTICSEARCH_APPLICATION_IMAGE_TARGET es_app_images)
+list (APPEND IMAGE_EXTERNAL_SRC ${EASYEXIF_SRC})
+add_application_target("${ELASTICSEARCH_APPLICATION_IMAGE_TARGET}"
+                       "${ELASTICSEARCH_APPLICATION_IMAGE_SRC}"
+                       "${IMAGE_EXTERNAL_SRC}"
+)
+target_include_directories(${ELASTICSEARCH_APPLICATION_IMAGE_TARGET}
+                        PRIVATE
+                        ${EASYEXIF_INCL}
+)
 
 if (WITH_UT)
     add_subdirectory(tests)
