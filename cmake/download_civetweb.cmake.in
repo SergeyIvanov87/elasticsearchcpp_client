@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION 3.15)
+
+project(civetweb-download NONE)
+
+include(ExternalProject)
+ExternalProject_Add(civetweb
+    GIT_REPOSITORY    https://github.com/civetweb/civetweb.git
+    GIT_TAG           master
+    SOURCE_DIR        src
+    BINARY_DIR        build
+    INSTALL_DIR       "${CIVETWEB_INSTALLED_PATH}"
+    CMAKE_ARGS        -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+)

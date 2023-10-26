@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.6)
 
 if(WITH_CURL)
 #    set (PKG_CONFIG_USE_CMAKE_PREFIX_PATH ON)
-    if (False AND NOT CURL_INSTALLED_PATH)
+    if (NOT CURL_INSTALLED_PATH)
         find_package(CURL QUIET)
     else()
         #list(APPEND CMAKE_PREFIX_PATH ${CURL_INSTALLED_PATH})
